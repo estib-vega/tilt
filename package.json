@@ -2,7 +2,7 @@
   "type": "module",
   "name": "tilt",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "bun run --watch server/index.ts",
     "lint": "eslint ."
   },
   "dependencies": {
