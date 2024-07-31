@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "strict": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
@@ -21,5 +22,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
-  }
+  },
+  "include": ["server/**/*"],
 }
