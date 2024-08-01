@@ -9,7 +9,7 @@ interface LLMGenerateParams {
   prompt: string;
   context?: number[];
   onMessage: (message: string) => void;
-  onEnd: (context: number[]) => void;
+  onEnd: (fullResponse: string, context: number[]) => void;
 }
 
 export async function llmGenerate(params: LLMGenerateParams) {
@@ -29,19 +29,26 @@ export async function llmGenerate(params: LLMGenerateParams) {
     throw new Error("Failed to create a readable stream.");
   }
 
+  const buffer: string[] = [];
+
   for await (const m of readerToStringIterator(reader)) {
     const split = m.split("\n");
     for (const s of split) {
-      if (!isLLMGenerateStreamResponse(s)) {
+      if (!s) {
+        continue;
+      }
+      const parsed = JSON.parse(s);
+      if (!isLLMGenerateStreamResponse(parsed)) {
         throw new Error("Invalid response from the server: " + s);
       }
 
-      if (s.done) {
-        params.onEnd(s.context);
+      if (parsed.done) {
+        params.onEnd(buffer.join(""), parsed.context);
         return;
       }
 
-      params.onMessage(s.response);
+      buffer.push(parsed.response);
+      params.onMessage(parsed.response);
     }
   }
 }
