@@ -35,6 +35,7 @@ const ChatContent = (props: ChatContentProps): JSX.Element => {
           streamingMessage={props.streamingMessage}
           isLoadingAnswer={props.isLoadingAnswer}
         />
+        <div className="h-40"/>
       </div>
     </ScrollArea>
   );
