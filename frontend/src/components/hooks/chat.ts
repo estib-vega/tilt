@@ -1,7 +1,17 @@
 import React from "react";
-import { llmChatGreeting, llmGenerate } from "@/lib/api";
+import { LLMChatGreeterParams, llmChatGreeting, llmGenerate } from "@/lib/api";
 import { ChatMessageInfo } from "@server/lib/llm";
 import { useMutation, useQuery } from "@tanstack/react-query";
+
+function useChatGreeting(params: LLMChatGreeterParams): boolean {
+  const { isLoading } = useQuery({
+    queryKey: ["chatGreeting"],
+    queryFn: () => llmChatGreeting(params),
+    refetchOnWindowFocus: false,
+  });
+
+  return isLoading;
+}
 
 interface ChatHook {
   streamingMessage: string | undefined;
@@ -40,15 +50,10 @@ export function useChat(): ChatHook {
     setStreamingMessage(undefined);
   };
 
-  const { isLoading } = useQuery({
-    queryKey: ["chatGreeting"],
-    queryFn: () =>
-      llmChatGreeting({
-        onStart: clearChat,
-        onMessage: onStreamingMessage,
-        onEnd: onStreamingEnd,
-      }),
-    refetchOnWindowFocus: false,
+  const isLoadingGreeting = useChatGreeting({
+    onStart: clearChat,
+    onMessage: onStreamingMessage,
+    onEnd: onStreamingEnd,
   });
 
   const mutation = useMutation({
@@ -74,7 +79,7 @@ export function useChat(): ChatHook {
 
   return {
     streamingMessage,
-    isLoadingAnswer: mutation.isPending || isLoading,
+    isLoadingAnswer: mutation.isPending || isLoadingGreeting,
     messages,
     onEnterInput,
     onStreamingMessage,

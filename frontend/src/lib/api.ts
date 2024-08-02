@@ -1,4 +1,4 @@
-import { hc } from "hono/client";
+import { ClientResponse, hc } from "hono/client";
 import { APIRoutes } from "@server/app";
 import { readerToStringIterator } from "@/utils/promise";
 import { isLLMGenerateStreamResponse } from "@server/lib/llm";
@@ -11,11 +11,62 @@ interface LLMStreamHandlerParams {
   onEnd: (fullResponse: string, context: number[]) => void;
 }
 
+/**
+ * Handles the LLM stream response and processes the data received from the server.
+ *
+ * @param response - The response object received from the server.
+ * @param params - The parameters for the LLM stream handler.
+ * @returns A promise that resolves to a boolean indicating whether the stream processing was successful.
+ * @throws An error if the response is not successful or if there is an issue with the readable stream.
+ */
+async function handleLLMStream<T, U extends number, F extends string>(
+  response: ClientResponse<T, U, F>,
+  params: LLMStreamHandlerParams
+): Promise<boolean> {
+  if (!response.ok) {
+    throw new Error("Failed to generate text.");
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("Failed to create a readable stream.");
+  }
+
+  params.onStart?.();
+
+  const buffer: string[] = [];
+  for await (const m of readerToStringIterator(reader)) {
+    const split = m.split("\n");
+    for (const s of split) {
+      if (!s) {
+        continue;
+      }
+      const parsed = JSON.parse(s);
+      if (!isLLMGenerateStreamResponse(parsed)) {
+        throw new Error("Invalid response from the server: " + s);
+      }
+
+      if (parsed.done) {
+        params.onEnd(buffer.join(""), parsed.context);
+        return true;
+      }
+
+      buffer.push(parsed.response);
+      params.onMessage(parsed.response);
+    }
+  }
+
+  return false;
+}
+
 interface LLMGenerateParams extends LLMStreamHandlerParams {
   prompt: string;
   context?: number[];
 }
 
+/**
+ * Generates a text response to the given prompt.
+ */
 export async function llmGenerate(params: LLMGenerateParams) {
   const response = await apiClient.api.llm.generate.$post({
     json: {
@@ -24,77 +75,15 @@ export async function llmGenerate(params: LLMGenerateParams) {
     },
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to generate text.");
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error("Failed to create a readable stream.");
-  }
-
-  params.onStart?.();
-
-  const buffer: string[] = [];
-  for await (const m of readerToStringIterator(reader)) {
-    const split = m.split("\n");
-    for (const s of split) {
-      if (!s) {
-        continue;
-      }
-      const parsed = JSON.parse(s);
-      if (!isLLMGenerateStreamResponse(parsed)) {
-        throw new Error("Invalid response from the server: " + s);
-      }
-
-      if (parsed.done) {
-        params.onEnd(buffer.join(""), parsed.context);
-        return true;
-      }
-
-      buffer.push(parsed.response);
-      params.onMessage(parsed.response);
-    }
-  }
-
-  return false;
+  return handleLLMStream(response, params);
 }
 
-interface LLMChatGreeterParams extends LLMStreamHandlerParams {}
+export interface LLMChatGreeterParams extends LLMStreamHandlerParams {}
 
+/**
+ * Generate a text chat greeting.
+ */
 export async function llmChatGreeting(params: LLMChatGreeterParams) {
   const response = await apiClient.api.llm.greeting.$get();
-  if (!response.ok) {
-    throw new Error("Failed to generate text.");
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error("Failed to create a readable stream.");
-  }
-
-  params.onStart?.();
-
-  const buffer: string[] = [];
-  for await (const m of readerToStringIterator(reader)) {
-    const split = m.split("\n");
-    for (const s of split) {
-      if (!s) {
-        continue;
-      }
-      const parsed = JSON.parse(s);
-      if (!isLLMGenerateStreamResponse(parsed)) {
-        throw new Error("Invalid response from the server: " + s);
-      }
-
-      if (parsed.done) {
-        params.onEnd(buffer.join(""), parsed.context);
-        return true;
-      }
-
-      buffer.push(parsed.response);
-      params.onMessage(parsed.response);
-    }
-  }
-  return false;
+  return handleLLMStream(response, params);
 }
