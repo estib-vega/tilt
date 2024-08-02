@@ -1,6 +1,6 @@
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, House, MessageSquareText } from "lucide-react";
 
-export type IconName = "arrow-up";
+export type IconName = "arrow-up" | "chat" | "home";
 
 interface IconProps {
   name: IconName;
@@ -14,6 +14,10 @@ const Icon = (props: IconProps): JSX.Element => {
   switch (name) {
     case "arrow-up":
       return <ArrowUp {...rest} />;
+    case "chat":
+      return <MessageSquareText {...rest} />;
+    case "home":
+      return <House {...rest} />;
   }
 };
 
