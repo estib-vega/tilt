@@ -29,11 +29,11 @@ const ChatInput = (props: ChatInputProps): JSX.Element => {
   };
 
   return (
-    <div className="flex gap-2 my-2 border rounded-md">
+    <div className="flex gap-2 my-2 border rounded-md focus-within:border-ring transition-colors">
       <div className="w-full">
         <Textarea
           placeholder="Type a message..."
-          className="w-full text-base min-h-20 resize-none border-none"
+          className="w-full text-base min-h-20 resize-none border-none caret-inherit text-primary"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}

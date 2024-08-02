@@ -9,12 +9,13 @@ interface ChatMessageProps extends ChatMessageInfo {
 const ChatMessage = (props: ChatMessageProps): JSX.Element => {
   const isUser = props.author === "user";
 
-  if (props.loading) return <Skeleton className="w-44 h-8 bg-slate-100" />;
+  if (props.loading)
+    return <Skeleton className="w-44 h-8 bg-muted animate-appear-up" />;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`p-2 shadow-sm rounded-md ${isUser ? "bg-primary-foreground" : "bg-secondary"}`}
+        className={`p-2 pb-0 shadow-sm shadow-border rounded-md text-primary ${isUser ? "bg-primary-foreground animate-appear-up" : "bg-secondary"}`}
       >
         <MD content={props.content} />
       </div>

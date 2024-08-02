@@ -18,6 +18,7 @@ const MD = ({ content }: MDProps): JSX.Element => {
           <p className="font-normal text-sm lg:text-md mb-2">{children}</p>
         ),
         ol: ({ children }) => <ol className="list-decimal ml-4">{children}</ol>,
+        ul: ({ children }) => <ul className="list-disc ml-4">{children}</ul>,
         li: ({ children }) => (
           <li className="font-normal text-sm lg:text-md mb-2">{children}</li>
         ),
