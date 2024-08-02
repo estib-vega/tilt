@@ -1,6 +1,7 @@
 import React from "react";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
+import Icon from "../icon/Icon";
 
 interface ChatInputProps {
   onEnterInput: (value: string) => void;
@@ -18,16 +19,25 @@ const ChatInput = (props: ChatInputProps): JSX.Element => {
   };
 
   return (
-    <div className="flex gap-2 my-2">
-      <Textarea
-        placeholder="Type a message..."
-        className="w-full resize-none"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-      />
-      <Button disabled={props.disabled} onClick={handleClick} className="bg-primary">
-        Send
-      </Button>
+    <div className="flex gap-2 my-2 border rounded-md">
+      <div className="w-full">
+        <Textarea
+          placeholder="Type a message..."
+          className="w-full text-base min-h-20 resize-none border-none"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+      </div>
+      <div className="pt-2 pr-2 flex-shrink-0">
+        <Button
+          disabled={props.disabled}
+          onClick={handleClick}
+          size="icon"
+          className="bg-primary"
+        >
+          <Icon name="arrow-up" />
+        </Button>
+      </div>
     </div>
   );
 };
