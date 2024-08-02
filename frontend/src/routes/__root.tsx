@@ -3,10 +3,10 @@ import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 
 export const Route = createRootRoute({
   component: () => (
-    <div className="w-screen h-screen fixed flex flex-col border">
-      <header className="container flex flex-col px-8 py-4 text-primary gap-1">
-        <h1 className="text-4xl font-bold">tilt</h1>
-        <nav className="flex gap-2">
+    <div className="w-screen h-dvh fixed flex flex-col border">
+      <header className="container flex sm:flex-col px-8 py-4 text-primary gap-2 sm:gap-1">
+        <h1 className="text-2xl sm:text-4xl font-bold">tilt</h1>
+        <nav className="flex items-center gap-2 text-sm">
           <Link to="/" className="[&.active]:font-bold">
             Home
           </Link>
