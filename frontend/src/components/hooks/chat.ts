@@ -1,7 +1,7 @@
 import React from "react";
-import { llmGenerate } from "@/lib/api";
+import { llmChatGreeting, llmGenerate } from "@/lib/api";
 import { ChatMessageInfo } from "@server/lib/llm";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface ChatHook {
   streamingMessage: string | undefined;
@@ -19,12 +19,10 @@ export function useChat(): ChatHook {
     string | undefined
   >(undefined);
 
-  const mutation = useMutation({
-    mutationFn: llmGenerate,
-    onSettled: () => {
-      setStreamingMessage(undefined);
-    },
-  });
+  const clearChat = () => {
+    setMessages([]);
+    setStreamingMessage(undefined);
+  };
 
   const onStreamingMessage = (message: string) => {
     setStreamingMessage((prev) => (prev ? prev + message : message));
@@ -39,7 +37,23 @@ export function useChat(): ChatHook {
         content: fullResponse,
       },
     ]);
+    setStreamingMessage(undefined);
   };
+
+  const { isLoading } = useQuery({
+    queryKey: ["chatGreeting"],
+    queryFn: () =>
+      llmChatGreeting({
+        onStart: clearChat,
+        onMessage: onStreamingMessage,
+        onEnd: onStreamingEnd,
+      }),
+    refetchOnWindowFocus: false,
+  });
+
+  const mutation = useMutation({
+    mutationFn: llmGenerate,
+  });
 
   const onEnterInput = (value: string) => {
     setMessages((prev) => [
@@ -60,7 +74,7 @@ export function useChat(): ChatHook {
 
   return {
     streamingMessage,
-    isLoadingAnswer: mutation.isPending,
+    isLoadingAnswer: mutation.isPending || isLoading,
     messages,
     onEnterInput,
     onStreamingMessage,
