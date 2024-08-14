@@ -15,7 +15,7 @@ const ChatMessage = (props: ChatMessageProps): JSX.Element => {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`p-2 pb-0 shadow-sm shadow-border rounded-md text-primary ${isUser ? "bg-primary-foreground animate-appear-up" : "bg-secondary"}`}
+        className={`p-2 shadow-sm shadow-border rounded-md text-primary ${isUser ? "bg-primary-foreground animate-appear-up" : "bg-secondary"}`}
       >
         <MD content={props.content} />
       </div>
