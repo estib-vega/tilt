@@ -57,6 +57,19 @@ export function chatGreeting() {
   });
 }
 
+export const ChatTitleRequestSchema = z.object({
+  context: z.number().array().optional(),
+});
+
+type ChatTitleRequest = z.infer<typeof ChatTitleRequestSchema>;
+
+export function chatTitle(req: ChatTitleRequest) {
+  return generate({
+    prompt: "Write a catchy title for a movie about a detective",
+    context: req.context,
+  });
+}
+
 export function isLLMGenerateStreamResponse(
   value: unknown
 ): value is LLMGenerateStreamResponse {

@@ -1,6 +1,12 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { chatGreeting, generate, GenerateRequestSchema } from "../lib/llm";
+import {
+  chatGreeting,
+  chatTitle,
+  ChatTitleRequestSchema,
+  generate,
+  GenerateRequestSchema,
+} from "../lib/llm";
 import { sendLLMStream } from "../utils/streaming";
 
 export const llmAPI = new Hono()
@@ -11,5 +17,10 @@ export const llmAPI = new Hono()
   .post("generate", zValidator("json", GenerateRequestSchema), async (c) => {
     const params = c.req.valid("json");
     const genStream = await generate(params);
+    return sendLLMStream(genStream, c);
+  })
+  .post("title", zValidator("json", ChatTitleRequestSchema), async (c) => {
+    const params = c.req.valid("json");
+    const genStream = await chatTitle(params);
     return sendLLMStream(genStream, c);
   });

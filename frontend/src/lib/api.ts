@@ -87,3 +87,20 @@ export async function llmChatGreeting(params: LLMChatGreeterParams) {
   const response = await apiClient.api.llm.greeting.$get();
   return handleLLMStream(response, params);
 }
+
+export interface LLMChatTitleParams extends LLMStreamHandlerParams {
+  context: number[];
+}
+
+/**
+ * Generate a title for the current chat.
+ */
+export async function llmChatTitle(params: LLMChatTitleParams) {
+  const response = await apiClient.api.llm.title.$post({
+    json: {
+      context: params.context,
+    },
+  });
+
+  return handleLLMStream(response, params);
+}

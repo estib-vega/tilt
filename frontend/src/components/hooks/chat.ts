@@ -1,7 +1,14 @@
 import React from "react";
-import { LLMChatGreeterParams, llmChatGreeting, llmGenerate } from "@/lib/api";
+import {
+  LLMChatGreeterParams,
+  llmChatGreeting,
+  llmChatTitle,
+  llmGenerate,
+} from "@/lib/api";
 import { ChatMessageInfo } from "@server/lib/llm";
 import { useMutation, useQuery } from "@tanstack/react-query";
+
+const TITLE_GENERATION_THRESHOLD = 2;
 
 function useChatGreeting(params: LLMChatGreeterParams): boolean {
   const { isLoading } = useQuery({
@@ -14,6 +21,8 @@ function useChatGreeting(params: LLMChatGreeterParams): boolean {
 }
 
 interface ChatHook {
+  isLoadingTitle: boolean;
+  chatTitle: string | undefined;
   streamingMessage: string | undefined;
   isLoadingAnswer: boolean;
   messages: ChatMessageInfo[];
@@ -23,6 +32,9 @@ interface ChatHook {
 }
 
 export function useChat(): ChatHook {
+  const [chatTitle, setChatTitle] = React.useState<string | undefined>(
+    undefined
+  );
   const [messages, setMessages] = React.useState<ChatMessageInfo[]>([]);
   const contextRef = React.useRef<number[] | undefined>(undefined);
   const [streamingMessage, setStreamingMessage] = React.useState<
@@ -56,33 +68,56 @@ export function useChat(): ChatHook {
     onEnd: onStreamingEnd,
   });
 
-  const mutation = useMutation({
+  const llmGenerateMutation = useMutation({
     mutationFn: llmGenerate,
   });
 
-  const onEnterInput = (value: string) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        author: "user",
-        content: value,
-      },
-    ]);
+  const llmTitleMutation = useMutation({
+    mutationFn: llmChatTitle,
+  });
 
-    mutation.mutate({
-      prompt: value,
-      context: contextRef.current,
-      onMessage: onStreamingMessage,
-      onEnd: onStreamingEnd,
+  const onEnterInput = (value: string) => {
+    setMessages((prev) => {
+      llmGenerateMutation.mutate({
+        prompt: value,
+        context: contextRef.current,
+        onMessage: onStreamingMessage,
+        onEnd: onStreamingEnd,
+      });
+
+      const newMessages: ChatMessageInfo[] = [
+        ...prev,
+        {
+          author: "user",
+          content: value,
+        },
+      ];
+
+      if (
+        newMessages.filter((m) => m.author === "user").length >=
+          TITLE_GENERATION_THRESHOLD &&
+        contextRef.current !== undefined
+      ) {
+        llmTitleMutation.mutate({
+          context: contextRef.current,
+          onMessage: (message) =>
+            setChatTitle((prev) => (prev ? prev + message : message)),
+          onEnd: (title) => setChatTitle(title),
+        });
+      }
+
+      return newMessages;
     });
   };
 
   return {
     streamingMessage,
-    isLoadingAnswer: mutation.isPending || isLoadingGreeting,
+    isLoadingAnswer: llmGenerateMutation.isPending || isLoadingGreeting,
     messages,
     onEnterInput,
     onStreamingMessage,
     onStreamingEnd,
+    chatTitle,
+    isLoadingTitle: llmTitleMutation.isPending,
   };
 }
