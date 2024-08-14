@@ -5,6 +5,27 @@ import { isLLMGenerateStreamResponse } from "@server/lib/llm";
 
 const apiClient = hc<APIRoutes>("/");
 
+// ==============================================================================
+// AUTH API
+// ==============================================================================
+
+/**
+ * Log in to the application.
+ */
+export function login() {
+  const url = "/api/auth/login";
+  window.location.href = url.toString();
+}
+
+export async function isAuthenticated() {
+  const response = await apiClient.api.auth.me.$get();
+  return response.ok;
+}
+
+// ==============================================================================
+// LLM API
+// ==============================================================================
+
 interface LLMStreamHandlerParams {
   onStart?: () => void;
   onMessage: (message: string) => void;
