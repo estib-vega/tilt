@@ -4,7 +4,9 @@
   "scripts": {
     "dev:ollama": "USE_OLLAMA=true bun run --watch server/index.ts",
     "dev": "bun run --watch server/index.ts",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "start": "bun run server/index.ts",
+    "secrets": "fly secrets import < .env.prod"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.2.2",
@@ -14,6 +16,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.5.8",
     "@types/bun": "latest",
     "eslint": "9.x",
     "globals": "^15.8.0",
