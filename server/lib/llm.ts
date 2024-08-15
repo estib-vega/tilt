@@ -1,80 +1,63 @@
 import { z } from "zod";
 import { ollamaGenerateStream } from "./ollama";
-import { isUnknownObject } from "../utils/typing";
-import { CHAT_GREETING } from "./prompts";
-
-export type ChatMessageAuthor = "user" | "bot";
-
-export interface ChatMessageInfo {
-  author: ChatMessageAuthor;
-  content: string;
-}
+import { CHAT_GREETING, CHAT_TITLE } from "./prompts";
+import { MessageRole } from "./chatStreamGeneration";
+import { useOllama } from "./environment";
+import { openAIGenerateStream } from "./openai";
 
 export enum LLMServiceProvider {
   Ollama = "ollama",
   OpenAI = "openai",
 }
 
-interface LLMGenerateStreamResponseBase {
-  done: boolean;
-}
-
-interface LLMGenerateStreamResponseOngoing
-  extends LLMGenerateStreamResponseBase {
-  done: false;
-  response: string;
-}
-
-interface LLMGenerateStreamResponseEnd extends LLMGenerateStreamResponseBase {
-  done: true;
-  context: number[];
-}
-
-export type LLMGenerateStreamResponse =
-  | LLMGenerateStreamResponseOngoing
-  | LLMGenerateStreamResponseEnd;
+const ChatMessagesSchema = z.array(
+  z.object({
+    role: z.nativeEnum(MessageRole),
+    content: z.string().min(1),
+  })
+);
 
 export const GenerateRequestSchema = z.object({
   prompt: z.string().min(1),
+  messages: ChatMessagesSchema,
   context: z.number().array().optional(),
 });
 
 type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
 
 export function generate(req: GenerateRequest) {
-  // TODO: Switch to Open AI on prod
-  return ollamaGenerateStream({
-    model: "llama3.1",
+  if (useOllama())
+    return ollamaGenerateStream({
+      model: "llama3.1",
+      prompt: req.prompt,
+      context: req.context,
+      temperature: 0.5,
+    });
+
+  return openAIGenerateStream({
+    model: "gpt-4o-mini",
     prompt: req.prompt,
-    context: req.context,
-    temperature: 0.5,
+    messages: req.messages,
   });
 }
 
 export function chatGreeting() {
   return generate({
     prompt: CHAT_GREETING,
+    messages: [],
   });
 }
 
-export const ChatTitleRequestSchema = z.object({
-  context: z.number().array().optional(),
+export const ChatTitleRequestSchema = GenerateRequestSchema.omit({
+  prompt: true,
 });
 
 type ChatTitleRequest = z.infer<typeof ChatTitleRequestSchema>;
 
 export function chatTitle(req: ChatTitleRequest) {
   return generate({
-    prompt: "Write a catchy title for a movie about a detective",
+    messages: [],
+    prompt: CHAT_TITLE,
     context: req.context,
   });
-}
-
-export function isLLMGenerateStreamResponse(
-  value: unknown
-): value is LLMGenerateStreamResponse {
-  if (!isUnknownObject(value)) {
-    return false;
-  }
-  return typeof value.response === "string" && typeof value.done === "boolean";
 }

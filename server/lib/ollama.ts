@@ -1,3 +1,5 @@
+import type { GenerateParams } from "./chatStreamGeneration";
+
 const LOCAL_HOST_ADDRESS = "http://localhost:11434";
 
 enum OllamaAPIEndpoint {
@@ -7,18 +9,13 @@ enum OllamaAPIEndpoint {
 
 type OllamaModel = "llama3.1";
 
-interface GenerateParams {
-  model: OllamaModel;
-  prompt: string;
-  context?: number[];
-  temperature?: number;
-}
+
 
 function getAPIUrl(endpoint: OllamaAPIEndpoint) {
   return `${LOCAL_HOST_ADDRESS}${endpoint}`;
 }
 
-export async function ollamaGenerateStream(params: GenerateParams) {
+export async function ollamaGenerateStream(params: GenerateParams<OllamaModel>): Promise<ReadableStream<Uint8Array>> {
   const response = await fetch(
     getAPIUrl(OllamaAPIEndpoint.Generate),
     {
