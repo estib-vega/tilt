@@ -1,6 +1,8 @@
 import { LLMGenerateStreamResponse } from "@server/lib/chatStreamGeneration";
 import { UnknownObject } from "@server/utils/typing";
 
+export type ItemOf<T> = T extends (infer U)[] ? U : never;
+
 export function isUnknownObject(value: unknown): value is UnknownObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

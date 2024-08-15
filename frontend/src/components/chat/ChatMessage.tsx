@@ -1,9 +1,10 @@
-
-import { ChatMessageInfo, MessageRole } from "@server/lib/chatStreamGeneration";
+import { MessageRole } from "@server/lib/chatStreamGeneration";
 import MD from "../md/MD";
 import { Skeleton } from "../ui/skeleton";
+import { ItemOf } from "@/utils/typing";
+import { ChatMessages } from "@server/lib/llm";
 
-interface ChatMessageProps extends ChatMessageInfo {
+interface ChatMessageProps extends ItemOf<ChatMessages> {
   loading?: boolean;
 }
 

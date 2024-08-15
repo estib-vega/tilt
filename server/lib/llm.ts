@@ -17,6 +17,8 @@ const ChatMessagesSchema = z.array(
   })
 );
 
+export type ChatMessages = z.infer<typeof ChatMessagesSchema>;
+
 export const GenerateRequestSchema = z.object({
   prompt: z.string().min(1),
   messages: ChatMessagesSchema,

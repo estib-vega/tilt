@@ -1,6 +1,7 @@
-import { ChatMessageInfo, MessageRole } from "@server/lib/chatStreamGeneration";
+import { MessageRole } from "@server/lib/chatStreamGeneration";
 import { ScrollArea } from "../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
+import { ChatMessages } from "@server/lib/llm";
 
 interface StreamingChatMessageProps {
   streamingMessage: string | undefined;
@@ -26,7 +27,7 @@ const StreamingChatMessage = (
   );
 };
 interface ChatContentProps extends StreamingChatMessageProps {
-  messages: ChatMessageInfo[];
+  messages: ChatMessages;
 }
 
 const ChatContent = (props: ChatContentProps): JSX.Element => {

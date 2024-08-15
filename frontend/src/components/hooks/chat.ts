@@ -6,7 +6,8 @@ import {
   llmGenerate,
 } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ChatMessageInfo, MessageRole } from "@server/lib/chatStreamGeneration";
+import { ChatMessages } from "@server/lib/llm";
+import { MessageRole } from "@server/lib/chatStreamGeneration";
 
 const TITLE_GENERATION_THRESHOLD = 2;
 
@@ -27,7 +28,7 @@ interface ChatHook {
   chatTitle: string | undefined;
   streamingMessage: string | undefined;
   isLoadingAnswer: boolean;
-  messages: ChatMessageInfo[];
+  messages: ChatMessages;
   onEnterInput: (value: string) => void;
   onStreamingMessage: (message: string) => void;
   onStreamingEnd: (fullResponse: string, context: number[]) => void;
@@ -37,7 +38,7 @@ export function useChat(): ChatHook {
   const [chatTitle, setChatTitle] = React.useState<string | undefined>(
     undefined
   );
-  const [messages, setMessages] = React.useState<ChatMessageInfo[]>([]);
+  const [messages, setMessages] = React.useState<ChatMessages>([]);
   const contextRef = React.useRef<number[] | undefined>(undefined);
   const [streamingMessage, setStreamingMessage] = React.useState<
     string | undefined
@@ -89,7 +90,7 @@ export function useChat(): ChatHook {
         onEnd: onStreamingEnd,
       });
 
-      const newMessages: ChatMessageInfo[] = [
+      const newMessages: ChatMessages = [
         ...prev,
         {
           role: MessageRole.User,
