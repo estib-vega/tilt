@@ -4,7 +4,7 @@
   "scripts": {
     "dev:ollama": "USE_OLLAMA=true bun run --watch server/index.ts",
     "dev": "bun run --watch server/index.ts",
-    "lint": "eslint .",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0 && bunx --bun tsc --noEmit",
     "start": "bun run server/index.ts",
     "secrets": "fly secrets import < .env.prod"
   },
