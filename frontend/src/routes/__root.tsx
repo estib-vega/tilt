@@ -1,8 +1,17 @@
 import NavIcon from "@/components/navigation/NavIcon";
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { type QueryClient } from "@tanstack/react-query";
+import {
+  createRootRouteWithContext,
+  Link,
+  Outlet,
+} from "@tanstack/react-router";
 // import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 
-export const Route = createRootRoute({
+export interface AppRouteContext {
+  queryClient: QueryClient;
+}
+
+export const Route = createRootRouteWithContext<AppRouteContext>()({
   component: () => (
     <div className="dark w-screen h-dvh fixed flex flex-col border bg-background">
       <header className="container flex sm:flex-col px-8 py-4 text-primary gap-2 sm:gap-1">
