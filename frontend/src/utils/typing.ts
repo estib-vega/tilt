@@ -5,11 +5,18 @@ export function isUnknownObject(value: unknown): value is UnknownObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+export function isNumArray(value: unknown): value is number[] {
+  return Array.isArray(value) && value.every((v) => typeof v === "number");
+}
+
 export function isLLMGenerateStreamResponse(
   value: unknown
 ): value is LLMGenerateStreamResponse {
   if (!isUnknownObject(value)) {
     return false;
   }
-  return typeof value.response === "string" && typeof value.done === "boolean";
+  return (
+    (typeof value.response === "string" || isNumArray(value.context)) &&
+    typeof value.done === "boolean"
+  );
 }
