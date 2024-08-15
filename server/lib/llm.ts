@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ollamaGenerateStream } from "./ollama";
-import { CHAT_GREETING, CHAT_TITLE } from "./prompts";
+import { CHAT_GREETING, CHAT_MESSAGE, CHAT_TITLE } from "./prompts";
 import { MessageRole } from "./chatStreamGeneration";
 import { useOllama } from "./environment";
 import { openAIGenerateStream } from "./openai";
@@ -12,7 +12,7 @@ export enum LLMServiceProvider {
 
 const ChatMessagesSchema = z.array(
   z.object({
-    role: z.nativeEnum(MessageRole),
+    role: z.enum([MessageRole.Assistant, MessageRole.User]),
     content: z.string().min(1),
   })
 );
@@ -38,6 +38,7 @@ export function generate(req: GenerateRequest) {
     model: "gpt-4o-mini",
     prompt: req.prompt,
     messages: req.messages,
+    systemMessage: CHAT_MESSAGE,
   });
 }
 

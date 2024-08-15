@@ -12,6 +12,7 @@ export interface ChatMessageInfo {
 export interface GenerateParams<ModelType extends string> {
   model: ModelType;
   prompt: string;
+  systemMessage?: string;
   context?: number[];
   messages?: ChatMessageInfo[];
   temperature?: number;

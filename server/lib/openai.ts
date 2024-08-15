@@ -5,6 +5,8 @@ import type {
 } from "./chatStreamGeneration";
 import { getOpenAIKey } from "./environment";
 
+const DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant.";
+
 const openai = new OpenAI({
   apiKey: getOpenAIKey(),
 });
@@ -28,12 +30,13 @@ function encodeResponse(response: LLMGenerateStreamResponse): Uint8Array {
 export async function openAIGenerateStream(
   params: GenerateParams<OpenAIModel>
 ): Promise<ReadableStream<Uint8Array>> {
+  const systemMessage = params.systemMessage ?? DEFAULT_SYSTEM_MESSAGE;
   const previousMessages = params.messages ?? [];
 
   const completion = await openai.chat.completions.create({
     model: params.model,
     messages: [
-      { role: "system", content: "You are a helpful assistant." },
+      { role: "system", content: systemMessage },
       ...previousMessages,
       { role: "user", content: params.prompt },
     ],
