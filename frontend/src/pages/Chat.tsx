@@ -8,7 +8,11 @@ export default function Chat() {
   return (
     <div className="h-full flex flex-col flex-grow-0 overflow-hidden">
       <div className="container flex-grow overflow-hidden">
-        <h1 className="text-2xl py-4">{chat.chatTitle}</h1>
+        {chat.chatTitle && (
+          <h1 className="textt-xl sm:text-2xl py-2 sm:py-4">
+            {chat.chatTitle}
+          </h1>
+        )}
         <ChatContent
           streamingMessage={chat.streamingMessage}
           messages={chat.messages}
