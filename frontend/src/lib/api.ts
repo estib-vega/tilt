@@ -1,7 +1,8 @@
 import { ClientResponse, hc } from "hono/client";
 import { APIRoutes } from "@server/app";
 import { readerToStringIterator } from "@/utils/promise";
-import { isLLMGenerateStreamResponse } from "@server/lib/llm";
+import { ChatMessageInfo } from "@server/lib/chatStreamGeneration";
+import { isLLMGenerateStreamResponse } from "@/utils/typing";
 
 const apiClient = hc<APIRoutes>("/");
 
@@ -82,6 +83,7 @@ async function handleLLMStream<T, U extends number, F extends string>(
 
 interface LLMGenerateParams extends LLMStreamHandlerParams {
   prompt: string;
+  chatMessages: ChatMessageInfo[];
   context?: number[];
 }
 
@@ -93,6 +95,7 @@ export async function llmGenerate(params: LLMGenerateParams) {
     json: {
       prompt: params.prompt,
       context: params.context,
+      messages: params.chatMessages,
     },
   });
 
@@ -111,6 +114,7 @@ export async function llmChatGreeting(params: LLMChatGreeterParams) {
 
 export interface LLMChatTitleParams extends LLMStreamHandlerParams {
   context: number[];
+  chatMessages: ChatMessageInfo[];
 }
 
 /**
@@ -120,6 +124,7 @@ export async function llmChatTitle(params: LLMChatTitleParams) {
   const response = await apiClient.api.llm.title.$post({
     json: {
       context: params.context,
+      messages: params.chatMessages,
     },
   });
 

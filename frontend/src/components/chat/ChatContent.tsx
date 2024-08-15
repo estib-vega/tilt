@@ -1,4 +1,4 @@
-import { ChatMessageInfo } from "@server/lib/llm";
+import { ChatMessageInfo, MessageRole } from "@server/lib/chatStreamGeneration";
 import { ScrollArea } from "../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
 
@@ -15,10 +15,15 @@ const StreamingChatMessage = (
   }
 
   if (!props.streamingMessage) {
-    return <ChatMessage author="bot" content="" loading />;
+    return <ChatMessage role={MessageRole.Assistant} content="" loading />;
   }
 
-  return <ChatMessage author="bot" content={props.streamingMessage} />;
+  return (
+    <ChatMessage
+      role={MessageRole.Assistant}
+      content={props.streamingMessage}
+    />
+  );
 };
 interface ChatContentProps extends StreamingChatMessageProps {
   messages: ChatMessageInfo[];
@@ -35,7 +40,7 @@ const ChatContent = (props: ChatContentProps): JSX.Element => {
           streamingMessage={props.streamingMessage}
           isLoadingAnswer={props.isLoadingAnswer}
         />
-        <div className="h-40"/>
+        <div className="h-40" />
       </div>
     </ScrollArea>
   );

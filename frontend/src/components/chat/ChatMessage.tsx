@@ -1,4 +1,5 @@
-import { ChatMessageInfo } from "@server/lib/llm";
+
+import { ChatMessageInfo, MessageRole } from "@server/lib/chatStreamGeneration";
 import MD from "../md/MD";
 import { Skeleton } from "../ui/skeleton";
 
@@ -7,7 +8,7 @@ interface ChatMessageProps extends ChatMessageInfo {
 }
 
 const ChatMessage = (props: ChatMessageProps): JSX.Element => {
-  const isUser = props.author === "user";
+  const isUser = props.role === MessageRole.User;
 
   if (props.loading)
     return <Skeleton className="w-44 h-8 bg-muted animate-appear-up" />;

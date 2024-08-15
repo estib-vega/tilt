@@ -5,8 +5,8 @@ import {
   llmChatTitle,
   llmGenerate,
 } from "@/lib/api";
-import { ChatMessageInfo } from "@server/lib/llm";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { ChatMessageInfo, MessageRole } from "@server/lib/chatStreamGeneration";
 
 const TITLE_GENERATION_THRESHOLD = 2;
 
@@ -15,6 +15,8 @@ function useChatGreeting(params: LLMChatGreeterParams): boolean {
     queryKey: ["chatGreeting"],
     queryFn: () => llmChatGreeting(params),
     refetchOnWindowFocus: false,
+    retry: false,
+    staleTime: Infinity,
   });
 
   return isLoading;
@@ -55,7 +57,7 @@ export function useChat(): ChatHook {
     setMessages((prev) => [
       ...prev,
       {
-        author: "bot",
+        role: MessageRole.Assistant,
         content: fullResponse,
       },
     ]);
@@ -81,6 +83,7 @@ export function useChat(): ChatHook {
       llmGenerateMutation.mutate({
         prompt: value,
         context: contextRef.current,
+        chatMessages: prev,
         onMessage: onStreamingMessage,
         onEnd: onStreamingEnd,
       });
@@ -88,18 +91,19 @@ export function useChat(): ChatHook {
       const newMessages: ChatMessageInfo[] = [
         ...prev,
         {
-          author: "user",
+          role: MessageRole.User,
           content: value,
         },
       ];
 
       if (
-        newMessages.filter((m) => m.author === "user").length >=
+        newMessages.filter((m) => m.role === MessageRole.User).length >=
           TITLE_GENERATION_THRESHOLD &&
         contextRef.current !== undefined
       ) {
         llmTitleMutation.mutate({
           context: contextRef.current,
+          chatMessages: newMessages,
           onMessage: (message) =>
             setChatTitle((prev) => (prev ? prev + message : message)),
           onEnd: (title) => setChatTitle(title),
