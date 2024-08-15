@@ -2,6 +2,7 @@
   "type": "module",
   "name": "tilt",
   "scripts": {
+    "dev:ollama": "USE_OLLAMA=true bun run --watch server/index.ts",
     "dev": "bun run --watch server/index.ts",
     "lint": "eslint ."
   },
