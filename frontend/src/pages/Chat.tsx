@@ -9,7 +9,7 @@ export default function Chat() {
     <div className="h-full flex flex-col flex-grow-0 overflow-hidden">
       <div className="container flex-grow overflow-hidden">
         {chat.chatTitle && (
-          <h1 className="textt-xl sm:text-2xl py-2 sm:py-4">
+          <h1 className="text-xl sm:text-2xl py-2 sm:py-4 text-primary">
             {chat.chatTitle}
           </h1>
         )}
