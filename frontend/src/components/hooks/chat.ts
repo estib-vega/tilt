@@ -61,6 +61,7 @@ export function useChat(): ChatHook {
         content: fullResponse,
       },
     ]);
+
     setStreamingMessage(undefined);
   };
 
@@ -99,10 +100,10 @@ export function useChat(): ChatHook {
       if (
         newMessages.filter((m) => m.role === MessageRole.User).length >=
           TITLE_GENERATION_THRESHOLD &&
-        contextRef.current !== undefined
+        !chatTitle
       ) {
         llmTitleMutation.mutate({
-          context: contextRef.current,
+          context: contextRef.current ?? [],
           chatMessages: newMessages,
           onMessage: (message) =>
             setChatTitle((prev) => (prev ? prev + message : message)),
