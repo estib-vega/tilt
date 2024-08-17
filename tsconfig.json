@@ -21,7 +21,9 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false,
+
+    "outDir": "dist"
   },
-  "include": ["server/**/*"],
+  "include": ["server/**/*"]
 }
