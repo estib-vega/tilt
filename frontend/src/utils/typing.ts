@@ -1,4 +1,4 @@
-import { LLMGenerateStreamResponse } from "@server/lib/chatStreamGeneration";
+import { LLMGenerateStreamResponse } from "@server/lib/ai/chatStreamGeneration";
 import { UnknownObject } from "@server/utils/typing";
 
 export type ItemOf<T> = T extends (infer U)[] ? U : never;

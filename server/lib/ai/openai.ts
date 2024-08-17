@@ -3,7 +3,7 @@ import type {
   GenerateParams,
   LLMGenerateStreamResponse,
 } from "./chatStreamGeneration";
-import { getOpenAIKey } from "./environment";
+import { getOpenAIKey } from "../environment";
 
 const DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant.";
 

@@ -2,7 +2,7 @@ import { ClientResponse, hc } from "hono/client";
 import { APIRoutes } from "@server/app";
 import { readerToStringIterator } from "@/utils/promise";
 import { isLLMGenerateStreamResponse } from "@/utils/typing";
-import { ChatMessages } from "@server/lib/llm";
+import { ChatMessages } from "@server/lib/ai/llm";
 
 const apiClient = hc<APIRoutes>("/");
 

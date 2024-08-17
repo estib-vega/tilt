@@ -6,8 +6,8 @@ import {
   llmGenerate,
 } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ChatMessages } from "@server/lib/llm";
-import { MessageRole } from "@server/lib/chatStreamGeneration";
+import { ChatMessages } from "@server/lib/ai/llm";
+import { MessageRole } from "@server/lib/ai/chatStreamGeneration";
 
 const TITLE_GENERATION_THRESHOLD = 2;
 

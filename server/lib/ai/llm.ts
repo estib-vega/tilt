@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ollamaGenerateStream } from "./ollama";
 import { CHAT_GREETING, CHAT_MESSAGE, CHAT_TITLE } from "./prompts";
 import { MessageRole } from "./chatStreamGeneration";
-import { useOllama } from "./environment";
+import { useOllama } from "../environment";
 import { openAIGenerateStream } from "./openai";
 
 export enum LLMServiceProvider {

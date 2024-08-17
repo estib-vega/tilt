@@ -6,7 +6,7 @@ import {
   ChatTitleRequestSchema,
   generate,
   GenerateRequestSchema,
-} from "../lib/llm";
+} from "../lib/ai/llm";
 import { sendLLMStream } from "../utils/streaming";
 
 export const llmAPI = new Hono()

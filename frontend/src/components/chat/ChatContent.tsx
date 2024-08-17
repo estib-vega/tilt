@@ -1,7 +1,7 @@
-import { MessageRole } from "@server/lib/chatStreamGeneration";
+import { MessageRole } from "@server/lib/ai/chatStreamGeneration";
 import { ScrollArea } from "../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
-import { ChatMessages } from "@server/lib/llm";
+import { ChatMessages } from "@server/lib/ai/llm";
 
 interface StreamingChatMessageProps {
   streamingMessage: string | undefined;
