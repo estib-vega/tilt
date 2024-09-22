@@ -11,3 +11,7 @@ export function useOllama(): boolean {
 export function getOpenAIKey(): string {
   return process.env.OPENAI_API_KEY || raise("OpenAI API key is not set.");
 }
+
+export function getGithubAPIKey(): string {
+  return process.env.GITHUB_API_KEY || raise("GitHub API key is not set.");
+}
