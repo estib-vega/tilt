@@ -133,6 +133,74 @@ function getGithubAPIUrl(
   }
 }
 
+const GithubCommitSchema = z.object({
+  sha: z.string(),
+  commit: z.object({
+    author: z.object({
+      name: z.string(),
+      email: z.string(),
+      date: z.string(),
+    }),
+    committer: z.object({
+      name: z.string(),
+      email: z.string(),
+      date: z.string(),
+    }),
+    message: z.string(),
+  }),
+  url: z.string(),
+  author: z.object({
+    login: z.string(),
+    url: z.string(),
+    avatar_url: z.string(),
+  }),
+  committer: z.object({
+    login: z.string(),
+    url: z.string(),
+    avatar_url: z.string(),
+  }),
+});
+
+export type GithubCommit = z.infer<typeof GithubCommitSchema>;
+
+const GithubPrSchema = z.object({
+  id: z.number(),
+  url: z.string(),
+  number: z.number(),
+  state: z.string(),
+  title: z.string(),
+  body: z.string().nullable(),
+  user: z.object({
+    login: z.string(),
+    avatar_url: z.string(),
+    url: z.string(),
+  }),
+  created_at: z.string(),
+  updated_at: z.string(),
+  head: z.object({
+    label: z.string(),
+    ref: z.string(),
+    sha: z.string(),
+    user: z.object({
+      login: z.string(),
+      avatar_url: z.string(),
+      url: z.string(),
+    }),
+  }),
+  base: z.object({
+    label: z.string(),
+    ref: z.string(),
+    sha: z.string(),
+    user: z.object({
+      login: z.string(),
+      avatar_url: z.string(),
+      url: z.string(),
+    }),
+  }),
+});
+
+export type GithubPR = z.infer<typeof GithubPrSchema>;
+
 export type GetCommitsParams = {
   /**
    * The owner of the repository.
@@ -172,35 +240,7 @@ export type GetCommitsParams = {
   page?: number;
 };
 
-const GetCommitsResponseSchema = z.array(
-  z.object({
-    sha: z.string(),
-    commit: z.object({
-      author: z.object({
-        name: z.string(),
-        email: z.string(),
-        date: z.string(),
-      }),
-      committer: z.object({
-        name: z.string(),
-        email: z.string(),
-        date: z.string(),
-      }),
-      message: z.string(),
-    }),
-    url: z.string(),
-    author: z.object({
-      login: z.string(),
-      url: z.string(),
-      avatar_url: z.string(),
-    }),
-    committer: z.object({
-      login: z.string(),
-      url: z.string(),
-      avatar_url: z.string(),
-    }),
-  })
-);
+const GetCommitsResponseSchema = z.array(GithubCommitSchema);
 
 type GetCommitsResponse = z.infer<typeof GetCommitsResponseSchema>;
 
@@ -249,43 +289,7 @@ export type GetPullsForCommitParams = {
   commit_sha: string;
 };
 
-const GetPullsForCommitResponseSchema = z.array(
-  z.object({
-    id: z.number(),
-    url: z.string(),
-    number: z.number(),
-    state: z.string(),
-    title: z.string(),
-    body: z.string().nullable(),
-    user: z.object({
-      login: z.string(),
-      avatar_url: z.string(),
-      url: z.string(),
-    }),
-    created_at: z.string(),
-    updated_at: z.string(),
-    head: z.object({
-      label: z.string(),
-      ref: z.string(),
-      sha: z.string(),
-      user: z.object({
-        login: z.string(),
-        avatar_url: z.string(),
-        url: z.string(),
-      }),
-    }),
-    base: z.object({
-      label: z.string(),
-      ref: z.string(),
-      sha: z.string(),
-      user: z.object({
-        login: z.string(),
-        avatar_url: z.string(),
-        url: z.string(),
-      }),
-    }),
-  })
-);
+const GetPullsForCommitResponseSchema = z.array(GithubPrSchema);
 
 type GetPullsForCommitResponse = z.infer<
   typeof GetPullsForCommitResponseSchema
@@ -334,25 +338,7 @@ export type GetPullCommitsParams = {
   pull_number: number;
 };
 
-const GetPullCommitsResponseSchema = z.array(
-  z.object({
-    sha: z.string(),
-    url: z.string(),
-    commit: z.object({
-      message: z.string(),
-    }),
-    author: z.object({
-      login: z.string(),
-      url: z.string(),
-      avatar_url: z.string(),
-    }),
-    committer: z.object({
-      login: z.string(),
-      url: z.string(),
-      avatar_url: z.string(),
-    }),
-  })
-);
+const GetPullCommitsResponseSchema = z.array(GithubCommitSchema);
 
 type GetPullCommitsResponse = z.infer<typeof GetPullCommitsResponseSchema>;
 
