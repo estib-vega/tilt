@@ -23,3 +23,31 @@ export function sendLLMStream(
     }
   );
 }
+
+/**
+ * Convert a reader to an async iterator that yields strings.
+ *
+ * @param reader - The reader to convert.
+ * @returns An async iterator that yields strings.
+ */
+export function readerToStringIterator(
+  reader: ReadableStreamDefaultReader<Uint8Array>
+) {
+  return {
+    [Symbol.asyncIterator]() {
+      return {
+        async next() {
+          const { done, value } = await reader.read();
+          if (done) {
+            return { done: true };
+          }
+
+          return {
+            done: false,
+            value: new TextDecoder().decode(value),
+          };
+        },
+      };
+    },
+  };
+}
