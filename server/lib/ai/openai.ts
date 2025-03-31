@@ -4,6 +4,8 @@ import type {
   LLMGenerateStreamResponse,
 } from "./chatStreamGeneration";
 import { getOpenAIKey } from "../environment";
+import { readerToStringIterator } from "../../utils/streaming";
+import { z } from "zod";
 
 const DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant.";
 
@@ -65,4 +67,36 @@ export async function openAIGenerateStream(
   });
 
   return stream;
+}
+
+const StreamResponseChunkSchema = z.object({
+  response: z.string().optional(),
+  done: z.boolean(),
+});
+
+/**
+ * Streams and prints responses from the OpenAI API.
+ *
+ * @param params - The parameters required to generate a stream from the OpenAI API.
+ * @returns A promise that resolves when the streaming and printing process is complete.
+ */
+export async function openAIPrintStream(
+  params: GenerateParams<OpenAIModel>
+): Promise<void> {
+  const stream = await openAIGenerateStream(params);
+  const reader = stream.getReader();
+
+  for await (const m of readerToStringIterator(reader)) {
+    if (!m) {
+      continue;
+    }
+    const parsed = JSON.parse(m);
+    const response = StreamResponseChunkSchema.safeParse(parsed);
+    if (response.success) {
+      process.stdout.write(response.data.response ?? "\n");
+    } else {
+      console.error("Invalid response from the server: " + m);
+    }
+  }
+  process.stdout.write("\n");
 }
