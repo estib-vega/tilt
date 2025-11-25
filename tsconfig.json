@@ -1,7 +1,7 @@
 {
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "./src/ui/**/*.ts",
+    "./src/ui/**/*.tsx",
     "eslint.config.js",
     "prettier.config.js",
     "vite.config.js"
