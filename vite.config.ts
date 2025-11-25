@@ -31,4 +31,8 @@ export default defineConfig({
   build: {
     outDir: 'dist-ui',
   },
+  server: {
+    port: 3000,
+    strictPort: true,
+  },
 })

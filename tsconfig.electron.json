@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "Node16",
@@ -9,9 +10,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "outDir": "../../dist-electron",
-    "rootDir": "."
+    "rootDir": "src/electron",
+    "outDir": "dist-electron"
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules", "../../dist-electron"]
+  "include": ["src/electron", "eslint.electron.js"]
 }
