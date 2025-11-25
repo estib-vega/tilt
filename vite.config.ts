@@ -13,13 +13,19 @@ export default defineConfig({
     tanstackRouter({
       target: 'react',
       autoCodeSplitting: true,
+      routesDirectory: fileURLToPath(
+        new URL('./src/ui/routes', import.meta.url),
+      ),
+      generatedRouteTree: fileURLToPath(
+        new URL('./src/ui/routeTree.gen.ts', import.meta.url),
+      ),
     }),
     viteReact(),
     tailwindcss(),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@': fileURLToPath(new URL('./src/ui', import.meta.url)),
     },
   },
 })
