@@ -28,4 +28,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src/ui', import.meta.url)),
     },
   },
+  build: {
+    outDir: 'dist-ui',
+  },
 })
