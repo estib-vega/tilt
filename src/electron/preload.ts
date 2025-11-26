@@ -1,9 +1,14 @@
-/* eslint-disable no-unused-vars */
+import { randomUUID } from 'crypto'
 import { contextBridge, ipcRenderer } from 'electron'
+
+interface ChatEvent {
+  id: string
+  text: string
+}
 
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object
-contextBridge.exposeInMainWorld('electron', {
+contextBridge.exposeInMainWorld('api', {
   // Example: Simple ping/pong
   ping: () => ipcRenderer.invoke('ping'),
 
@@ -19,6 +24,21 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Example: Open external link
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+
+  chatStart: (message: string) => {
+    const id = randomUUID()
+
+    ipcRenderer.send('llm:start', {
+      id,
+      prompt: message,
+    })
+
+    return id
+  },
+  onChunk: (cb: (event: ChatEvent) => void) =>
+    ipcRenderer.on('llm:chunk', (_, data) => cb(data)),
+  onEnd: (cb: (event: ChatEvent) => void) =>
+    ipcRenderer.on('llm:end', (_, data) => cb(data)),
 })
 
 // Type definitions for the exposed API
@@ -30,12 +50,9 @@ export interface ElectronAPI {
     arch: string
     version: string
   }>
-  notify: (_title: string, _body: string) => Promise<void>
+  notify: (title: string, body: string) => Promise<void>
   openExternal: (url: string) => Promise<void>
-}
-
-declare global {
-  interface Window {
-    electron: ElectronAPI
-  }
+  chatStart: (message: string) => string
+  onChunk: (cb: (event: ChatEvent) => void) => void
+  onEnd: (cb: (event: ChatEvent) => void) => void
 }

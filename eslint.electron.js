@@ -16,6 +16,7 @@ export default {
     '@typescript-eslint': ts,
   },
   rules: {
-    'no-console': 'off', // common for electron main
+    'no-console': 'off', // common for electron main,
+    'no-unused-vars': 'off', // handled by TS
   },
 }

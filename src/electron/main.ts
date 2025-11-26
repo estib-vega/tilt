@@ -1,6 +1,10 @@
 import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { chat } from './ai/chat.js'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -20,7 +24,7 @@ function createWindow(): void {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true,
+      sandbox: false,
     },
     show: false, // Don't show until ready-to-show event
   })
@@ -95,4 +99,28 @@ ipcMain.handle('show-notification', (_event, { title, body }) => {
 // Example: Open external URL
 ipcMain.handle('open-external', async (_event, url: string) => {
   await shell.openExternal(url)
+})
+
+const activeControllers = new Map() // id → abortController
+
+ipcMain.on('llm:start', async (event, { id, prompt }) => {
+  const controller = new AbortController()
+  activeControllers.set(id, controller)
+
+  const messageId = new Date().getTime().toString()
+
+  const fullResponse = await chat(
+    [{ id: messageId, role: 'user', parts: [{ type: 'text', text: prompt }] }],
+    (chunk) => {
+      event.sender.send('llm:chunk', { id, text: chunk })
+    },
+    controller.signal,
+  )
+
+  event.sender.send('llm:end', { id, text: fullResponse })
+  activeControllers.delete(id)
+})
+
+ipcMain.on('llm:cancel', (_, { id }) => {
+  activeControllers.get(id)?.abort()
 })
