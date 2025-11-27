@@ -24,7 +24,7 @@ function App() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col borderborder-red-500">
+    <div className="h-full w-full flex flex-col border border-red-500">
       <div className="border w-full h-full">
         {messages.map((message, index) => (
           <div key={index} className="p-2">
