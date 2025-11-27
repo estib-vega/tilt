@@ -1,12 +1,17 @@
 import { openai } from '@ai-sdk/openai'
-import { streamText, UIMessage, convertToModelMessages } from 'ai'
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  UIMessageChunk,
+} from 'ai'
 
 /**
  * Streams a chat response from the AI model based on the provided messages.
  */
 export async function chat(
   messages: UIMessage[],
-  onUpdate: (message: string) => void,
+  onUpdate: (chunk: UIMessageChunk) => void,
   abortSignal?: AbortSignal,
 ): Promise<string> {
   const modelMessages = convertToModelMessages(messages)
@@ -17,7 +22,9 @@ export async function chat(
     abortSignal,
   })
 
-  for await (const chunk of streamResponse.textStream) {
+  const stream = streamResponse.toUIMessageStream()
+
+  for await (const chunk of stream) {
     onUpdate(chunk)
   }
 

@@ -1,10 +1,17 @@
-import { randomUUID } from 'crypto'
-import { contextBridge, ipcRenderer } from 'electron'
+import { UIMessage, UIMessageChunk } from 'ai'
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 
-interface ChatEvent {
+export interface ChatEndEvent {
   id: string
   text: string
 }
+
+export interface ChatChunkEvent {
+  id: string
+  chunk: UIMessageChunk
+}
+
+export type CleanUpFn = () => void
 
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object
@@ -25,20 +32,27 @@ contextBridge.exposeInMainWorld('api', {
   // Example: Open external link
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
 
-  chatStart: (message: string) => {
-    const id = randomUUID()
-
+  chatStart: (id: string, messages: UIMessage[]) => {
     ipcRenderer.send('llm:start', {
       id,
-      prompt: message,
+      messages,
     })
-
-    return id
   },
-  onChunk: (cb: (event: ChatEvent) => void) =>
-    ipcRenderer.on('llm:chunk', (_, data) => cb(data)),
-  onEnd: (cb: (event: ChatEvent) => void) =>
-    ipcRenderer.on('llm:end', (_, data) => cb(data)),
+  onChatChunk: (cb: (event: ChatChunkEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: ChatChunkEvent) =>
+      cb(data)
+    ipcRenderer.on('llm:chunk', listener)
+    return () => {
+      ipcRenderer.removeListener('llm:chunk', listener)
+    }
+  },
+  onChatEnd: (cb: (event: ChatEndEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: ChatEndEvent) => cb(data)
+    ipcRenderer.on('llm:end', listener)
+    return () => {
+      ipcRenderer.removeListener('llm:end', listener)
+    }
+  },
 })
 
 // Type definitions for the exposed API
@@ -52,7 +66,7 @@ export interface ElectronAPI {
   }>
   notify: (title: string, body: string) => Promise<void>
   openExternal: (url: string) => Promise<void>
-  chatStart: (message: string) => string
-  onChunk: (cb: (event: ChatEvent) => void) => void
-  onEnd: (cb: (event: ChatEvent) => void) => void
+  chatStart: (id: string, messages: UIMessage[]) => string
+  onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn
+  onChatEnd: (cb: (event: ChatEndEvent) => void) => CleanUpFn
 }

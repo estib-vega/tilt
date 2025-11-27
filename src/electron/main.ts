@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { chat } from './ai/chat.js'
 import dotenv from 'dotenv'
+import { UIMessage } from 'ai'
 
 dotenv.config()
 
@@ -103,16 +104,17 @@ ipcMain.handle('open-external', async (_event, url: string) => {
 
 const activeControllers = new Map() // id → abortController
 
-ipcMain.on('llm:start', async (event, { id, prompt }) => {
+ipcMain.on('llm:start', async (event, { id, messages }) => {
   const controller = new AbortController()
   activeControllers.set(id, controller)
 
-  const messageId = new Date().getTime().toString()
+  // TODO: Validate types in a better way.
+  const uiMessages = messages as UIMessage[]
 
   const fullResponse = await chat(
-    [{ id: messageId, role: 'user', parts: [{ type: 'text', text: prompt }] }],
+    uiMessages,
     (chunk) => {
-      event.sender.send('llm:chunk', { id, text: chunk })
+      event.sender.send('llm:chunk', { id, chunk })
     },
     controller.signal,
   )
