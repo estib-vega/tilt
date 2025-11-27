@@ -10,6 +10,9 @@
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
   },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
   "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
   "editor.formatOnType": false,
   "editor.formatOnSave": true,
