@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { chat } from './ai/chat.js'
 import dotenv from 'dotenv'
-import { UIMessage } from 'ai'
+import { parseLLMStartParams } from './api.js'
 
 dotenv.config()
 
@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Keep a global reference of the window object to prevent garbage collection
 let mainWindow: BrowserWindow | null = null
+const activeControllers = new Map() // id → abortController
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
@@ -49,6 +50,11 @@ function createWindow(): void {
   // Handle window closed
   mainWindow.on('closed', () => {
     mainWindow = null
+    // Abort all active controllers on window close
+    activeControllers.forEach((controller) => {
+      controller.abort()
+    })
+    activeControllers.clear()
   })
 }
 
@@ -102,17 +108,13 @@ ipcMain.handle('open-external', async (_event, url: string) => {
   await shell.openExternal(url)
 })
 
-const activeControllers = new Map() // id → abortController
-
-ipcMain.on('llm:start', async (event, { id, messages }) => {
+ipcMain.on('llm:start', async (event, params) => {
+  const [id, messages] = await parseLLMStartParams(params)
   const controller = new AbortController()
   activeControllers.set(id, controller)
 
-  // TODO: Validate types in a better way.
-  const uiMessages = messages as UIMessage[]
-
   const fullResponse = await chat(
-    uiMessages,
+    messages,
     (chunk) => {
       event.sender.send('llm:chunk', { id, chunk })
     },
@@ -125,4 +127,5 @@ ipcMain.on('llm:start', async (event, { id, messages }) => {
 
 ipcMain.on('llm:cancel', (_, { id }) => {
   activeControllers.get(id)?.abort()
+  activeControllers.delete(id)
 })

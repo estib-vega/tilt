@@ -1,4 +1,4 @@
-import type { ChatChunkEvent, ChatEndEvent } from '@api/preload'
+import type { ChatChunkEvent, ChatEndEvent } from '@api/api'
 import type {
   ChatRequestOptions,
   ChatTransport,

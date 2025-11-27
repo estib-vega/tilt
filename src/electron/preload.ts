@@ -1,15 +1,6 @@
-import { UIMessage, UIMessageChunk } from 'ai'
+import { UIMessage } from 'ai'
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-
-export interface ChatEndEvent {
-  id: string
-  text: string
-}
-
-export interface ChatChunkEvent {
-  id: string
-  chunk: UIMessageChunk
-}
+import { ChatChunkEvent, ChatEndEvent } from './api'
 
 export type CleanUpFn = () => void
 
