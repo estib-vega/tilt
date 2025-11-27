@@ -36,11 +36,21 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         const cleanUpChunk = window.api.onChatChunk(onChunk)
         const cleanUpEnd = window.api.onChatEnd(onEnd)
 
+        const onAbort = () => {
+          window.api.chatInterrupt(options.chatId)
+          controller.error(new DOMException('Aborted', 'AbortError'))
+          cleanup()
+        }
+
         // Clean up
         const cleanup = () => {
           cleanUpChunk()
           cleanUpEnd()
+          options.abortSignal?.removeEventListener('abort', onAbort)
         }
+
+        // Handle abort
+        options.abortSignal?.addEventListener('abort', onAbort)
 
         // trigger backend stream
         window.api.chatStart(options.chatId, options.messages)

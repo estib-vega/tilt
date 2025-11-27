@@ -32,12 +32,20 @@ contextBridge.exposeInMainWorld('api', {
   // Example: Open external link
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
 
+  // Start a chat session
   chatStart: (id: string, messages: UIMessage[]) => {
     ipcRenderer.send('llm:start', {
       id,
       messages,
     })
   },
+
+  // Interrupt an ongoing chat session
+  chatInterrupt: (id: string) => {
+    ipcRenderer.send('llm:cancel', { id })
+  },
+
+  // Listen for chat chunks
   onChatChunk: (cb: (event: ChatChunkEvent) => void) => {
     const listener = (_event: IpcRendererEvent, data: ChatChunkEvent) =>
       cb(data)
@@ -46,6 +54,8 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.removeListener('llm:chunk', listener)
     }
   },
+
+  // Listen for chat end
   onChatEnd: (cb: (event: ChatEndEvent) => void) => {
     const listener = (_event: IpcRendererEvent, data: ChatEndEvent) => cb(data)
     ipcRenderer.on('llm:end', listener)
@@ -66,7 +76,20 @@ export interface ElectronAPI {
   }>
   notify: (title: string, body: string) => Promise<void>
   openExternal: (url: string) => Promise<void>
+  /**
+   * Starts a chat session with the given ID and messages.
+   */
   chatStart: (id: string, messages: UIMessage[]) => string
+  /**
+   * Listens for chat response chunks.
+   */
   onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn
+  /**
+   * Listens for the end of a chat session.
+   */
   onChatEnd: (cb: (event: ChatEndEvent) => void) => CleanUpFn
+  /**
+   * Interrupts an ongoing chat session with the given ID.
+   */
+  chatInterrupt: (id: string) => void
 }
