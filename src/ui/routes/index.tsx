@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import React from 'react'
 import { useChat } from '@ai-sdk/react'
 import ElectronTransport from '@/model/api/electronTransport'
+import { ChatMessage } from '@/components/ChatMessage'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -24,27 +25,13 @@ function App() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col border border-red-500">
-      <div className="border w-full h-full">
+    <div className="min-h-0 h-full w-full flex flex-col">
+      <div className="h-full w-full overflow-scroll">
         {messages.map((message, index) => (
-          <div key={index} className="p-2">
-            <strong>{message.role}:</strong>{' '}
-            {message.parts.map((part, partIndex) => (
-              <React.Fragment key={partIndex}>
-                <div>
-                  {part.type !== 'text' ? (
-                    <pre className="text-xs">
-                      {JSON.stringify(part, null, 2)}
-                    </pre>
-                  ) : null}
-                </div>
-                <span>{part.type === 'text' ? part.text : null}</span>
-              </React.Fragment>
-            ))}
-          </div>
+          <ChatMessage key={index} message={message} />
         ))}
       </div>
-      <div className="w-full p-8 flex gap-2 border">
+      <div className="w-full p-8 flex shrink-0 gap-2 border-t">
         <input
           className="w-full border p-2 rounded-sm"
           type="text"
