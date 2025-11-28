@@ -1,23 +1,19 @@
-import type { UIMessage } from 'ai'
-import type { JSX } from 'react'
-import { Message, MessageContent, MessageResponse } from './ai-elements/message'
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from './ai-elements/reasoning'
-import React from 'react'
+import type { UIMessage } from 'ai';
+import type { JSX } from 'react';
+import { Message, MessageContent, MessageResponse } from './ai-elements/message';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning';
+import React from 'react';
 
-type MessagePart = UIMessage['parts'][number]
-type MessageRole = UIMessage['role']
+type MessagePart = UIMessage['parts'][number];
+type MessageRole = UIMessage['role'];
 
 export interface ChatMessageProps {
-  isLast: boolean
-  message: UIMessage
+  isLast: boolean;
+  message: UIMessage;
 }
 
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
-  const { message, isLast } = props
+  const { message, isLast } = props;
   return (
     <ChatMessageWrapper from={message.role}>
       {message.parts.map((part, i) => (
@@ -28,67 +24,62 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
         </Message>
       ))}
     </ChatMessageWrapper>
-  )
+  );
 }
 
 interface ChatMessageWrapperProps {
-  from: MessageRole
-  children: React.ReactNode
+  from: MessageRole;
+  children: React.ReactNode;
 }
 
 function ChatMessageWrapper(props: ChatMessageWrapperProps): React.ReactNode {
-  const { from, children } = props
+  const { from, children } = props;
   switch (from) {
     case 'user':
-      return children
+      return children;
     case 'system':
-      return <Message from="system">{children}</Message>
+      return <Message from="system">{children}</Message>;
     case 'assistant':
-      return <div className="px-12">{children}</div>
+      return <div className="px-12">{children}</div>;
   }
 }
 
 interface ChatMessagePartProps {
-  isLastMessage: boolean
-  part: MessagePart
+  isLastMessage: boolean;
+  part: MessagePart;
 }
 
 function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
-  const { part, isLastMessage } = props
+  const { part, isLastMessage } = props;
 
   switch (part.type) {
     case 'text':
-      return (
-        <ChatMessageResponse
-          content={part.text}
-          streaming={part.state === 'streaming'}
-        />
-      )
+      return <ChatMessageResponse content={part.text} streaming={part.state === 'streaming'} />;
     case 'step-start':
-      return <></>
+      return <></>;
     case 'reasoning': {
-      const isStreaming = part.state === 'streaming' && isLastMessage
+      const isStreaming = part.state === 'streaming' && isLastMessage;
       return (
         <Reasoning className="w-full" isStreaming={isStreaming}>
           <ReasoningTrigger />
           <ReasoningContent>{part.text}</ReasoningContent>
         </Reasoning>
-      )
+      );
     }
 
     default:
-      return <pre className="text-xs">{JSON.stringify(part, null, 2)}</pre>
+      return <pre className="text-xs">{JSON.stringify(part, null, 2)}</pre>;
   }
 }
 
 interface ChatMessageResponseProps {
-  content: string
-  streaming: boolean
+  content: string;
+  streaming: boolean;
 }
 
 function ChatMessageResponse(props: ChatMessageResponseProps): JSX.Element {
-  const { content } = props
-  const mode = props.streaming ? 'streaming' : 'static'
+  const { content } = props;
+  const mode = props.streaming ? 'streaming' : 'static';
   return (
     <MessageResponse
       shikiTheme={['dark-plus', 'github-light']}
@@ -105,25 +96,15 @@ function ChatMessageResponse(props: ChatMessageResponseProps): JSX.Element {
           </a>
         ),
         p: ({ children }) => <p className="mb-4">{children}</p>,
-        ul: ({ children }) => (
-          <ul className="list-disc list-inside mb-4">{children}</ul>
-        ),
-        ol: ({ children }) => (
-          <ol className="list-decimal list-inside mb-4">{children}</ol>
-        ),
+        ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
         li: ({ children }) => <li className="mb-1 list-disc">{children}</li>,
-        h1: ({ children }) => (
-          <h1 className="text-2xl font-bold mb-4">{children}</h1>
-        ),
-        h2: ({ children }) => (
-          <h2 className="text-xl font-bold mb-3">{children}</h2>
-        ),
-        h3: ({ children }) => (
-          <h3 className="text-lg font-bold mb-2">{children}</h3>
-        ),
+        h1: ({ children }) => <h1 className="text-2xl font-bold mb-4">{children}</h1>,
+        h2: ({ children }) => <h2 className="text-xl font-bold mb-3">{children}</h2>,
+        h3: ({ children }) => <h3 className="text-lg font-bold mb-2">{children}</h3>,
       }}
     >
       {content}
     </MessageResponse>
-  )
+  );
 }

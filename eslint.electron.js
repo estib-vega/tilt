@@ -1,5 +1,5 @@
-import ts from '@typescript-eslint/eslint-plugin'
-import parser from '@typescript-eslint/parser'
+import ts from '@typescript-eslint/eslint-plugin';
+import parser from '@typescript-eslint/parser';
 
 export default {
   languageOptions: {
@@ -19,4 +19,4 @@ export default {
     'no-console': 'off', // common for electron main,
     'no-unused-vars': 'off', // handled by TS
   },
-}
+};

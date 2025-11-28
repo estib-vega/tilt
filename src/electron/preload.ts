@@ -1,8 +1,8 @@
-import { UIMessage } from 'ai'
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { ChatChunkEvent, ChatEndEvent } from './api'
+import { UIMessage } from 'ai';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { ChatChunkEvent, ChatEndEvent } from './api';
 
-export type CleanUpFn = () => void
+export type CleanUpFn = () => void;
 
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object
@@ -17,8 +17,7 @@ contextBridge.exposeInMainWorld('api', {
   getPlatform: () => ipcRenderer.invoke('get-platform'),
 
   // Example: Send notification to main process
-  notify: (title: string, body: string) =>
-    ipcRenderer.invoke('show-notification', { title, body }),
+  notify: (title: string, body: string) => ipcRenderer.invoke('show-notification', { title, body }),
 
   // Example: Open external link
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
@@ -28,59 +27,58 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.send('llm:start', {
       id,
       messages,
-    })
+    });
   },
 
   // Interrupt an ongoing chat session
   chatInterrupt: (id: string) => {
-    ipcRenderer.send('llm:cancel', { id })
+    ipcRenderer.send('llm:cancel', { id });
   },
 
   // Listen for chat chunks
   onChatChunk: (cb: (event: ChatChunkEvent) => void) => {
-    const listener = (_event: IpcRendererEvent, data: ChatChunkEvent) =>
-      cb(data)
-    ipcRenderer.on('llm:chunk', listener)
+    const listener = (_event: IpcRendererEvent, data: ChatChunkEvent) => cb(data);
+    ipcRenderer.on('llm:chunk', listener);
     return () => {
-      ipcRenderer.removeListener('llm:chunk', listener)
-    }
+      ipcRenderer.removeListener('llm:chunk', listener);
+    };
   },
 
   // Listen for chat end
   onChatEnd: (cb: (event: ChatEndEvent) => void) => {
-    const listener = (_event: IpcRendererEvent, data: ChatEndEvent) => cb(data)
-    ipcRenderer.on('llm:end', listener)
+    const listener = (_event: IpcRendererEvent, data: ChatEndEvent) => cb(data);
+    ipcRenderer.on('llm:end', listener);
     return () => {
-      ipcRenderer.removeListener('llm:end', listener)
-    }
+      ipcRenderer.removeListener('llm:end', listener);
+    };
   },
-})
+});
 
 // Type definitions for the exposed API
 export interface ElectronAPI {
-  ping: () => Promise<string>
-  getAppVersion: () => Promise<string>
+  ping: () => Promise<string>;
+  getAppVersion: () => Promise<string>;
   getPlatform: () => Promise<{
-    platform: string
-    arch: string
-    version: string
-  }>
-  notify: (title: string, body: string) => Promise<void>
-  openExternal: (url: string) => Promise<void>
+    platform: string;
+    arch: string;
+    version: string;
+  }>;
+  notify: (title: string, body: string) => Promise<void>;
+  openExternal: (url: string) => Promise<void>;
   /**
    * Starts a chat session with the given ID and messages.
    */
-  chatStart: (id: string, messages: UIMessage[]) => string
+  chatStart: (id: string, messages: UIMessage[]) => string;
   /**
    * Listens for chat response chunks.
    */
-  onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn
+  onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn;
   /**
    * Listens for the end of a chat session.
    */
-  onChatEnd: (cb: (event: ChatEndEvent) => void) => CleanUpFn
+  onChatEnd: (cb: (event: ChatEndEvent) => void) => CleanUpFn;
   /**
    * Interrupts an ongoing chat session with the given ID.
    */
-  chatInterrupt: (id: string) => void
+  chatInterrupt: (id: string) => void;
 }

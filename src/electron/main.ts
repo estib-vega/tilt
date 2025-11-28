@@ -1,19 +1,19 @@
-import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
-import { chat } from './ai/chat.js'
-import dotenv from 'dotenv'
-import { parseLLMStartParams } from './api.js'
+import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { chat } from './ai/chat.js';
+import dotenv from 'dotenv';
+import { parseLLMStartParams } from './api.js';
 
-dotenv.config()
+dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Keep a global reference of the window object to prevent garbage collection
-let mainWindow: BrowserWindow | null = null
-const activeControllers = new Map() // id → abortController
+let mainWindow: BrowserWindow | null = null;
+const activeControllers = new Map(); // id → abortController
 
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 function createWindow(): void {
   // Create the browser window
@@ -29,63 +29,63 @@ function createWindow(): void {
       sandbox: false,
     },
     show: false, // Don't show until ready-to-show event
-  })
+  });
 
   // Load the app
   if (isDev) {
     // In development, load from Vite dev server
-    mainWindow.loadURL('http://localhost:3000')
+    mainWindow.loadURL('http://localhost:3000');
     // Open DevTools in development
-    mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools();
   } else {
     // In production, load the built index.html
-    mainWindow.loadFile(path.join(__dirname, '../dist-ui/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../dist-ui/index.html'));
   }
 
   // Show window when ready
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.show()
-  })
+    mainWindow?.show();
+  });
 
   // Handle window closed
   mainWindow.on('closed', () => {
-    mainWindow = null
+    mainWindow = null;
     // Abort all active controllers on window close
     activeControllers.forEach((controller) => {
-      controller.abort()
-    })
-    activeControllers.clear()
-  })
+      controller.abort();
+    });
+    activeControllers.clear();
+  });
 }
 
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
-  createWindow()
+  createWindow();
 
   // On macOS, re-create window when dock icon is clicked and no windows are open
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      createWindow();
     }
-  })
-})
+  });
+});
 
 // Quit when all windows are closed, except on macOS
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});
 
 // Handle IPC messages from renderer process
 ipcMain.handle('ping', () => {
-  return 'pong'
-})
+  return 'pong';
+});
 
 // Example: Get app version
 ipcMain.handle('get-app-version', () => {
-  return app.getVersion()
-})
+  return app.getVersion();
+});
 
 // Example: Get platform info
 ipcMain.handle('get-platform', () => {
@@ -93,39 +93,39 @@ ipcMain.handle('get-platform', () => {
     platform: process.platform,
     arch: process.arch,
     version: process.version,
-  }
-})
+  };
+});
 
 // Example: Show notification
 ipcMain.handle('show-notification', (_event, { title, body }) => {
   if (Notification.isSupported()) {
-    new Notification({ title, body }).show()
+    new Notification({ title, body }).show();
   }
-})
+});
 
 // Example: Open external URL
 ipcMain.handle('open-external', async (_event, url: string) => {
-  await shell.openExternal(url)
-})
+  await shell.openExternal(url);
+});
 
 ipcMain.on('llm:start', async (event, params) => {
-  const [id, messages] = await parseLLMStartParams(params)
-  const controller = new AbortController()
-  activeControllers.set(id, controller)
+  const [id, messages] = await parseLLMStartParams(params);
+  const controller = new AbortController();
+  activeControllers.set(id, controller);
 
   const fullResponse = await chat(
     messages,
     (chunk) => {
-      event.sender.send('llm:chunk', { id, chunk })
+      event.sender.send('llm:chunk', { id, chunk });
     },
     controller.signal,
-  )
+  );
 
-  event.sender.send('llm:end', { id, text: fullResponse })
-  activeControllers.delete(id)
-})
+  event.sender.send('llm:end', { id, text: fullResponse });
+  activeControllers.delete(id);
+});
 
 ipcMain.on('llm:cancel', (_, { id }) => {
-  activeControllers.get(id)?.abort()
-  activeControllers.delete(id)
-})
+  activeControllers.get(id)?.abort();
+  activeControllers.delete(id);
+});

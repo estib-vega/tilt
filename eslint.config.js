@@ -1,5 +1,5 @@
-import js from '@eslint/js'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from '@eslint/js';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
   js.configs.recommended,
@@ -16,4 +16,4 @@ export default defineConfig([
     files: ['src/electron/**/*.ts'],
     ...(await import('./eslint.electron.js')).default,
   },
-])
+]);
