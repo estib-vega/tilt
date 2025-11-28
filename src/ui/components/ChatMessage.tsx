@@ -1,55 +1,55 @@
-import type { ReasoningUIPart, UIMessage } from 'ai'
+import type { UIMessage } from 'ai'
 import type { JSX } from 'react'
-import Markdown from './Markdown'
+import { Message, MessageContent, MessageResponse } from './ai-elements/message'
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from './ai-elements/reasoning'
 
 type MessagePart = UIMessage['parts'][number]
 
 export interface ChatMessageProps {
+  isLast: boolean
   message: UIMessage
 }
 
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
-  const { message } = props
+  const { message, isLast } = props
   return (
-    <div className="w-full p-4 border-b last:border-0">
-      <strong>{message.role}:</strong>{' '}
-      {message.parts.map((part, i) => (
-        <ChatMessagePart key={i} part={part} />
-      ))}
-    </div>
+    <Message from={message.role}>
+      <MessageContent>
+        {message.parts.map((part, i) => (
+          <ChatMessagePart key={i} part={part} isLastMessage={isLast} />
+        ))}
+      </MessageContent>
+    </Message>
   )
 }
-
 interface ChatMessagePartProps {
+  isLastMessage: boolean
   part: MessagePart
 }
 
 function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
-  const { part } = props
+  const { part, isLastMessage } = props
 
   switch (part.type) {
     case 'text':
-      console.log('Rendering markdown for part:', part.text)
-      return <Markdown text={part.text} />
+      return <MessageResponse>{part.text}</MessageResponse>
     case 'step-start':
-      return <hr className="my-4 border-dashed" />
-    case 'reasoning':
-      return <ChatMessageReasoning part={part} />
+      return <></>
+    case 'reasoning': {
+      const isStreaming = part.state === 'streaming' && isLastMessage
+      return (
+        <Reasoning className="w-full" isStreaming={isStreaming}>
+          <ReasoningTrigger />
+          <ReasoningContent>{part.text}</ReasoningContent>
+        </Reasoning>
+      )
+    }
+
     default:
       return <pre className="text-xs">{JSON.stringify(part, null, 2)}</pre>
   }
-}
-
-interface ChatMessageReasoningProps {
-  part: ReasoningUIPart
-}
-
-function ChatMessageReasoning(props: ChatMessageReasoningProps): JSX.Element {
-  const { part } = props
-  if (part.state === 'streaming') {
-    const content = part.text || 'Thinking...'
-    return <span className="text-gray-500 animate-pulse">{content}</span>
-  }
-
-  return <span className="text-gray-500">{part.text}</span>
 }
