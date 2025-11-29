@@ -39,3 +39,10 @@ export async function parseLLMStartParams(something: unknown): Promise<[string, 
   const validatedMessages = await validateUIMessages({ messages });
   return [id, validatedMessages];
 }
+
+export interface UIChat {
+  id: string;
+  title: string | null;
+  createdAt: number;
+  updatedAt: number;
+}

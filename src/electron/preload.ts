@@ -1,6 +1,6 @@
 import { UIMessage } from 'ai';
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { ChatChunkEvent, ChatEndEvent } from './api';
+import { ChatChunkEvent, ChatEndEvent, UIChat } from './api';
 
 export type CleanUpFn = () => void;
 
@@ -52,6 +52,9 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.removeListener('llm:end', listener);
     };
   },
+
+  // List all messages for a chat
+  listMessages: (chatId: string) => ipcRenderer.invoke('llm:get-messages', { chatId }),
 });
 
 // Type definitions for the exposed API
@@ -81,4 +84,12 @@ export interface ElectronAPI {
    * Interrupts an ongoing chat session with the given ID.
    */
   chatInterrupt: (id: string) => void;
+  /**
+   * Lists all messages for a given chat ID.
+   */
+  listMessages: (chatId: string) => Promise<UIMessage[]>;
+  /**
+   * Lists all chats.
+   */
+  listChats: () => Promise<UIChat[]>;
 }

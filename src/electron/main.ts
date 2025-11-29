@@ -1,9 +1,10 @@
 import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { chat } from './ai/chat.js';
+import ChatManager from './ai/chat.js';
 import dotenv from 'dotenv';
 import { parseLLMStartParams } from './api.js';
+import DB from './db/sqlite.js';
 
 dotenv.config();
 
@@ -11,7 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Keep a global reference of the window object to prevent garbage collection
 let mainWindow: BrowserWindow | null = null;
-const activeControllers = new Map(); // id → abortController
+const db = DB.getInstance(app.getPath('userData'));
+const chatManager = ChatManager.getInstance(db);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -50,11 +52,11 @@ function createWindow(): void {
   // Handle window closed
   mainWindow.on('closed', () => {
     mainWindow = null;
-    // Abort all active controllers on window close
-    activeControllers.forEach((controller) => {
-      controller.abort();
-    });
-    activeControllers.clear();
+    // Close the database connection
+    db.close();
+
+    // Destroy ChatManager instance
+    chatManager.destroy();
   });
 }
 
@@ -110,22 +112,22 @@ ipcMain.handle('open-external', async (_event, url: string) => {
 
 ipcMain.on('llm:start', async (event, params) => {
   const [id, messages] = await parseLLMStartParams(params);
-  const controller = new AbortController();
-  activeControllers.set(id, controller);
 
-  const fullResponse = await chat(
-    messages,
-    (chunk) => {
-      event.sender.send('llm:chunk', { id, chunk });
-    },
-    controller.signal,
-  );
+  const fullResponse = await chatManager.chat(id, messages, (chunk) => {
+    event.sender.send('llm:chunk', { id, chunk });
+  });
 
   event.sender.send('llm:end', { id, text: fullResponse });
-  activeControllers.delete(id);
 });
 
 ipcMain.on('llm:cancel', (_, { id }) => {
-  activeControllers.get(id)?.abort();
-  activeControllers.delete(id);
+  chatManager.stopChat(id);
+});
+
+ipcMain.handle('llm:get-messages', (_event, { chatId }) => {
+  return chatManager.getChatMessages(chatId);
+});
+
+ipcMain.handle('llm:list-chats', () => {
+  return chatManager.listChats();
 });
