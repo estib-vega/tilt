@@ -131,3 +131,11 @@ ipcMain.handle('llm:get-messages', (_event, { chatId }) => {
 ipcMain.handle('llm:list-chats', () => {
   return chatManager.listChats();
 });
+
+ipcMain.handle('llm:update-chat-title', (_event, { chatId, title }) => {
+  return chatManager.updateChatTitle(chatId, title);
+});
+
+ipcMain.handle('llm:delete-chat', (_event, { chatId }) => {
+  chatManager.deleteChat(chatId);
+});

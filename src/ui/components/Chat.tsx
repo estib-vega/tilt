@@ -46,7 +46,11 @@ export default function Chat(props: ChatProps): JSX.Element {
             />
           </PromptInputBody>
           <PromptInputFooter className="flex justify-end">
-            <PromptInputSubmit disabled={!inputValue && !status} status={status} />
+            <PromptInputSubmit
+              disabled={!inputValue && !status}
+              status={status}
+              className="cursor-pointer"
+            />
           </PromptInputFooter>
         </PromptInput>
       </div>

@@ -45,8 +45,9 @@ export default class DB {
     return this.messagesTable.get(chatId);
   }
 
-  deleteMessagesByChat(chatId: string): number {
-    return this.messagesTable.deleteMessagesByChat(chatId);
+  deleteChat(chatId: string): void {
+    this.messagesTable.deleteMessagesByChat(chatId);
+    this.chatsTable.delete(chatId);
   }
 
   listChats(): DBUIChat[] {

@@ -18,6 +18,29 @@ export default class ChatManager {
     this.activeControllers = new Map();
   }
 
+  /**
+   * Update the title of a chat in the database.
+   */
+  updateChatTitle(chatId: string, title: string): UIChat {
+    const chat = this.db.updateChatTitle(chatId, title);
+    return {
+      id: chat.id,
+      title: chat.title,
+      createdAt: chat.created_at,
+      updatedAt: chat.updated_at,
+    };
+  }
+
+  /**
+   * Delete a chat from the database.
+   */
+  deleteChat(chatId: string): void {
+    this.db.deleteChat(chatId);
+  }
+
+  /**
+   * List all chats from the database.
+   */
   listChats(): UIChat[] {
     return this.db.listChats().map(
       (dbChat): UIChat => ({

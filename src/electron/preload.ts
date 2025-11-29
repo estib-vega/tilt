@@ -1,6 +1,6 @@
 import { UIMessage } from 'ai';
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { ChatChunkEvent, ChatEndEvent, UIChat } from './api';
+import { ChatChunkEvent, ChatEndEvent, UIChat, UpdateChatTitleParams } from './api';
 
 export type CleanUpFn = () => void;
 
@@ -58,6 +58,13 @@ contextBridge.exposeInMainWorld('api', {
 
   // List all chats
   listChats: () => ipcRenderer.invoke('llm:list-chats'),
+
+  // Update chat title
+  updateChatTitle: (params: UpdateChatTitleParams) =>
+    ipcRenderer.invoke('llm:update-chat-title', params),
+
+  // Delete a chat
+  deleteChat: (chatId: string) => ipcRenderer.invoke('llm:delete-chat', { chatId }),
 });
 
 // Type definitions for the exposed API
@@ -95,4 +102,12 @@ export interface ElectronAPI {
    * Lists all chats.
    */
   listChats: () => Promise<UIChat[]>;
+  /**
+   * Updates the title of a chat.
+   */
+  updateChatTitle: (params: UpdateChatTitleParams) => Promise<UIChat>;
+  /**
+   * Deletes a chat with the given ID.
+   */
+  deleteChat: (chatId: string) => Promise<void>;
 }

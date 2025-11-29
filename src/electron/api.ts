@@ -46,3 +46,8 @@ export interface UIChat {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface UpdateChatTitleParams {
+  chatId: string;
+  title: string;
+}
