@@ -1,5 +1,5 @@
 import { useChat } from '@ai-sdk/react';
-import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import ElectronTransport from './electronTransport';
 import type { UpdateChatTitleParams } from '@api/api';
 
@@ -13,19 +13,31 @@ export function useElectronChat(chatId: string) {
   });
 }
 
-function useChatMessages(chatId: string) {
-  return useSuspenseQuery({
+export const chatMessagesQueryOptions = (chatId: string) =>
+  queryOptions({
     queryKey: ['chat-messages', chatId],
     queryFn: async () => window.api.listMessages(chatId),
-  });
-}
-
-export function useListChats() {
-  return useSuspenseQuery({
-    queryKey: ['chats'],
-    queryFn: async () => window.api.listChats(),
     retry: false,
   });
+
+function useChatMessages(chatId: string) {
+  return useSuspenseQuery(chatMessagesQueryOptions(chatId));
+}
+
+export const chatsQueryOptions = queryOptions({
+  queryKey: ['chats'],
+  queryFn: async () => window.api.listChats(),
+  retry: false,
+});
+
+export function useListChats() {
+  return useSuspenseQuery(chatsQueryOptions);
+}
+
+export async function getDefaultChatId(): Promise<string | null> {
+  const chats = await window.api.listChats();
+  if (chats.length === 0) return null;
+  return chats[0].id;
 }
 
 export function updateChatTitleMutation() {

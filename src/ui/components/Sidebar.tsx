@@ -1,21 +1,25 @@
 import { useListChats, deleteChatMutation } from '@/model/api/chat';
 import { ScrollArea } from '@radix-ui/react-scroll-area';
-import React from 'react';
+import React, { type JSX } from 'react';
 import { Button } from './ui/button';
 import { EllipsisVertical } from 'lucide-react';
 import { Popover, PopoverTrigger } from './ui/popover';
 import { PopoverContent } from '@radix-ui/react-popover';
 
-export default function Sidebar() {
+interface SideBarProps {
+  selectedChatId: string | undefined;
+}
+
+export default function Sidebar(props: SideBarProps): JSX.Element {
   return (
     <div className="min-h-0 h-full w-64">
       <ScrollArea>
         <div>
-          <h3 className="w-full px-2 text-xs">chats</h3>
+          <h3 className="w-full px-4 text-xs">chats</h3>
           <React.Suspense
             fallback={<div className="p-2 text-sm text-muted-foreground">Loading chats...</div>}
           >
-            <ChatList />
+            <ChatList selectedChatId={props.selectedChatId} />
           </React.Suspense>
         </div>
       </ScrollArea>
@@ -23,7 +27,11 @@ export default function Sidebar() {
   );
 }
 
-function ChatList() {
+interface ChatListProps {
+  selectedChatId: string | undefined;
+}
+
+function ChatList(props: ChatListProps): JSX.Element {
   const { data: chats, status, error } = useListChats();
   if (status === 'error') console.error('Error loading chats:', error);
   if (chats.length === 0) {
@@ -33,7 +41,12 @@ function ChatList() {
   return (
     <div>
       {chats.map((chat) => (
-        <ChatListItem key={chat.id} title={chat.title} id={chat.id} />
+        <ChatListItem
+          key={chat.id}
+          title={chat.title}
+          id={chat.id}
+          selected={chat.id === props.selectedChatId}
+        />
       ))}
     </div>
   );
@@ -42,20 +55,32 @@ function ChatList() {
 interface ChatListItemProps {
   id: string;
   title: string | null;
+  selected: boolean;
 }
 
 const ChatListItem = React.memo(
   function ChatListItem(props: ChatListItemProps) {
     const { title } = props;
 
+    const itemClassNames = [
+      'cursor-pointer',
+      'flex justify-between items-center w-full pl-2 rounded-md',
+      props.selected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50',
+    ].join(' ');
+
     return (
-      <div className="p-2 pl-4 flex justify-between items-center text-sm border-b last:border-0">
-        <p>{title ?? 'untitled chat'}</p>
-        <EditChatTitleButton chatId={props.id} currentTitle={title} />
+      <div className="p-2 pl-4 flex text-sm">
+        <div className={itemClassNames}>
+          <p>{title ?? 'untitled chat'}</p>
+          <EditChatTitleButton chatId={props.id} currentTitle={title} />
+        </div>
       </div>
     );
   },
-  (prevProps, nextProps) => prevProps.id === nextProps.id && prevProps.title === nextProps.title,
+  (prevProps, nextProps) =>
+    prevProps.id === nextProps.id &&
+    prevProps.title === nextProps.title &&
+    prevProps.selected === nextProps.selected,
 );
 
 interface EditChatTitleButtonProps {
