@@ -5,7 +5,8 @@
   "search.exclude": {
     "**/routeTree.gen.ts": true,
     "dist-electron/**": true,
-    "dist-ui/**": true
+    "dist-ui/**": true,
+    "node_modules/**": true
   },
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
