@@ -35,6 +35,7 @@ export default class DB {
 
   addMessageToChat(chatId: string, message: DBUIMessage, idx?: number): string {
     this.ensureChatExists(chatId);
+    this.chatsTable.chatUpdated(chatId);
     if (this.messagesTable.exists(chatId, message.id)) {
       return message.id;
     }

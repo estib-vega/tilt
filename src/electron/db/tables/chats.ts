@@ -56,6 +56,16 @@ export default class DBChats {
     return this.getById(id);
   }
 
+  chatUpdated(id: string): void {
+    const now = Date.now();
+    const stmt = this.db.prepare(`
+      UPDATE chats
+      SET updated_at = ?
+      WHERE id = ?
+    `);
+    stmt.run(now, id);
+  }
+
   delete(id: string): void {
     const stmt = this.db.prepare('DELETE FROM chats WHERE id = ?');
     stmt.run(id);
