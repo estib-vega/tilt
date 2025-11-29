@@ -10,6 +10,7 @@ export default {
     globals: {
       __dirname: 'readonly',
       process: 'readonly',
+      console: 'readonly',
     },
   },
   plugins: {
