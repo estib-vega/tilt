@@ -1,7 +1,7 @@
 import Database, { type Database as SQLiteDB } from 'better-sqlite3';
 import path from 'path';
-import DBMessages, { DBUIMessage } from './tables/messages';
-import DBChats, { DBUIChat } from './tables/chats';
+import DBMessages, { DBUIMessage } from './tables/messages.js';
+import DBChats, { DBUIChat } from './tables/chats.js';
 
 export default class DB {
   private static instance: DB | undefined;
