@@ -13,6 +13,7 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  staleTime: Infinity,
   component: () => (
     <>
       <div className="w-full h-full flex flex-col min-h-0">

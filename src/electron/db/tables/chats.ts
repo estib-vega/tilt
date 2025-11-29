@@ -3,8 +3,8 @@ import { type Database as SQLiteDB } from 'better-sqlite3';
 export type DBUIChat = {
   id: string;
   title: string | null;
-  createdAt: number;
-  updatedAt: number;
+  created_at: number;
+  updated_at: number;
 };
 
 export type DBUIChatUpdate = {
@@ -17,21 +17,21 @@ export default class DBChats {
     this.db.exec(`
     CREATE TABLE IF NOT EXISTS chats (
       id TEXT NOT NULL PRIMARY KEY,
-      title TEXT NOT NULL,
+      title TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
     `);
   }
 
-  create(chat: Omit<DBUIChat, 'createdAt' | 'updatedAt'>): DBUIChat {
+  create(chat: Omit<DBUIChat, 'created_at' | 'updated_at'>): DBUIChat {
     const now = Date.now();
     const stmt = this.db.prepare(`
       INSERT INTO chats (id, title, created_at, updated_at)
       VALUES (?, ?, ?, ?)
     `);
     stmt.run(chat.id, chat.title, now, now);
-    return { ...chat, createdAt: now, updatedAt: now };
+    return { ...chat, created_at: now, updated_at: now };
   }
 
   getById(id: string): DBUIChat | undefined {

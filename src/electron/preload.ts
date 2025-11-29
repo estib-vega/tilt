@@ -55,6 +55,9 @@ contextBridge.exposeInMainWorld('api', {
 
   // List all messages for a chat
   listMessages: (chatId: string) => ipcRenderer.invoke('llm:get-messages', { chatId }),
+
+  // List all chats
+  listChats: () => ipcRenderer.invoke('llm:list-chats'),
 });
 
 // Type definitions for the exposed API

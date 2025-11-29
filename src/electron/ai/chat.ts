@@ -1,7 +1,13 @@
 import { openai } from '@ai-sdk/openai';
 import { UIChat } from '@api/api';
 import DB from '@api/db/sqlite';
-import { streamText, UIMessage, convertToModelMessages, UIMessageChunk } from 'ai';
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  UIMessageChunk,
+  validateUIMessages,
+} from 'ai';
 
 export default class ChatManager {
   private static instance: ChatManager | undefined;
@@ -13,14 +19,21 @@ export default class ChatManager {
   }
 
   listChats(): UIChat[] {
-    return this.db.listChats();
+    return this.db.listChats().map(
+      (dbChat): UIChat => ({
+        id: dbChat.id,
+        title: dbChat.title,
+        createdAt: dbChat.created_at,
+        updatedAt: dbChat.updated_at,
+      }),
+    );
   }
 
   /**
    * Get all messages for a chat from the database.
    */
-  getChatMessages(chatId: string): UIMessage[] {
-    return this.db.getMessagesForChat(chatId).map(
+  async getChatMessages(chatId: string): Promise<UIMessage[]> {
+    const messages = this.db.getMessagesForChat(chatId).map(
       (dbMessage): UIMessage => ({
         id: dbMessage.id,
         role: dbMessage.role as UIMessage['role'],
@@ -28,6 +41,8 @@ export default class ChatManager {
         metadata: dbMessage.metadata,
       }),
     );
+
+    return await validateUIMessages({ messages });
   }
 
   /**

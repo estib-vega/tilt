@@ -29,7 +29,7 @@ export default function Chat(props: ChatProps): JSX.Element {
   const lastMessageIndex = React.useMemo(() => messages.length - 1, [messages.length]);
 
   return (
-    <div className="min-h-0 h-full w-full flex flex-col">
+    <div className="min-h-0 h-full w-full flex flex-col border-l border-t rounded-tl-md">
       <Conversation>
         <ConversationContent>
           {messages.map((message, index) => (
@@ -37,7 +37,7 @@ export default function Chat(props: ChatProps): JSX.Element {
           ))}
         </ConversationContent>
       </Conversation>
-      <div className="w-full p-8 flex shrink-0 gap-2 border-t">
+      <div className="w-full p-4 flex shrink-0 gap-2 border-t">
         <PromptInput onSubmit={handleSend}>
           <PromptInputBody>
             <PromptInputTextarea

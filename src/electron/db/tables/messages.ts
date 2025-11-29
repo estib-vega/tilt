@@ -31,6 +31,16 @@ export default class DBMessages {
     `);
   }
 
+  exists(chatId: string, messageId: string): boolean {
+    const row = this.db
+      .prepare<
+        [string, string],
+        { count: number }
+      >('SELECT COUNT(1) as count FROM messages WHERE chat_id = ? AND id = ?')
+      .get(chatId, messageId);
+    return (row?.count ?? 0) > 0;
+  }
+
   add(chatId: string, message: DBUIMessage, idx?: number): string {
     const id = message.id;
     const createdAt = Date.now();
@@ -47,8 +57,8 @@ export default class DBMessages {
     }
 
     const stmt = this.db.prepare(`
-    INSERT INTO messages (id, chat_id, role, name, content, metadata, created_at, idx)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO messages (id, chat_id, role, parts, metadata, created_at, idx)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
     stmt.run(
       id,
