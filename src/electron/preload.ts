@@ -65,6 +65,9 @@ contextBridge.exposeInMainWorld('api', {
 
   // Delete a chat
   deleteChat: (chatId: string) => ipcRenderer.invoke('llm:delete-chat', { chatId }),
+
+  // Create a new chat
+  createChat: () => ipcRenderer.invoke('llm:create-chat'),
 });
 
 // Type definitions for the exposed API
@@ -110,4 +113,8 @@ export interface ElectronAPI {
    * Deletes a chat with the given ID.
    */
   deleteChat: (chatId: string) => Promise<void>;
+  /**
+   * Creates a new chat and returns its ID.
+   */
+  createChat: () => Promise<string>;
 }

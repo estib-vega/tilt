@@ -32,6 +32,13 @@ export default class ChatManager {
   }
 
   /**
+   * Create a new chat in the database.
+   */
+  createChat(): string {
+    return this.db.createChat();
+  }
+
+  /**
    * Delete a chat from the database.
    */
   deleteChat(chatId: string): void {

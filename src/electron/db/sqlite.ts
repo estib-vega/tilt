@@ -48,6 +48,12 @@ export default class DB {
     return this.messagesTable.get(chatId);
   }
 
+  createChat(): string {
+    const chatId = randomUUID();
+    this.chatsTable.create({ id: chatId, title: null });
+    return chatId;
+  }
+
   deleteChat(chatId: string): void {
     this.messagesTable.deleteMessagesByChat(chatId);
     this.chatsTable.delete(chatId);

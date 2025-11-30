@@ -139,3 +139,7 @@ ipcMain.handle('llm:update-chat-title', (_event, { chatId, title }) => {
 ipcMain.handle('llm:delete-chat', (_event, { chatId }) => {
   chatManager.deleteChat(chatId);
 });
+
+ipcMain.handle('llm:create-chat', () => {
+  return chatManager.createChat();
+});

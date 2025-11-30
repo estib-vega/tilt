@@ -51,13 +51,26 @@ export function updateChatTitleMutation() {
   });
 }
 
+export function createChatMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => window.api.createChat(),
+    onSuccess: (newChatId) => {
+      // Invalidate chats query to refetch updated data
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+      return newChatId;
+    },
+  });
+}
+
 export function deleteChatMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (chatId: string) => window.api.deleteChat(chatId),
-    onSuccess: () => {
+    onSuccess: (_, chatId) => {
       // Invalidate chats query to refetch updated data
       queryClient.invalidateQueries({ queryKey: ['chats'] });
+      queryClient.invalidateQueries({ queryKey: ['chat-messages', chatId] });
     },
   });
 }
