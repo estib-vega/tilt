@@ -2,9 +2,10 @@ import { useListChats, deleteChatMutation } from '@/model/api/chat';
 import { ScrollArea } from '@radix-ui/react-scroll-area';
 import React, { type JSX } from 'react';
 import { Button } from './ui/button';
-import { EllipsisVertical } from 'lucide-react';
+import { EllipsisVertical, Plus } from 'lucide-react';
 import { Popover, PopoverTrigger } from './ui/popover';
 import { PopoverContent } from '@radix-ui/react-popover';
+import { Link } from '@tanstack/react-router';
 
 interface SideBarProps {
   selectedChatId: string | undefined;
@@ -39,7 +40,8 @@ function ChatList(props: ChatListProps): JSX.Element {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-2 py-2">
+      <NewChatButton />
       {chats.map((chat) => (
         <ChatListItem
           key={chat.id}
@@ -69,12 +71,14 @@ const ChatListItem = React.memo(
     ].join(' ');
 
     return (
-      <div className="p-2 pl-4 flex text-sm">
-        <div className={itemClassNames}>
-          <p>{title ?? 'untitled chat'}</p>
-          <EditChatTitleButton chatId={props.id} currentTitle={title} />
+      <Link to="/chat" search={{ chatId: props.id }} className="block w-full">
+        <div className="px-4 flex text-sm">
+          <div className={itemClassNames}>
+            <p>{title ?? 'untitled chat'}</p>
+            <EditChatTitleButton chatId={props.id} currentTitle={title} />
+          </div>
         </div>
-      </div>
+      </Link>
     );
   },
   (prevProps, nextProps) =>
@@ -86,6 +90,19 @@ const ChatListItem = React.memo(
 interface EditChatTitleButtonProps {
   chatId: string;
   currentTitle: string | null;
+}
+
+function NewChatButton() {
+  return (
+    <Link to="/chat" search={{}}>
+      <div className="px-4 flex text-sm">
+        <div className="cursor-pointer flex justify-between items-center w-full px-2 py-1 rounded-md border box-border hover:bg-primary hover:text-primary-foreground transition-colors">
+          <p>new chat</p>
+          <Plus />
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 function EditChatTitleButton(props: EditChatTitleButtonProps) {

@@ -65,6 +65,11 @@ export default class ChatManager {
       }),
     );
 
+    if (messages.length === 0) {
+      // skip validation if there are no messages
+      return messages;
+    }
+
     return await validateUIMessages({ messages });
   }
 

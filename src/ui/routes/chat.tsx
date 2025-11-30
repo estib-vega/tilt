@@ -1,6 +1,6 @@
-import Chat from '@/components/Chat';
+import Chat, { ChatSkeleton } from '@/components/Chat';
 import Sidebar from '@/components/SideBar';
-import { chatMessagesQueryOptions, chatsQueryOptions } from '@/model/api/chat';
+import { chatsQueryOptions } from '@/model/api/chat';
 import { createFileRoute } from '@tanstack/react-router';
 import React from 'react';
 import { z } from 'zod';
@@ -11,11 +11,8 @@ const chatSearchSchema = z.object({
 
 export const Route = createFileRoute('/chat')({
   loaderDeps: ({ search: { chatId } }) => ({ chatId }),
-  loader: ({ context: { queryClient }, deps: { chatId } }) => {
+  loader: ({ context: { queryClient } }) => {
     queryClient.ensureQueryData(chatsQueryOptions);
-    if (chatId) {
-      queryClient.ensureQueryData(chatMessagesQueryOptions(chatId));
-    }
   },
   validateSearch: chatSearchSchema,
   component: ChatPage,
@@ -26,10 +23,8 @@ function ChatPage() {
   return (
     <div className="min-h-0 h-full w-full flex">
       <Sidebar selectedChatId={chatId} />
-      <React.Suspense
-        fallback={<div className="flex-1 flex items-center justify-center">Loading chat...</div>}
-      >
-        <Chat chatId={chatId ?? 'default-chat'} />
+      <React.Suspense fallback={<ChatSkeleton />}>
+        <Chat chatId={chatId} />
       </React.Suspense>
     </div>
   );
