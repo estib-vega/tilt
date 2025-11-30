@@ -1,11 +1,18 @@
-import { useListChats, deleteChatMutation } from '@/model/api/chat';
+import {
+  useListChats,
+  deleteChatMutation,
+  createChatMutation,
+  getDefaultChatId,
+} from '@/model/api/chat';
 import { ScrollArea } from '@radix-ui/react-scroll-area';
 import React, { type JSX } from 'react';
 import { Button } from './ui/button';
 import { EllipsisVertical, Plus } from 'lucide-react';
 import { Popover, PopoverTrigger } from './ui/popover';
 import { PopoverContent } from '@radix-ui/react-popover';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { Shimmer } from './ai-elements/shimmer';
+import { Flipper, Flipped } from 'react-flip-toolkit';
 
 interface SideBarProps {
   selectedChatId: string | undefined;
@@ -39,17 +46,25 @@ function ChatList(props: ChatListProps): JSX.Element {
     return <div className="p-2 text-sm text-muted-foreground">No chats yet.</div>;
   }
 
+  const chatsKey = React.useMemo(() => chats.map((chat) => chat.id).join(','), [chats]);
+
   return (
     <div className="flex flex-col gap-2 py-2">
       <NewChatButton />
-      {chats.map((chat) => (
-        <ChatListItem
-          key={chat.id}
-          title={chat.title}
-          id={chat.id}
-          selected={chat.id === props.selectedChatId}
-        />
-      ))}
+      <Flipper flipKey={chatsKey}>
+        {chats.map((chat) => (
+          <Flipped key={chat.id} flipId={chat.id}>
+            {(flippedProps) => (
+              <ChatListItem
+                flippedProps={flippedProps}
+                title={chat.title}
+                id={chat.id}
+                selected={chat.id === props.selectedChatId}
+              />
+            )}
+          </Flipped>
+        ))}
+      </Flipper>
     </div>
   );
 }
@@ -58,6 +73,7 @@ interface ChatListItemProps {
   id: string;
   title: string | null;
   selected: boolean;
+  flippedProps: object;
 }
 
 const ChatListItem = React.memo(
@@ -71,14 +87,16 @@ const ChatListItem = React.memo(
     ].join(' ');
 
     return (
-      <Link to="/chat" search={{ chatId: props.id }} className="block w-full">
-        <div className="px-4 flex text-sm">
-          <div className={itemClassNames}>
-            <p>{title ?? 'untitled chat'}</p>
-            <EditChatTitleButton chatId={props.id} currentTitle={title} />
+      <div {...props.flippedProps}>
+        <Link to="/chat" search={{ chatId: props.id }} className="block w-full">
+          <div className="px-4 flex text-sm">
+            <div className={itemClassNames}>
+              <p>{title ?? 'untitled chat'}</p>
+              <EditChatTitleButton chatId={props.id} currentTitle={title} />
+            </div>
           </div>
-        </div>
-      </Link>
+        </Link>
+      </div>
     );
   },
   (prevProps, nextProps) =>
@@ -93,21 +111,39 @@ interface EditChatTitleButtonProps {
 }
 
 function NewChatButton() {
+  const createChat = createChatMutation();
+  const navigate = useNavigate();
+
+  const handleCreateChat = async () => {
+    const chatId = await createChat.mutateAsync();
+    navigate({ to: '/chat', search: { chatId } });
+  };
+
   return (
-    <Link to="/chat" search={{}}>
-      <div className="px-4 flex text-sm">
-        <div className="cursor-pointer flex justify-between items-center w-full px-2 py-1 rounded-md border box-border hover:bg-primary hover:text-primary-foreground transition-colors">
-          <p>new chat</p>
-          <Plus />
-        </div>
-      </div>
-    </Link>
+    <div className="px-4 flex text-sm">
+      <Button
+        variant="default"
+        className="cursor-pointer flex justify-between items-center w-full px-2 py-1 rounded-md"
+        onClick={handleCreateChat}
+        disabled={createChat.isPending}
+      >
+        {createChat.isPending ? (
+          <Shimmer>creating...</Shimmer>
+        ) : (
+          <React.Fragment>
+            <p>new chat</p>
+            <Plus />
+          </React.Fragment>
+        )}
+      </Button>
+    </div>
   );
 }
 
 function EditChatTitleButton(props: EditChatTitleButtonProps) {
   const { chatId } = props;
   const [popoverOpen, setPopoverOpen] = React.useState(false);
+  const navigate = useNavigate();
   const deleteChat = deleteChatMutation();
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -116,7 +152,9 @@ function EditChatTitleButton(props: EditChatTitleButtonProps) {
 
   const handleDeleteChat = async () => {
     await deleteChat.mutateAsync(chatId);
+    const nextChat = await getDefaultChatId([chatId]);
     setPopoverOpen(false);
+    navigate({ to: '/chat', search: nextChat ? { chatId: nextChat } : {} });
   };
 
   return (

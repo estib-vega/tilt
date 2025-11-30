@@ -4,12 +4,20 @@ import ElectronTransport from './electronTransport';
 import type { UpdateChatTitleParams } from '@api/api';
 
 export function useElectronChat(chatId: string) {
+  const queryClient = useQueryClient();
   const { data: messages } = useChatMessages(chatId);
 
   return useChat({
     id: chatId,
     transport: new ElectronTransport(),
     messages,
+    onFinish: () => {
+      // Invalidate the chats list to reflect the latest order
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+      // Maybe we should also invalidate the messages?
+      // We don't strictly need it since the stream already has the latest messages.
+      // And we don't want to to unnecessary reads from the DB.
+    },
   });
 }
 
@@ -34,8 +42,10 @@ export function useListChats() {
   return useSuspenseQuery(chatsQueryOptions);
 }
 
-export async function getDefaultChatId(): Promise<string | null> {
-  const chats = await window.api.listChats();
+export async function getDefaultChatId(filterOut?: string[]): Promise<string | null> {
+  const chats = await window.api
+    .listChats()
+    .then((chats) => (filterOut ? chats.filter((chat) => !filterOut.includes(chat.id)) : chats));
   if (chats.length === 0) return null;
   return chats[0].id;
 }
