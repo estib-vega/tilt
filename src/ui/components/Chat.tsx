@@ -10,14 +10,43 @@ import {
 } from './ai-elements/prompt-input';
 import { Conversation, ConversationContent } from './ai-elements/conversation';
 import { ChatMessage } from './ChatMessage';
+import type { ChatStatus } from 'ai';
+import NewChatButton from './NewChatButton';
 
 export interface ChatProps {
   chatId: string | undefined;
 }
 
 export default function Chat(props: ChatProps): JSX.Element {
+  if (props.chatId) {
+    return (
+      <React.Suspense fallback={<ChatSkeleton />}>
+        <InitializedChat chatId={props.chatId} />
+      </React.Suspense>
+    );
+  }
+
+  return <NewChat />;
+}
+
+function NewChat(): JSX.Element {
+  return (
+    <div className="min-h-0 h-full w-full flex justify-center items-center border-l border-t rounded-tl-md">
+      <div className="w-full flex flex-col items-center justify-start gap-2">
+        <NewChatButton label="start a new chat" />
+        <p className="text-sm text-muted-foreground">i mean, that's the whole point</p>
+      </div>
+    </div>
+  );
+}
+
+interface InitializedChatProps {
+  chatId: string;
+}
+
+function InitializedChat(props: InitializedChatProps): JSX.Element {
   const { chatId } = props;
-  const { messages, sendMessage, status, stop } = useElectronChat(chatId ?? 'default-chat-2');
+  const { messages, sendMessage, status, stop } = useElectronChat(chatId);
   const [inputValue, setInputValue] = React.useState('');
 
   const handleSend = (message: PromptInputMessage) => {
@@ -38,29 +67,48 @@ export default function Chat(props: ChatProps): JSX.Element {
         </ConversationContent>
       </Conversation>
       <div className="w-full p-4 flex shrink-0 gap-2 border-t">
-        <PromptInput onSubmit={handleSend} onAbort={stop}>
-          <PromptInputBody>
-            <PromptInputTextarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
-          </PromptInputBody>
-          <PromptInputFooter className="flex justify-end">
-            <PromptInputSubmit
-              disabled={!inputValue && !status}
-              status={status}
-              className="cursor-pointer"
-            />
-          </PromptInputFooter>
-        </PromptInput>
+        <ChatInput
+          handleSend={handleSend}
+          stop={stop}
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          status={status}
+        />
       </div>
     </div>
   );
 }
+
+interface ChatInputProps {
+  handleSend: (message: PromptInputMessage) => void;
+  stop: () => Promise<void>;
+  inputValue: string;
+  setInputValue: React.Dispatch<React.SetStateAction<string>>;
+  status: ChatStatus;
+}
+
+function ChatInput(props: ChatInputProps): JSX.Element {
+  const { handleSend, stop, inputValue, setInputValue, status } = props;
+  return (
+    <PromptInput onSubmit={handleSend} onAbort={stop}>
+      <PromptInputBody>
+        <PromptInputTextarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+      </PromptInputBody>
+      <PromptInputFooter className="flex justify-end">
+        <PromptInputSubmit
+          disabled={!inputValue && !status}
+          status={status}
+          className="cursor-pointer"
+        />
+      </PromptInputFooter>
+    </PromptInput>
+  );
+}
+
 /**
  * Skeleton component displayed while the Chat component is loading.
  */
-export function ChatSkeleton() {
+function ChatSkeleton() {
   return (
     <div className="min-h-0 h-full w-full flex flex-col border-l border-t rounded-tl-md">
       <div className="flex-1 p-4 overflow-y-auto space-y-4">

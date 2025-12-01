@@ -1,18 +1,13 @@
-import {
-  useListChats,
-  deleteChatMutation,
-  createChatMutation,
-  getDefaultChatId,
-} from '@/model/api/chat';
+import { useListChats, deleteChatMutation, getDefaultChatId } from '@/model/api/chat';
 import { ScrollArea } from '@radix-ui/react-scroll-area';
 import React, { type JSX } from 'react';
 import { Button } from './ui/button';
-import { EllipsisVertical, Plus } from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 import { Popover, PopoverTrigger } from './ui/popover';
 import { PopoverContent } from '@radix-ui/react-popover';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Shimmer } from './ai-elements/shimmer';
 import { Flipper, Flipped } from 'react-flip-toolkit';
+import NewChatButton from './NewChatButton';
 
 interface SideBarProps {
   selectedChatId: string | undefined;
@@ -25,7 +20,7 @@ export default function Sidebar(props: SideBarProps): JSX.Element {
         <div>
           <h3 className="w-full px-4 text-xs">chats</h3>
           <React.Suspense
-            fallback={<div className="p-2 text-sm text-muted-foreground">Loading chats...</div>}
+            fallback={<div className="p-2 text-sm text-muted-foreground">loading chats...</div>}
           >
             <ChatList selectedChatId={props.selectedChatId} />
           </React.Suspense>
@@ -41,12 +36,12 @@ interface ChatListProps {
 
 function ChatList(props: ChatListProps): JSX.Element {
   const { data: chats, status, error } = useListChats();
+  const chatsKey = React.useMemo(() => chats.map((chat) => chat.id).join(','), [chats]);
+
   if (status === 'error') console.error('Error loading chats:', error);
   if (chats.length === 0) {
-    return <div className="p-2 text-sm text-muted-foreground">No chats yet.</div>;
+    return <div className="p-2 px-4 text-sm text-muted-foreground">no chats yet.</div>;
   }
-
-  const chatsKey = React.useMemo(() => chats.map((chat) => chat.id).join(','), [chats]);
 
   return (
     <div className="flex flex-col gap-2 py-2">
@@ -108,36 +103,6 @@ const ChatListItem = React.memo(
 interface EditChatTitleButtonProps {
   chatId: string;
   currentTitle: string | null;
-}
-
-function NewChatButton() {
-  const createChat = createChatMutation();
-  const navigate = useNavigate();
-
-  const handleCreateChat = async () => {
-    const chatId = await createChat.mutateAsync();
-    navigate({ to: '/chat', search: { chatId } });
-  };
-
-  return (
-    <div className="px-4 flex text-sm">
-      <Button
-        variant="default"
-        className="cursor-pointer flex justify-between items-center w-full px-2 py-1 rounded-md"
-        onClick={handleCreateChat}
-        disabled={createChat.isPending}
-      >
-        {createChat.isPending ? (
-          <Shimmer>creating...</Shimmer>
-        ) : (
-          <React.Fragment>
-            <p>new chat</p>
-            <Plus />
-          </React.Fragment>
-        )}
-      </Button>
-    </div>
-  );
 }
 
 function EditChatTitleButton(props: EditChatTitleButtonProps) {
