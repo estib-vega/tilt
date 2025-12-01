@@ -1,4 +1,3 @@
-import { openai } from '@ai-sdk/openai';
 import { UIChat, UIChatTitleUpdateEvent } from '@api/api';
 import DB from '@api/db/sqlite';
 import {
@@ -9,6 +8,7 @@ import {
   validateUIMessages,
   generateText,
 } from 'ai';
+import { getOllama } from './model.js';
 
 type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
 
@@ -118,7 +118,7 @@ export default class ChatManager {
     });
 
     const streamResponse = streamText({
-      model: openai('gpt-5-mini'),
+      model: getOllama(),
       messages: modelMessages,
       abortSignal,
     });
@@ -168,7 +168,7 @@ Answer with only the title, without any additional text.
 `;
 
     const title = await generateText({
-      model: openai('gpt-5-mini'),
+      model: getOllama(),
       prompt,
     });
 

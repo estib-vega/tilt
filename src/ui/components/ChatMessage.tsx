@@ -59,10 +59,14 @@ function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
       return <></>;
     case 'reasoning': {
       const isStreaming = part.state === 'streaming' && isLastMessage;
+      const splitTextLines = part.text.split('\n');
+      const line = splitTextLines.at(splitTextLines.length - 1) || '...';
+      const label = line.length >= 50 ? '...' + line.slice(-47) : line;
+
       return (
         <Reasoning className="w-full" isStreaming={isStreaming}>
           <ReasoningTrigger />
-          <ReasoningContent>{part.text}</ReasoningContent>
+          <ReasoningContent>{label}</ReasoningContent>
         </Reasoning>
       );
     }
