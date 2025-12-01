@@ -17,7 +17,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: () => (
     <>
       <div className="w-full h-full flex flex-col min-h-0">
-        <div className="h-12">{/*  account for the title bar*/}</div>
+        <div className="h-12 select-none [-webkit-app-region:drag]">
+          {/*  account for the title bar*/}
+        </div>
         <Header />
         <Outlet />
       </div>
