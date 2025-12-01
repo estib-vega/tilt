@@ -30,6 +30,8 @@ function createWindow(): void {
       contextIsolation: true,
       sandbox: false,
     },
+    titleBarStyle: 'hiddenInset',
+    titleBarOverlay: { color: '#ffffff', symbolColor: '#333', height: 28 },
     show: false, // Don't show until ready-to-show event
   });
 
