@@ -15,7 +15,7 @@ interface SideBarProps {
 
 export default function Sidebar(props: SideBarProps): JSX.Element {
   return (
-    <div className="min-h-0 h-full w-64">
+    <div className="min-h-0 h-full w-64 shrink-0">
       <ScrollArea>
         <div>
           <h3 className="w-full px-4 text-xs">chats</h3>
@@ -36,7 +36,10 @@ interface ChatListProps {
 
 function ChatList(props: ChatListProps): JSX.Element {
   const { data: chats, status, error } = useListChats();
-  const chatsKey = React.useMemo(() => chats.map((chat) => chat.id).join(','), [chats]);
+  const chatsKey = React.useMemo(
+    () => chats.map((chat) => chat.id + (chat.title ?? '-')).join(','),
+    [chats],
+  );
 
   if (status === 'error') console.error('Error loading chats:', error);
   if (chats.length === 0) {
@@ -86,7 +89,9 @@ const ChatListItem = React.memo(
         <Link to="/chat" search={{ chatId: props.id }} className="block w-full">
           <div className="px-4 flex text-sm">
             <div className={itemClassNames}>
-              <p>{title ?? 'untitled chat'}</p>
+              <p title={title ?? undefined} className="text-ellipsis text-nowrap overflow-hidden">
+                {title ?? 'untitled chat'}
+              </p>
               <EditChatTitleButton chatId={props.id} currentTitle={title} />
             </div>
           </div>

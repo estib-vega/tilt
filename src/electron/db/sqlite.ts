@@ -63,6 +63,10 @@ export default class DB {
     return this.chatsTable.getAll();
   }
 
+  getChat(chatId: string): DBUIChat | undefined {
+    return this.chatsTable.getById(chatId);
+  }
+
   updateChatTitle(chatId: string, title: string): DBUIChat {
     const chat = this.chatsTable.update(chatId, { title });
     if (!chat) {

@@ -7,6 +7,7 @@ import {
   convertToModelMessages,
   UIMessageChunk,
   validateUIMessages,
+  generateText,
 } from 'ai';
 
 type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
@@ -112,6 +113,10 @@ export default class ChatManager {
       this.db.addMessageToChat(chatId, lastMessage, lastIdx);
     }
 
+    this.ensureChatHasTitle(chatId, messages[0]).catch((err) => {
+      console.error('Chat: Failed to ensure chat has title:', err);
+    });
+
     const streamResponse = streamText({
       model: openai('gpt-5-mini'),
       messages: modelMessages,
@@ -129,6 +134,45 @@ export default class ChatManager {
     }
 
     return streamResponse.text;
+  }
+
+  private async ensureChatHasTitle(chatId: string, firstMessage: UIMessage) {
+    const chat = this.db.getChat(chatId);
+
+    if (!chat) {
+      throw new Error(`Chat with id ${chatId} does not exist`);
+    }
+
+    if (chat.title && chat.title.trim().length > 0) {
+      return;
+    }
+
+    // Generate a title based on the first user message
+    if (firstMessage.role !== 'user') {
+      return;
+    }
+
+    const textParts = firstMessage.parts
+      .filter((part) => part.type === 'text')
+      .map((part) => part.text);
+    const messageText = textParts.join(' ').slice(0, 1000); // Limit to first 1000 characters
+
+    const prompt = `
+Please, take a look at the following message from a user and generate a concise and descriptive title for the chat.
+The title should be no longer than 5 words and should summarize the main topic or question posed by the user.
+Answer with only the title, without any additional text.
+
+<user-message>
+  ${messageText}
+</user-message>
+`;
+
+    const title = await generateText({
+      model: openai('gpt-5-mini'),
+      prompt,
+    });
+
+    this.updateChatTitle(chatId, title.text);
   }
 
   /**
