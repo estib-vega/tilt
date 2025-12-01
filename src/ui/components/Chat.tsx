@@ -3,6 +3,7 @@ import React, { type JSX } from 'react';
 import {
   PromptInput,
   PromptInputBody,
+  PromptInputButton,
   PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
@@ -12,6 +13,7 @@ import { Conversation, ConversationContent } from './ai-elements/conversation';
 import { ChatMessage } from './ChatMessage';
 import type { ChatStatus } from 'ai';
 import NewChatButton from './NewChatButton';
+import { GlobeIcon } from 'lucide-react';
 
 export interface ChatProps {
   chatId: string | undefined;
@@ -48,19 +50,20 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
   const { chatId } = props;
   const { messages, sendMessage, status, stop } = useElectronChat(chatId);
   const [inputValue, setInputValue] = React.useState('');
+  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
 
   const handleSend = (message: PromptInputMessage) => {
     if (message.text.trim() === '') return;
-    sendMessage({ role: 'user', parts: [{ type: 'text', text: message.text }] });
+    sendMessage({ role: 'user', parts: [{ type: 'text', text: message.text }] }, useWebSearch);
     setInputValue('');
   };
 
   const lastMessageIndex = React.useMemo(() => messages.length - 1, [messages.length]);
 
   return (
-    <div className="min-h-0 h-full w-full flex flex-col border-l border-t rounded-tl-md">
+    <div className="min-h-0 h-full w-full flex flex-col border-l border-t rounded-tl-md overflow-hidden">
       <Conversation>
-        <ConversationContent>
+        <ConversationContent className="overflow-y-auto">
           {messages.map((message, index) => (
             <ChatMessage key={index} message={message} isLast={index === lastMessageIndex} />
           ))}
@@ -73,6 +76,8 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
           inputValue={inputValue}
           setInputValue={setInputValue}
           status={status}
+          useWebSearch={useWebSearch}
+          setUseWebSearch={setUseWebSearch}
         />
       </div>
     </div>
@@ -84,17 +89,29 @@ interface ChatInputProps {
   stop: () => Promise<void>;
   inputValue: string;
   setInputValue: React.Dispatch<React.SetStateAction<string>>;
+  useWebSearch: boolean;
+  setUseWebSearch: React.Dispatch<React.SetStateAction<boolean>>;
   status: ChatStatus;
 }
 
 function ChatInput(props: ChatInputProps): JSX.Element {
-  const { handleSend, stop, inputValue, setInputValue, status } = props;
+  const { handleSend, stop, inputValue, setInputValue, status, useWebSearch, setUseWebSearch } =
+    props;
   return (
     <PromptInput onSubmit={handleSend} onAbort={stop}>
       <PromptInputBody>
         <PromptInputTextarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
       </PromptInputBody>
-      <PromptInputFooter className="flex justify-end">
+      <PromptInputFooter className="flex justify-between">
+        <div>
+          <PromptInputButton
+            onClick={() => setUseWebSearch((prev) => !prev)}
+            variant={useWebSearch ? 'default' : 'ghost'}
+          >
+            <GlobeIcon size={16} />
+            <span>Search</span>
+          </PromptInputButton>
+        </div>
         <PromptInputSubmit
           disabled={!inputValue && !status}
           status={status}

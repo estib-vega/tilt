@@ -1,14 +1,14 @@
 import { useChat } from '@ai-sdk/react';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import ElectronTransport from './electronTransport';
-import type { UpdateChatTitleParams } from '@api/api';
+import type { CustomUIMessage, UpdateChatTitleParams } from '@api/api';
 import React from 'react';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
   const { data: messages } = useChatMessages(chatId);
 
-  return useChat({
+  const chat = useChat<CustomUIMessage>({
     id: chatId,
     transport: new ElectronTransport(),
     messages,
@@ -20,6 +20,21 @@ export function useElectronChat(chatId: string) {
       // And we don't want to to unnecessary reads from the DB.
     },
   });
+
+  type MessageType = Parameters<typeof chat.sendMessage>[0];
+
+  const sendMessage = async (message: MessageType, webSearch: boolean): Promise<void> => {
+    await chat.sendMessage(message, {
+      body: {
+        webSearch,
+      },
+    });
+  };
+
+  return {
+    ...chat,
+    sendMessage,
+  };
 }
 
 export const chatMessagesQueryOptions = (chatId: string) =>

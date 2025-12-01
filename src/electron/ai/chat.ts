@@ -1,4 +1,4 @@
-import { UIChat, UIChatTitleUpdateEvent } from '@api/api';
+import { ChatRequestOptions, UIChat, UIChatTitleUpdateEvent } from '@api/api';
 import DB from '@api/db/sqlite';
 import {
   streamText,
@@ -7,8 +7,12 @@ import {
   UIMessageChunk,
   validateUIMessages,
   generateText,
+  createIdGenerator,
+  stepCountIs,
 } from 'ai';
 import { getOllama } from './model.js';
+import WebSearch from './webSearch.js';
+import { generateTools } from './tools.js';
 
 type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
 
@@ -16,11 +20,13 @@ export default class ChatManager {
   private static instance: ChatManager | undefined;
   private activeControllers = new Map<string, AbortController>(); // id → abortController
   private chatTitleEventListeners: Set<ChatTitleUpdateListener>;
+  private webSearch: WebSearch;
 
   private constructor(private db: DB) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
     this.chatTitleEventListeners = new Set();
+    this.webSearch = new WebSearch();
   }
 
   addChatTitleUpdateListener(listener: ChatTitleUpdateListener): void {
@@ -102,6 +108,7 @@ export default class ChatManager {
   async chat(
     chatId: string,
     messages: UIMessage[],
+    options: ChatRequestOptions,
     onUpdate: (chunk: UIMessageChunk) => void,
   ): Promise<string> {
     const abortSignal = this.getAbortControllerSignal(chatId);
@@ -120,10 +127,20 @@ export default class ChatManager {
     const streamResponse = streamText({
       model: getOllama(),
       messages: modelMessages,
+      tools: generateTools({
+        useWebSearch: options.webSearch,
+        webSearch: this.webSearch,
+      }),
+      stopWhen: stepCountIs(5),
       abortSignal,
     });
 
     const stream = streamResponse.toUIMessageStream({
+      originalMessages: messages,
+      generateMessageId: createIdGenerator({
+        prefix: 'msg',
+        size: 16,
+      }),
       onFinish: ({ responseMessage }) => {
         this.db.addMessageToChat(chatId, responseMessage, lastIdx + 1);
       },

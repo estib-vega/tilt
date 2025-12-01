@@ -1,15 +1,16 @@
-import type { UIMessage } from 'ai';
 import type { JSX } from 'react';
 import { Message, MessageContent, MessageResponse } from './ai-elements/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning';
 import React from 'react';
+import type { CustomUIMessage } from '@api/api';
+import ChatTool from './ChatTool';
 
-type MessagePart = UIMessage['parts'][number];
-type MessageRole = UIMessage['role'];
+type MessagePart = CustomUIMessage['parts'][number];
+type MessageRole = CustomUIMessage['role'];
 
 export interface ChatMessageProps {
   isLast: boolean;
-  message: UIMessage;
+  message: CustomUIMessage;
 }
 
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
@@ -40,7 +41,7 @@ function ChatMessageWrapper(props: ChatMessageWrapperProps): React.ReactNode {
     case 'system':
       return <Message from="system">{children}</Message>;
     case 'assistant':
-      return <div className="px-12">{children}</div>;
+      return <div className="px-7">{children}</div>;
   }
 }
 
@@ -57,6 +58,8 @@ function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
       return <ChatMessageResponse content={part.text} streaming={part.state === 'streaming'} />;
     case 'step-start':
       return <></>;
+    case 'tool-searchWeb':
+      return <ChatTool toolPart={part} />;
     case 'reasoning': {
       const isStreaming = part.state === 'streaming' && isLastMessage;
       const splitTextLines = part.text.split('\n');

@@ -1,8 +1,9 @@
-import { UIMessage } from 'ai';
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import {
   ChatChunkEvent,
   ChatEndEvent,
+  CustomUIMessage,
+  LLMStartParams,
   UIChat,
   UIChatTitleUpdateEvent,
   UpdateChatTitleParams,
@@ -29,11 +30,8 @@ contextBridge.exposeInMainWorld('api', {
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
 
   // Start a chat session
-  chatStart: (id: string, messages: UIMessage[]) => {
-    ipcRenderer.send('llm:start', {
-      id,
-      messages,
-    });
+  chatStart: (params: LLMStartParams) => {
+    ipcRenderer.send('llm:start', params);
   },
 
   // Interrupt an ongoing chat session
@@ -99,7 +97,7 @@ export interface ElectronAPI {
   /**
    * Starts a chat session with the given ID and messages.
    */
-  chatStart: (id: string, messages: UIMessage[]) => string;
+  chatStart: (params: LLMStartParams) => string;
   /**
    * Listens for chat response chunks.
    */
@@ -115,7 +113,7 @@ export interface ElectronAPI {
   /**
    * Lists all messages for a given chat ID.
    */
-  listMessages: (chatId: string) => Promise<UIMessage[]>;
+  listMessages: (chatId: string) => Promise<CustomUIMessage[]>;
   /**
    * Lists all chats.
    */

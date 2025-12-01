@@ -117,9 +117,9 @@ ipcMain.handle('open-external', async (_event, url: string) => {
 });
 
 ipcMain.on('llm:start', async (event, params) => {
-  const [id, messages] = await parseLLMStartParams(params);
+  const [id, messages, options] = await parseLLMStartParams(params);
 
-  const fullResponse = await chatManager.chat(id, messages, (chunk) => {
+  const fullResponse = await chatManager.chat(id, messages, options, (chunk) => {
     event.sender.send('llm:chunk', { id, chunk });
   });
 

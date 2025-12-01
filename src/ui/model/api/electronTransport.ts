@@ -47,8 +47,14 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         // Handle abort
         options.abortSignal?.addEventListener('abort', onAbort);
 
+        const chatOptions = parseEletronChatRequestOptions(options);
+
         // trigger backend stream
-        window.api.chatStart(options.chatId, options.messages);
+        window.api.chatStart({
+          id: options.chatId,
+          messages: options.messages,
+          webSerch: chatOptions.webSearch,
+        });
       },
     });
 
@@ -62,4 +68,31 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
 
     return null;
   }
+}
+
+interface RequestOptions {
+  webSearch: boolean;
+}
+
+interface ElectronChatRequestOptions {
+  body?: RequestOptions;
+}
+
+function isElectronChatRequestOptions(something: unknown): something is ElectronChatRequestOptions {
+  if (typeof something !== 'object' || something === null) return false;
+  const obj = something as ElectronChatRequestOptions;
+  if (obj.body && typeof obj.body.webSearch !== 'boolean') return false;
+  return true;
+}
+
+function parseEletronChatRequestOptions(options: ChatRequestOptions): RequestOptions {
+  if (isElectronChatRequestOptions(options)) {
+    return {
+      webSearch: options.body?.webSearch ?? false,
+    };
+  }
+
+  return {
+    webSearch: false,
+  };
 }
