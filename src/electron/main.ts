@@ -60,6 +60,10 @@ function createWindow(): void {
     // Destroy ChatManager instance
     chatManager.destroy();
   });
+
+  chatManager.addChatTitleUpdateListener((event) => {
+    mainWindow?.webContents.send('llm:chat-title-updated', event);
+  });
 }
 
 // This method will be called when Electron has finished initialization

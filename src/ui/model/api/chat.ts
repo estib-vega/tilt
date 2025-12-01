@@ -2,6 +2,7 @@ import { useChat } from '@ai-sdk/react';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import ElectronTransport from './electronTransport';
 import type { UpdateChatTitleParams } from '@api/api';
+import React from 'react';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
@@ -38,7 +39,27 @@ export const chatsQueryOptions = queryOptions({
   retry: false,
 });
 
+/**
+ * Hook to watch for chat title updates and invalidate the chats query.
+ */
+function useWatchChatTitleUpdates() {
+  const queryClient = useQueryClient();
+  React.useEffect(() => {
+    const removeListener = window.api.onChatTitleUpdated((_) => {
+      // Invalidate chats query to refetch updated data
+      queryClient.invalidateQueries({ queryKey: chatsQueryOptions.queryKey });
+      // TODO: Invalidate individual chat titles instead of the whole list.
+      // For now it's good enough.
+    });
+
+    return () => {
+      removeListener();
+    };
+  }, []);
+}
+
 export function useListChats() {
+  useWatchChatTitleUpdates();
   return useSuspenseQuery(chatsQueryOptions);
 }
 

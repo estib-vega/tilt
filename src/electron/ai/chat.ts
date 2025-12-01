@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai';
-import { UIChat } from '@api/api';
+import { UIChat, UIChatTitleUpdateEvent } from '@api/api';
 import DB from '@api/db/sqlite';
 import {
   streamText,
@@ -9,13 +9,27 @@ import {
   validateUIMessages,
 } from 'ai';
 
+type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
+
 export default class ChatManager {
   private static instance: ChatManager | undefined;
   private activeControllers = new Map<string, AbortController>(); // id → abortController
+  private chatTitleEventListeners: Set<ChatTitleUpdateListener>;
 
   private constructor(private db: DB) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
+    this.chatTitleEventListeners = new Set();
+  }
+
+  addChatTitleUpdateListener(listener: ChatTitleUpdateListener): void {
+    this.chatTitleEventListeners.add(listener);
+  }
+
+  private notifyChatTitleUpdate(event: UIChatTitleUpdateEvent): void {
+    for (const listener of this.chatTitleEventListeners) {
+      listener(event);
+    }
   }
 
   /**
@@ -23,6 +37,7 @@ export default class ChatManager {
    */
   updateChatTitle(chatId: string, title: string): UIChat {
     const chat = this.db.updateChatTitle(chatId, title);
+    this.notifyChatTitleUpdate({ id: chat.id, title: chat.title });
     return {
       id: chat.id,
       title: chat.title,
@@ -148,6 +163,8 @@ export default class ChatManager {
     this.activeControllers.forEach((controller) => {
       controller.abort();
     });
+    this.activeControllers.clear();
+    this.chatTitleEventListeners.clear();
     ChatManager.instance = undefined;
   }
 }

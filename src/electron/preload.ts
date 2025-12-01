@@ -1,6 +1,12 @@
 import { UIMessage } from 'ai';
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { ChatChunkEvent, ChatEndEvent, UIChat, UpdateChatTitleParams } from './api';
+import {
+  ChatChunkEvent,
+  ChatEndEvent,
+  UIChat,
+  UIChatTitleUpdateEvent,
+  UpdateChatTitleParams,
+} from './api';
 
 export type CleanUpFn = () => void;
 
@@ -68,6 +74,15 @@ contextBridge.exposeInMainWorld('api', {
 
   // Create a new chat
   createChat: () => ipcRenderer.invoke('llm:create-chat'),
+
+  // List for chat title updates
+  onChatTitleUpdated: (cb: (event: UIChatTitleUpdateEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, chat: UIChatTitleUpdateEvent) => cb(chat);
+    ipcRenderer.on('llm:chat-title-updated', listener);
+    return () => {
+      ipcRenderer.removeListener('llm:chat-title-updated', listener);
+    };
+  },
 });
 
 // Type definitions for the exposed API
@@ -117,4 +132,8 @@ export interface ElectronAPI {
    * Creates a new chat and returns its ID.
    */
   createChat: () => Promise<string>;
+  /**
+   * Listens for chat title updates.
+   */
+  onChatTitleUpdated: (cb: (event: UIChatTitleUpdateEvent) => void) => CleanUpFn;
 }

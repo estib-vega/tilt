@@ -47,6 +47,11 @@ export interface UIChat {
   updatedAt: number;
 }
 
+export interface UIChatTitleUpdateEvent {
+  id: string;
+  title: string | null;
+}
+
 export interface UpdateChatTitleParams {
   chatId: string;
   title: string;
