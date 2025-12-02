@@ -118,6 +118,12 @@ export default class ChatManager {
     if (lastIdx >= 0) {
       const lastMessage = messages[messages.length - 1];
       this.db.addMessageToChat(chatId, lastMessage, lastIdx);
+
+      if (lastMessage.role !== 'user') {
+        // This signals that there is a chat session
+        // is resuming, so we don't need to trigger generation again.
+        return '';
+      }
     }
 
     this.ensureChatHasTitle(chatId, messages[0]).catch((err) => {
@@ -151,6 +157,18 @@ export default class ChatManager {
     }
 
     return streamResponse.text;
+  }
+
+  /**
+   * Resume a chat by fetching its messages and continuing the chat session.
+   */
+  async resumeChat(
+    chatId: string,
+    options: ChatRequestOptions,
+    onUpdate: (chunk: UIMessageChunk) => void,
+  ): Promise<string> {
+    const messages = await this.getChatMessages(chatId);
+    return this.chat(chatId, messages, options, onUpdate);
   }
 
   private async ensureChatHasTitle(chatId: string, firstMessage: UIMessage) {

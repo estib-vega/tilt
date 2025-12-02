@@ -12,6 +12,7 @@ export function useElectronChat(chatId: string) {
     id: chatId,
     transport: new ElectronTransport(),
     messages,
+    resume: true,
     onFinish: () => {
       // Invalidate the chats list to reflect the latest order
       queryClient.invalidateQueries({ queryKey: ['chats'] });

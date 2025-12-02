@@ -62,11 +62,49 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
   }
 
   async reconnectToStream(
-    _options: { chatId: string } & ChatRequestOptions,
+    options: { chatId: string } & ChatRequestOptions,
   ): Promise<ReadableStream<UIMessageChunk> | null> {
-    // TODO: Implement reconnect logic if needed
+    console.log('Reconnecting to stream for chatId:', options.chatId);
+    const chats = await window.api.listChats();
+    const chatExists = chats.some((chat) => chat.id === options.chatId);
+    if (!chatExists) {
+      return null;
+    }
+    // Create a browser-readable stream that pulls data over IPC
+    const stream = new ReadableStream<UIMessageChunk>({
+      start(controller) {
+        // incoming token chunks
+        const onChunk = (data: ChatChunkEvent) => {
+          if (data.id !== options.chatId) return;
+          controller.enqueue(data.chunk);
+        };
 
-    return null;
+        const onEnd = (data: ChatEndEvent) => {
+          if (data.id !== options.chatId) return;
+          controller.close();
+          cleanup();
+        };
+
+        const cleanUpChunk = window.api.onChatChunk(onChunk);
+        const cleanUpEnd = window.api.onChatEnd(onEnd);
+
+        // Clean up
+        const cleanup = () => {
+          cleanUpChunk();
+          cleanUpEnd();
+        };
+
+        const chatOptions = parseEletronChatRequestOptions(options);
+
+        // trigger backend stream
+        window.api.chatResume({
+          id: options.chatId,
+          webSerch: chatOptions.webSearch,
+        });
+      },
+    });
+
+    return stream;
   }
 }
 

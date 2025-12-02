@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager from './ai/chat.js';
 import dotenv from 'dotenv';
-import { parseLLMStartParams } from './api.js';
+import { parseLLMResumeParams, parseLLMStartParams } from './api.js';
 import DB from './db/sqlite.js';
 
 dotenv.config();
@@ -120,6 +120,16 @@ ipcMain.on('llm:start', async (event, params) => {
   const [id, messages, options] = await parseLLMStartParams(params);
 
   const fullResponse = await chatManager.chat(id, messages, options, (chunk) => {
+    event.sender.send('llm:chunk', { id, chunk });
+  });
+
+  event.sender.send('llm:end', { id, text: fullResponse });
+});
+
+ipcMain.on('llm:resume', async (event, params) => {
+  const { id, webSerch } = await parseLLMResumeParams(params);
+
+  const fullResponse = await chatManager.resumeChat(id, { webSearch: webSerch }, (chunk) => {
     event.sender.send('llm:chunk', { id, chunk });
   });
 

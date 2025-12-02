@@ -3,6 +3,7 @@ import {
   ChatChunkEvent,
   ChatEndEvent,
   CustomUIMessage,
+  LLMResumeParams,
   LLMStartParams,
   UIChat,
   UIChatTitleUpdateEvent,
@@ -11,9 +12,66 @@ import {
 
 export type CleanUpFn = () => void;
 
-// Expose protected methods that allow the renderer process to use
-// ipcRenderer without exposing the entire object
-contextBridge.exposeInMainWorld('api', {
+/**
+ * Type definition for the Electron API exposed in the preload script.
+ */
+export interface ElectronAPI {
+  ping: () => Promise<string>;
+  getAppVersion: () => Promise<string>;
+  getPlatform: () => Promise<{
+    platform: string;
+    arch: string;
+    version: string;
+  }>;
+  notify: (title: string, body: string) => Promise<void>;
+  openExternal: (url: string) => Promise<void>;
+  /**
+   * Starts a chat session with the given ID and messages.
+   */
+  chatStart: (params: LLMStartParams) => void;
+  /**
+   * Resumes a chat session with the given ID.
+   */
+  chatResume: (params: LLMResumeParams) => void;
+  /**
+   * Listens for chat response chunks.
+   */
+  onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn;
+  /**
+   * Listens for the end of a chat session.
+   */
+  onChatEnd: (cb: (event: ChatEndEvent) => void) => CleanUpFn;
+  /**
+   * Interrupts an ongoing chat session with the given ID.
+   */
+  chatInterrupt: (id: string) => void;
+  /**
+   * Lists all messages for a given chat ID.
+   */
+  listMessages: (chatId: string) => Promise<CustomUIMessage[]>;
+  /**
+   * Lists all chats.
+   */
+  listChats: () => Promise<UIChat[]>;
+  /**
+   * Updates the title of a chat.
+   */
+  updateChatTitle: (params: UpdateChatTitleParams) => Promise<UIChat>;
+  /**
+   * Deletes a chat with the given ID.
+   */
+  deleteChat: (chatId: string) => Promise<void>;
+  /**
+   * Creates a new chat and returns its ID.
+   */
+  createChat: () => Promise<string>;
+  /**
+   * Listens for chat title updates.
+   */
+  onChatTitleUpdated: (cb: (event: UIChatTitleUpdateEvent) => void) => CleanUpFn;
+}
+
+const api: ElectronAPI = {
   // Example: Simple ping/pong
   ping: () => ipcRenderer.invoke('ping'),
 
@@ -32,6 +90,11 @@ contextBridge.exposeInMainWorld('api', {
   // Start a chat session
   chatStart: (params: LLMStartParams) => {
     ipcRenderer.send('llm:start', params);
+  },
+
+  // Resume a chat session
+  chatResume: (params: LLMResumeParams) => {
+    ipcRenderer.send('llm:resume', params);
   },
 
   // Interrupt an ongoing chat session
@@ -81,57 +144,8 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.removeListener('llm:chat-title-updated', listener);
     };
   },
-});
+};
 
-// Type definitions for the exposed API
-export interface ElectronAPI {
-  ping: () => Promise<string>;
-  getAppVersion: () => Promise<string>;
-  getPlatform: () => Promise<{
-    platform: string;
-    arch: string;
-    version: string;
-  }>;
-  notify: (title: string, body: string) => Promise<void>;
-  openExternal: (url: string) => Promise<void>;
-  /**
-   * Starts a chat session with the given ID and messages.
-   */
-  chatStart: (params: LLMStartParams) => string;
-  /**
-   * Listens for chat response chunks.
-   */
-  onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn;
-  /**
-   * Listens for the end of a chat session.
-   */
-  onChatEnd: (cb: (event: ChatEndEvent) => void) => CleanUpFn;
-  /**
-   * Interrupts an ongoing chat session with the given ID.
-   */
-  chatInterrupt: (id: string) => void;
-  /**
-   * Lists all messages for a given chat ID.
-   */
-  listMessages: (chatId: string) => Promise<CustomUIMessage[]>;
-  /**
-   * Lists all chats.
-   */
-  listChats: () => Promise<UIChat[]>;
-  /**
-   * Updates the title of a chat.
-   */
-  updateChatTitle: (params: UpdateChatTitleParams) => Promise<UIChat>;
-  /**
-   * Deletes a chat with the given ID.
-   */
-  deleteChat: (chatId: string) => Promise<void>;
-  /**
-   * Creates a new chat and returns its ID.
-   */
-  createChat: () => Promise<string>;
-  /**
-   * Listens for chat title updates.
-   */
-  onChatTitleUpdated: (cb: (event: UIChatTitleUpdateEvent) => void) => CleanUpFn;
-}
+// Expose protected methods that allow the renderer process to use
+// ipcRenderer without exposing the entire object
+contextBridge.exposeInMainWorld('api', api);

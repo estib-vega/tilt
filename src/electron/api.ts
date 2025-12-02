@@ -52,6 +52,32 @@ export async function parseLLMStartParams(
   return [id, validatedMessages, { webSearch: something.webSerch }];
 }
 
+export interface LLMResumeParams {
+  id: string;
+  webSerch: boolean;
+}
+
+export function isLLMResumeParams(something: unknown): something is LLMResumeParams {
+  return (
+    typeof something === 'object' &&
+    something !== null &&
+    'id' in something &&
+    'webSerch' in something &&
+    typeof (something as any).id === 'string' &&
+    typeof (something as any).webSerch === 'boolean'
+  );
+}
+
+export function parseLLMResumeParams(something: unknown): LLMResumeParams {
+  if (!isLLMResumeParams(something)) {
+    throw new Error('Invalid LLM resume parameters');
+  }
+  return {
+    id: something.id,
+    webSerch: something.webSerch,
+  };
+}
+
 export interface UIChat {
   id: string;
   title: string | null;
