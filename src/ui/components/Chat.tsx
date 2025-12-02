@@ -52,10 +52,23 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
   const [inputValue, setInputValue] = React.useState('');
   const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
 
-  const handleSend = (message: PromptInputMessage) => {
-    if (message.text.trim() === '') return;
-    sendMessage({ role: 'user', parts: [{ type: 'text', text: message.text }] }, useWebSearch);
-    setInputValue('');
+  const handleSend = (message: PromptInputMessage): boolean => {
+    switch (status) {
+      case 'error':
+        return false;
+      case 'streaming':
+        stop();
+        return false;
+      case 'ready': {
+        if (message.text.trim() === '') return false;
+        sendMessage({ role: 'user', parts: [{ type: 'text', text: message.text }] }, useWebSearch);
+        setInputValue('');
+        return true;
+      }
+      case 'submitted':
+        // Waiting for the stream to start
+        return false;
+    }
   };
 
   const lastMessageIndex = React.useMemo(() => messages.length - 1, [messages.length]);
@@ -72,7 +85,6 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
       <div className="w-full p-4 flex shrink-0 gap-2 border-t">
         <ChatInput
           handleSend={handleSend}
-          stop={stop}
           inputValue={inputValue}
           setInputValue={setInputValue}
           status={status}
@@ -86,7 +98,6 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
 
 interface ChatInputProps {
   handleSend: (message: PromptInputMessage) => void;
-  stop: () => Promise<void>;
   inputValue: string;
   setInputValue: React.Dispatch<React.SetStateAction<string>>;
   useWebSearch: boolean;
@@ -95,10 +106,9 @@ interface ChatInputProps {
 }
 
 function ChatInput(props: ChatInputProps): JSX.Element {
-  const { handleSend, stop, inputValue, setInputValue, status, useWebSearch, setUseWebSearch } =
-    props;
+  const { handleSend, inputValue, setInputValue, status, useWebSearch, setUseWebSearch } = props;
   return (
-    <PromptInput onSubmit={handleSend} onAbort={stop}>
+    <PromptInput onSubmit={handleSend}>
       <PromptInputBody>
         <PromptInputTextarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
       </PromptInputBody>

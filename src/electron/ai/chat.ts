@@ -10,7 +10,7 @@ import {
   createIdGenerator,
   stepCountIs,
 } from 'ai';
-import { getOllama } from './model.js';
+import { getOllama, getOpenAI } from './model.js';
 import WebSearch from './webSearch.js';
 import { generateTools } from './tools.js';
 
@@ -185,7 +185,7 @@ Answer with only the title, without any additional text.
 `;
 
     const title = await generateText({
-      model: getOllama(),
+      model: getOpenAI({ model: 'gpt-5-nano' }),
       prompt,
     });
 
