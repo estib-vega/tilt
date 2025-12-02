@@ -56,8 +56,12 @@ export default class ChatManager {
   /**
    * Create a new chat in the database.
    */
-  createChat(): string {
-    return this.db.createChat();
+  createChat(initialMessages?: UIMessage[]): string {
+    const chatId = this.db.createChat();
+    if (initialMessages && initialMessages.length > 0) {
+      this.db.addMessagesToChat(chatId, initialMessages);
+    }
+    return chatId;
   }
 
   /**

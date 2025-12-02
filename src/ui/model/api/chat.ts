@@ -3,6 +3,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@ta
 import ElectronTransport from './electronTransport';
 import type { CustomUIMessage, UpdateChatTitleParams } from '@api/api';
 import React from 'react';
+import { generateId } from 'ai';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
@@ -101,7 +102,15 @@ export function updateChatTitleMutation() {
 export function createChatMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => window.api.createChat(),
+    mutationFn: async (messages: Omit<CustomUIMessage, 'id' | 'role'>[]) => {
+      const id = generateId();
+      const initialMessages: CustomUIMessage[] = messages.map((msg) => ({
+        id,
+        role: 'user',
+        parts: msg.parts,
+      }));
+      return window.api.createChat({ initialMessages });
+    },
     onSuccess: (newChatId) => {
       // Invalidate chats query to refetch updated data
       queryClient.invalidateQueries({ queryKey: ['chats'] });

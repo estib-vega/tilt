@@ -78,6 +78,37 @@ export function parseLLMResumeParams(something: unknown): LLMResumeParams {
   };
 }
 
+export interface LLMCreateChatParams {
+  initialMessages?: UIMessage[];
+}
+
+function isLLMCreateChatParams(something: unknown): something is LLMCreateChatParams {
+  if (typeof something !== 'object' || something === null) {
+    return false;
+  }
+  const maybeInitialMessages = (something as any).initialMessages;
+  if (maybeInitialMessages === undefined) {
+    return true;
+  }
+  if (!Array.isArray(maybeInitialMessages)) {
+    return false;
+  }
+  return true;
+}
+
+export async function parseLLMCreateChatParams(
+  something: unknown,
+): Promise<[UIMessage[] | undefined]> {
+  if (!isLLMCreateChatParams(something)) {
+    throw new Error('Invalid LLM create parameters');
+  }
+  const { initialMessages } = something;
+  if (initialMessages && initialMessages.length > 0) {
+    return validateUIMessages({ messages: initialMessages }).then((msgs) => [msgs]);
+  }
+  return [undefined];
+}
+
 export interface UIChat {
   id: string;
   title: string | null;

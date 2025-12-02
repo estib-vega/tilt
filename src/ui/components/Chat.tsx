@@ -1,4 +1,4 @@
-import { useElectronChat } from '@/model/api/chat';
+import { createChatMutation, useElectronChat } from '@/model/api/chat';
 import React, { type JSX } from 'react';
 import {
   PromptInput,
@@ -12,8 +12,8 @@ import {
 import { Conversation, ConversationContent } from './ai-elements/conversation';
 import { ChatMessage } from './ChatMessage';
 import type { ChatStatus } from 'ai';
-import NewChatButton from './NewChatButton';
 import { GlobeIcon } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 
 export interface ChatProps {
   chatId: string | undefined;
@@ -32,11 +32,32 @@ export default function Chat(props: ChatProps): JSX.Element {
 }
 
 function NewChat(): JSX.Element {
+  const navigation = useNavigate();
+  const createChat = createChatMutation();
+  const [inputValue, setInputValue] = React.useState('');
+  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
+
+  const handleSend = async (message: PromptInputMessage): Promise<void> => {
+    if (message.text.trim() === '') return;
+    const chatId = await createChat.mutateAsync([
+      { parts: [{ type: 'text', text: message.text }] },
+    ]);
+    return navigation({ to: '/chat', search: { chatId } });
+  };
+
   return (
     <div className="min-h-0 h-full w-full flex justify-center items-center border-l border-t rounded-tl-md">
-      <div className="w-full flex flex-col items-center justify-start gap-2">
-        <NewChatButton label="start a new chat" />
-        <p className="text-sm text-muted-foreground">i mean, that's the whole point</p>
+      <div className="max-w-3xl w-full p-4 flex flex-col items-center justify-start gap-4">
+        <h1 className="text-3xl">ask away</h1>
+        <ChatInput
+          handleSend={handleSend}
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          status="ready"
+          useWebSearch={useWebSearch}
+          setUseWebSearch={setUseWebSearch}
+        />
+        {/* TODO: Suggestions of what to search */}
       </div>
     </div>
   );

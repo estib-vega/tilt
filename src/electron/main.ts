@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager from './ai/chat.js';
 import dotenv from 'dotenv';
-import { parseLLMResumeParams, parseLLMStartParams } from './api.js';
+import { parseLLMCreateChatParams, parseLLMResumeParams, parseLLMStartParams } from './api.js';
 import DB from './db/sqlite.js';
 
 dotenv.config();
@@ -127,7 +127,7 @@ ipcMain.on('llm:start', async (event, params) => {
 });
 
 ipcMain.on('llm:resume', async (event, params) => {
-  const { id, webSerch } = await parseLLMResumeParams(params);
+  const { id, webSerch } = parseLLMResumeParams(params);
 
   const fullResponse = await chatManager.resumeChat(id, { webSearch: webSerch }, (chunk) => {
     event.sender.send('llm:chunk', { id, chunk });
@@ -156,6 +156,7 @@ ipcMain.handle('llm:delete-chat', (_event, { chatId }) => {
   chatManager.deleteChat(chatId);
 });
 
-ipcMain.handle('llm:create-chat', () => {
-  return chatManager.createChat();
+ipcMain.handle('llm:create-chat', async (_event, params) => {
+  const [messages] = await parseLLMCreateChatParams(params);
+  return chatManager.createChat(messages);
 });

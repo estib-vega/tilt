@@ -44,6 +44,15 @@ export default class DB {
     return this.messagesTable.add(chatId, message, idx);
   }
 
+  addMessagesToChat(chatId: string, messages: DBUIMessage[]): string[] {
+    this.ensureChatExists(chatId);
+    this.chatsTable.chatUpdated(chatId);
+    return this.messagesTable.addMultiple(
+      chatId,
+      messages.map((msg) => this.ensureChatMessageHasId(msg)),
+    );
+  }
+
   getMessagesForChat(chatId: string): DBUIMessage[] {
     return this.messagesTable.get(chatId);
   }

@@ -72,6 +72,45 @@ export default class DBMessages {
     return id;
   }
 
+  addMultiple(chatId: string, messages: DBUIMessage[]): string[] {
+    const stmt = this.db.prepare(`
+    INSERT INTO messages (id, chat_id, role, parts, metadata, created_at, idx)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const messageIds: string[] = [];
+    let currentIdx =
+      this.db
+        .prepare<
+          string,
+          { maxIdx: number | null }
+        >('SELECT MAX(idx) as maxIdx FROM messages WHERE chat_id = ?')
+        .get(chatId)?.maxIdx ?? null;
+
+    // Use a transaction for bulk insert
+    const insertMany = this.db.transaction((msgs: DBUIMessage[]) => {
+      for (const message of msgs) {
+        const id = message.id;
+        const createdAt = Date.now();
+        currentIdx = (currentIdx ?? -1) + 1;
+        stmt.run(
+          id,
+          chatId,
+          message.role,
+          JSON.stringify(message.parts),
+          message.metadata ? JSON.stringify(message.metadata) : null,
+          createdAt,
+          currentIdx,
+        );
+        messageIds.push(id);
+      }
+    });
+
+    insertMany(messages);
+
+    return messageIds;
+  }
+
   get(chatId: string): DBUIMessage[] {
     const rows = this.db
       .prepare<

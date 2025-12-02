@@ -3,6 +3,7 @@ import {
   ChatChunkEvent,
   ChatEndEvent,
   CustomUIMessage,
+  LLMCreateChatParams,
   LLMResumeParams,
   LLMStartParams,
   UIChat,
@@ -64,7 +65,7 @@ export interface ElectronAPI {
   /**
    * Creates a new chat and returns its ID.
    */
-  createChat: () => Promise<string>;
+  createChat: (params: LLMCreateChatParams) => Promise<string>;
   /**
    * Listens for chat title updates.
    */
@@ -134,7 +135,7 @@ const api: ElectronAPI = {
   deleteChat: (chatId: string) => ipcRenderer.invoke('llm:delete-chat', { chatId }),
 
   // Create a new chat
-  createChat: () => ipcRenderer.invoke('llm:create-chat'),
+  createChat: (params: LLMCreateChatParams) => ipcRenderer.invoke('llm:create-chat', params),
 
   // List for chat title updates
   onChatTitleUpdated: (cb: (event: UIChatTitleUpdateEvent) => void) => {
