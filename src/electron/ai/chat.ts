@@ -131,7 +131,7 @@ export default class ChatManager {
         useWebSearch: options.webSearch,
         webSearch: this.webSearch,
       }),
-      stopWhen: stepCountIs(5),
+      stopWhen: stepCountIs(15),
       abortSignal,
     });
 
