@@ -11,7 +11,7 @@ import {
   UIChatTitleUpdateEvent,
   UpdateChatTitleParams,
 } from './api';
-import { Model } from './ai/model';
+import { ModelWithId } from './ai/model';
 
 export type CleanUpFn = () => void;
 
@@ -75,11 +75,11 @@ export interface ElectronAPI {
   /**
    * List all models.
    */
-  listModels: () => Promise<Model[]>;
+  listModels: () => Promise<ModelWithId[]>;
   /**
    * Adds a new model.
    */
-  addModel: (params: CreateModelRequest) => Promise<Model>;
+  addModel: (params: CreateModelRequest) => Promise<ModelWithId>;
 }
 
 const api: ElectronAPI = {

@@ -135,20 +135,19 @@ export function isModel(something: unknown): something is Model {
   if (typeof something !== 'object' || something === null) {
     return false;
   }
-  const maybeModel = (something as any).model;
-  if (typeof maybeModel !== 'object' || maybeModel === null) {
+  if (
+    typeof (something as any).provider !== 'string' ||
+    !isModelProvider((something as any).provider)
+  ) {
     return false;
   }
-  if (typeof maybeModel.provider !== 'string' || !isModelProvider(maybeModel.provider)) {
+  if (typeof (something as any).name !== 'string') {
     return false;
   }
-  if (typeof maybeModel.name !== 'string') {
+  if ((something as any).apiKey !== null && typeof (something as any).apiKey !== 'string') {
     return false;
   }
-  if (maybeModel.apiKey !== null && typeof maybeModel.apiKey !== 'string') {
-    return false;
-  }
-  if (maybeModel.baseUrl !== null && typeof maybeModel.baseUrl !== 'string') {
+  if ((something as any).baseUrl !== null && typeof (something as any).baseUrl !== 'string') {
     return false;
   }
   return true;

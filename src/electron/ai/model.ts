@@ -3,11 +3,15 @@ import DB from '@api/db/sqlite';
 import { decryptString, encryptString } from '../utils/safeStorage.js';
 import { LanguageModel } from 'ai';
 import { createOllama } from 'ollama-ai-provider-v2';
+import { BrandedID, createBrandedID } from '../utils/id.js';
 
 export default class ModelManager {
   private static instance: ModelManager | undefined;
+  private models: ModelMap;
 
-  private constructor(private db: DB) {}
+  private constructor(private db: DB) {
+    this.models = new Map();
+  }
 
   static getInstance(db: DB): ModelManager {
     if (!ModelManager.instance) {
@@ -20,25 +24,35 @@ export default class ModelManager {
     ModelManager.instance = undefined;
   }
 
-  add(model: Model) {
+  add(model: Model): ModelWithId {
     const existing = this.listModels();
     if (existing.find((m) => isEqualModel(m, model))) {
       throw new Error('Model already exists');
     }
 
-    const m = this.create(model);
+    const languageModel = this.create(model);
     this.persistModel(model);
-    return m;
+    const modelWithId = createModelWithId(model);
+    this.models.set(modelWithId.id, { ...modelWithId, llm: languageModel });
+    return modelWithId;
   }
 
-  listModels(): Model[] {
+  listModels(): ModelWithId[] {
     const dbModels = this.db.listModels();
-    return dbModels.map((dbModel) => ({
-      provider: assertValidModelProvider(dbModel.provider),
-      name: dbModel.name,
-      apiKey: dbModel.api_key ? decryptString(dbModel.api_key) : null,
-      baseUrl: dbModel.base_url,
-    }));
+    return dbModels.map((dbModel) => {
+      const model: Model = {
+        provider: assertValidModelProvider(dbModel.provider),
+        name: dbModel.name,
+        apiKey: dbModel.api_key ? decryptString(dbModel.api_key) : null,
+        baseUrl: dbModel.base_url,
+      };
+
+      const id = createModelId(model);
+      return {
+        ...model,
+        id,
+      };
+    });
   }
 
   private persistModel(model: Model) {
@@ -63,7 +77,7 @@ export default class ModelManager {
 }
 
 const MODEL_PROVIDERS = ['openai', 'ollama'] as const;
-type ModelProvider = (typeof MODEL_PROVIDERS)[number];
+export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
 
 export function isModelProvider(value: string): value is ModelProvider {
   return MODEL_PROVIDERS.includes(value as ModelProvider);
@@ -92,6 +106,54 @@ export interface Model {
    */
   baseUrl: string | null;
 }
+
+export type ModelId = BrandedID<'ModelId'>;
+
+const NULL_VALUE = '<null>';
+const UNICODE_SEPARATOR = '\u241F'; // Unit Separator character
+
+export function createModelId(model: Model): ModelId {
+  const encryptedApiKey = model.apiKey ? encryptString(model.apiKey) : null;
+  const encryptedApiKeyString = encryptedApiKey
+    ? Buffer.from(encryptedApiKey).toString('base64')
+    : '';
+  const idString = `${model.provider}${UNICODE_SEPARATOR}${model.name}${UNICODE_SEPARATOR}${model.baseUrl || NULL_VALUE}${UNICODE_SEPARATOR}${encryptedApiKeyString || NULL_VALUE}`;
+
+  return createBrandedID('ModelId', idString);
+}
+
+export function parseModelId(id: ModelId): Model {
+  const [provider, name, baseUrlStr, encryptedApiKeyString] = id.split(UNICODE_SEPARATOR);
+  const baseUrl = baseUrlStr === NULL_VALUE ? null : baseUrlStr;
+  const apiKey =
+    encryptedApiKeyString === NULL_VALUE
+      ? null
+      : decryptString(Buffer.from(encryptedApiKeyString, 'base64'));
+  return {
+    provider: assertValidModelProvider(provider),
+    name,
+    baseUrl,
+    apiKey,
+  };
+}
+
+export function createModelWithId(model: Model): ModelWithId {
+  const id = createModelId(model);
+  return {
+    ...model,
+    id,
+  };
+}
+
+export interface ModelWithId extends Model {
+  id: ModelId;
+}
+
+interface ModelWithLLM extends ModelWithId {
+  llm: LanguageModel;
+}
+
+type ModelMap = Map<ModelId, ModelWithLLM>;
 
 type ModelParameters = Omit<Model, 'provider'>;
 function isEqualModel(a: Model, b: Model): boolean {

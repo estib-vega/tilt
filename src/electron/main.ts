@@ -175,7 +175,7 @@ ipcMain.handle('models:list', () => {
 
 ipcMain.handle('models:add', (_event, modelCreationRequest) => {
   if (!isCreateModelRequest(modelCreationRequest)) {
-    throw new Error('Invalid CreateModelRequest');
+    throw new Error('Invalid CreateModelRequest: ' + JSON.stringify(modelCreationRequest));
   }
   const { model } = modelCreationRequest;
   return modelManager.add(model);
