@@ -69,6 +69,15 @@ function createWindow(): void {
     chatManager.destroy();
   });
 
+  const allowlistedProtocols = ['http:', 'https:'];
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (allowlistedProtocols.includes(new URL(url).protocol)) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
   chatManager.addChatTitleUpdateListener((event) => {
     mainWindow?.webContents.send('llm:chat-title-updated', event);
   });
