@@ -11,6 +11,7 @@ export default {
       __dirname: 'readonly',
       process: 'readonly',
       console: 'readonly',
+      Buffer: 'readonly',
     },
   },
   plugins: {

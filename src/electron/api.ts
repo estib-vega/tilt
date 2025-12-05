@@ -1,5 +1,6 @@
 import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
+import { isModelProvider, Model } from './ai/model.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -124,4 +125,38 @@ export interface UIChatTitleUpdateEvent {
 export interface UpdateChatTitleParams {
   chatId: string;
   title: string;
+}
+
+export interface CreateModelRequest {
+  model: Model;
+}
+
+export function isModel(something: unknown): something is Model {
+  if (typeof something !== 'object' || something === null) {
+    return false;
+  }
+  const maybeModel = (something as any).model;
+  if (typeof maybeModel !== 'object' || maybeModel === null) {
+    return false;
+  }
+  if (typeof maybeModel.provider !== 'string' || !isModelProvider(maybeModel.provider)) {
+    return false;
+  }
+  if (typeof maybeModel.name !== 'string') {
+    return false;
+  }
+  if (maybeModel.apiKey !== null && typeof maybeModel.apiKey !== 'string') {
+    return false;
+  }
+  if (maybeModel.baseUrl !== null && typeof maybeModel.baseUrl !== 'string') {
+    return false;
+  }
+  return true;
+}
+
+export function isCreateModelRequest(something: unknown): something is CreateModelRequest {
+  if (typeof something !== 'object' || something === null) {
+    return false;
+  }
+  return isModel((something as any).model);
 }

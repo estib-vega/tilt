@@ -3,13 +3,17 @@ import path from 'path';
 import DBMessages, { DBUIMessage } from './tables/messages.js';
 import DBChats, { DBUIChat } from './tables/chats.js';
 import { randomUUID } from 'crypto';
+import DBModels, { DBModel } from './tables/models.js';
 
 export default class DB {
   private static instance: DB | undefined;
   private db: SQLiteDB;
   private dbPath: string;
+
+  // TABLES
   private chatsTable: DBChats;
   private messagesTable: DBMessages;
+  private modelsTable: DBModels;
 
   private constructor(private dataDir: string) {
     console.log('Initializing database at', dataDir);
@@ -20,6 +24,7 @@ export default class DB {
     this.db.pragma('journal_mode = WAL');
     this.chatsTable = new DBChats(this.db);
     this.messagesTable = new DBMessages(this.db);
+    this.modelsTable = new DBModels(this.db);
   }
 
   static getInstance(dataDir: string): DB {
@@ -32,6 +37,14 @@ export default class DB {
   close() {
     this.db.close();
     DB.instance = undefined;
+  }
+
+  listModels(): DBModel[] {
+    return this.modelsTable.getAll();
+  }
+
+  saveModel(model: Omit<DBModel, 'id' | 'created_at' | 'updated_at'>): DBModel {
+    return this.modelsTable.create(model);
   }
 
   addMessageToChat(chatId: string, message: DBUIMessage, idx?: number): string {

@@ -5,14 +5,15 @@ import {
   UIMessage,
   convertToModelMessages,
   UIMessageChunk,
-  validateUIMessages,
   generateText,
   createIdGenerator,
   stepCountIs,
+  safeValidateUIMessages,
 } from 'ai';
 import { getOllama, getOpenAI } from './model.js';
 import WebSearch from './webSearch.js';
 import { generateTools } from './tools.js';
+import { DBUIMessage } from '@api/db/tables/messages.js';
 
 type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
 
@@ -59,7 +60,8 @@ export default class ChatManager {
   createChat(initialMessages?: UIMessage[]): string {
     const chatId = this.db.createChat();
     if (initialMessages && initialMessages.length > 0) {
-      this.db.addMessagesToChat(chatId, initialMessages);
+      // TODO: ensuere messages are serializable
+      this.db.addMessagesToChat(chatId, initialMessages as DBUIMessage[]);
     }
     return chatId;
   }
@@ -103,7 +105,13 @@ export default class ChatManager {
       return messages;
     }
 
-    return await validateUIMessages({ messages });
+    const result = await safeValidateUIMessages({ messages });
+
+    if (!result.success) {
+      throw new Error(`Invalid messages for chat ${chatId}: ${result.error}`);
+    }
+
+    return result.data;
   }
 
   /**
@@ -121,7 +129,8 @@ export default class ChatManager {
     const lastIdx = messages.length - 1;
     if (lastIdx >= 0) {
       const lastMessage = messages[messages.length - 1];
-      this.db.addMessageToChat(chatId, lastMessage, lastIdx);
+      // TODO: ensure that lastMessage is serializable
+      this.db.addMessageToChat(chatId, lastMessage as DBUIMessage, lastIdx);
 
       if (lastMessage.role !== 'user') {
         // This signals that there is a chat session
@@ -152,7 +161,8 @@ export default class ChatManager {
         size: 16,
       }),
       onFinish: ({ responseMessage }) => {
-        this.db.addMessageToChat(chatId, responseMessage, lastIdx + 1);
+        // TODO: ensure that the response message is serializable
+        this.db.addMessageToChat(chatId, responseMessage as DBUIMessage, lastIdx + 1);
       },
     });
 

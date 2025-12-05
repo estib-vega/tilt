@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import {
   ChatChunkEvent,
   ChatEndEvent,
+  CreateModelRequest,
   CustomUIMessage,
   LLMCreateChatParams,
   LLMResumeParams,
@@ -10,6 +11,7 @@ import {
   UIChatTitleUpdateEvent,
   UpdateChatTitleParams,
 } from './api';
+import { Model } from './ai/model';
 
 export type CleanUpFn = () => void;
 
@@ -70,6 +72,14 @@ export interface ElectronAPI {
    * Listens for chat title updates.
    */
   onChatTitleUpdated: (cb: (event: UIChatTitleUpdateEvent) => void) => CleanUpFn;
+  /**
+   * List all models.
+   */
+  listModels: () => Promise<Model[]>;
+  /**
+   * Adds a new model.
+   */
+  addModel: (params: CreateModelRequest) => Promise<Model>;
 }
 
 const api: ElectronAPI = {
@@ -145,6 +155,12 @@ const api: ElectronAPI = {
       ipcRenderer.removeListener('llm:chat-title-updated', listener);
     };
   },
+
+  // List all models
+  listModels: () => ipcRenderer.invoke('models:list'),
+
+  // Add a new model
+  addModel: (params: CreateModelRequest) => ipcRenderer.invoke('models:add', params),
 };
 
 // Expose protected methods that allow the renderer process to use

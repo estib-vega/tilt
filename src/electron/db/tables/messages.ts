@@ -1,10 +1,11 @@
 import { type Database as SQLiteDB } from 'better-sqlite3';
+import { JSONArray, JSONObject, safeParseJson, safeStringifyJson } from './utils.js';
 
 export type DBUIMessage = {
   id: string; //  incoming id
   role: string; // 'user' | 'assistant' | 'system' | etc
-  parts: unknown; // serializable content (string, object, array)
-  metadata?: unknown; // optional serializable metadata
+  parts: JSONArray; // serializable content (string, object, array)
+  metadata?: JSONObject; // optional serializable metadata
 };
 
 type SerializedDBUIMessage = DBUIMessage & {
@@ -64,8 +65,8 @@ export default class DBMessages {
       id,
       chatId,
       message.role,
-      JSON.stringify(message.parts),
-      message.metadata ? JSON.stringify(message.metadata) : null,
+      safeStringifyJson(message.parts),
+      message.metadata ? safeStringifyJson(message.metadata) : null,
       createdAt,
       useIdx,
     );
@@ -97,8 +98,8 @@ export default class DBMessages {
           id,
           chatId,
           message.role,
-          JSON.stringify(message.parts),
-          message.metadata ? JSON.stringify(message.metadata) : null,
+          safeStringifyJson(message.parts),
+          message.metadata ? safeStringifyJson(message.metadata) : null,
           createdAt,
           currentIdx,
         );
@@ -122,8 +123,8 @@ export default class DBMessages {
     return rows.map((r) => ({
       id: r.id,
       role: r.role,
-      parts: safeParseJson(r.parts),
-      metadata: safeParseJson(r.metadata) ?? undefined,
+      parts: safeParseJson<JSONArray>(r.parts) ?? [],
+      metadata: safeParseJson<JSONObject>(r.metadata) ?? undefined,
     }));
   }
 
@@ -131,15 +132,5 @@ export default class DBMessages {
     const stmt = this.db.prepare('DELETE FROM messages WHERE chat_id = ?');
     const info = stmt.run(chatId);
     return info.changes;
-  }
-}
-
-// Helpers
-function safeParseJson<T = unknown>(s: string | null): T | null {
-  if (s == null) return null;
-  try {
-    return JSON.parse(s) as T;
-  } catch {
-    return s as any;
   }
 }
