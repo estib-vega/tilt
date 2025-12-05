@@ -35,9 +35,6 @@ export default function AddModelDialog() {
     };
 
     mutation.mutate(model, {
-      onError: (error) => {
-        console.error('Failed to add model:', error);
-      },
       onSuccess: () => {
         setOpen(false);
         setName('');
