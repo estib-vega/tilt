@@ -2,7 +2,7 @@ import { type Database as SQLiteDB } from 'better-sqlite3';
 import { JSONObject, safeParseJson, safeStringifyJson } from './utils.js';
 
 export type DBModel = {
-  id: number;
+  id: string;
   provider: string;
   name: string;
   /**
@@ -27,7 +27,7 @@ export default class DBModels {
     // Create table if it doesn't exist
     this.db.exec(`
     CREATE TABLE IF NOT EXISTS models (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id TEXT PRIMARY KEY,
       provider TEXT NOT NULL,
       name TEXT NOT NULL,
       api_key BLOB,
@@ -41,14 +41,15 @@ export default class DBModels {
     `);
   }
 
-  create(model: Omit<DBModel, 'id' | 'created_at' | 'updated_at'>): DBModel {
+  create(model: Omit<DBModel, 'created_at' | 'updated_at'>): DBModel {
     const now = Date.now();
     const stmt = this.db.prepare(`
-      INSERT INTO models (provider, name, api_key, base_url, parameters, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO models (id, provider, name, api_key, base_url, parameters, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const result = stmt.run(
+    stmt.run(
+      model.id,
       model.provider,
       model.name,
       model.api_key,
@@ -59,15 +60,14 @@ export default class DBModels {
     );
 
     return {
-      id: Number(result.lastInsertRowid),
       ...model,
       created_at: now,
       updated_at: now,
     };
   }
 
-  getById(id: number): DBModel | null {
-    const stmt = this.db.prepare<number, SerializedDBModel>('SELECT * FROM models WHERE id = ?');
+  getById(id: string): DBModel | null {
+    const stmt = this.db.prepare<string, SerializedDBModel>('SELECT * FROM models WHERE id = ?');
     const row = stmt.get(id);
 
     if (!row) return null;
@@ -89,7 +89,7 @@ export default class DBModels {
   }
 
   update(
-    id: number,
+    id: string,
     model: Partial<Omit<DBModel, 'id' | 'created_at' | 'updated_at'>>,
   ): DBModel | null {
     const existing = this.getById(id);
@@ -121,7 +121,7 @@ export default class DBModels {
     return this.getById(id);
   }
 
-  delete(id: number): boolean {
+  delete(id: string): boolean {
     const stmt = this.db.prepare('DELETE FROM models WHERE id = ?');
     const result = stmt.run(id);
     return result.changes > 0;

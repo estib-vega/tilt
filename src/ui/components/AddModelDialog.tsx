@@ -50,7 +50,7 @@ export default function AddModelDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" className="cursor-pointer">
           add model
           <Plus />
         </Button>

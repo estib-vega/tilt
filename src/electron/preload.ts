@@ -4,6 +4,7 @@ import {
   ChatEndEvent,
   CreateModelRequest,
   CustomUIMessage,
+  DeleteModelRequest,
   LLMCreateChatParams,
   LLMResumeParams,
   LLMStartParams,
@@ -80,6 +81,10 @@ export interface ElectronAPI {
    * Adds a new model.
    */
   addModel: (params: CreateModelRequest) => Promise<ModelWithId>;
+  /**
+   * Delete a model by its ID.
+   */
+  deleteModel: (params: DeleteModelRequest) => Promise<void>;
 }
 
 const api: ElectronAPI = {
@@ -161,6 +166,9 @@ const api: ElectronAPI = {
 
   // Add a new model
   addModel: (params: CreateModelRequest) => ipcRenderer.invoke('models:add', params),
+
+  // Delete a model by its ID
+  deleteModel: (params: DeleteModelRequest) => ipcRenderer.invoke('models:delete', params),
 };
 
 // Expose protected methods that allow the renderer process to use

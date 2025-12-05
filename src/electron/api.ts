@@ -1,6 +1,6 @@
 import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
-import { isModelProvider, Model } from './ai/model.js';
+import { isModelProvider, Model, ModelId } from './ai/model.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -158,4 +158,8 @@ export function isCreateModelRequest(something: unknown): something is CreateMod
     return false;
   }
   return isModel((something as any).model);
+}
+
+export interface DeleteModelRequest {
+  modelId: ModelId;
 }

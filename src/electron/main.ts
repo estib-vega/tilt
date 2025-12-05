@@ -180,3 +180,7 @@ ipcMain.handle('models:add', (_event, modelCreationRequest) => {
   const { model } = modelCreationRequest;
   return modelManager.add(model);
 });
+
+ipcMain.handle('models:delete', (_event, { modelId }) => {
+  modelManager.delete(modelId);
+});

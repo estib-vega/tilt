@@ -24,6 +24,9 @@ export default class ModelManager {
     ModelManager.instance = undefined;
   }
 
+  /**
+   * Adds a new model. Throws an error if the model already exists.
+   */
   add(model: Model): ModelWithId {
     const existing = this.listModels();
     if (existing.find((m) => isEqualModel(m, model))) {
@@ -31,12 +34,23 @@ export default class ModelManager {
     }
 
     const languageModel = this.create(model);
-    this.persistModel(model);
     const modelWithId = createModelWithId(model);
+    this.persistModel(modelWithId);
     this.models.set(modelWithId.id, { ...modelWithId, llm: languageModel });
     return modelWithId;
   }
 
+  /**
+   * Deletes a model by its ID.
+   */
+  delete(modelId: ModelId): void {
+    this.models.delete(modelId);
+    this.db.deleteModel(modelId);
+  }
+
+  /**
+   * Lists all models.
+   */
   listModels(): ModelWithId[] {
     const dbModels = this.db.listModels();
     return dbModels.map((dbModel) => {
@@ -55,9 +69,10 @@ export default class ModelManager {
     });
   }
 
-  private persistModel(model: Model) {
+  private persistModel(model: ModelWithId) {
     const apiKey = model.apiKey ? encryptString(model.apiKey) : null;
     this.db.saveModel({
+      id: model.id,
       provider: model.provider,
       name: model.name,
       api_key: apiKey,

@@ -43,8 +43,12 @@ export default class DB {
     return this.modelsTable.getAll();
   }
 
-  saveModel(model: Omit<DBModel, 'id' | 'created_at' | 'updated_at'>): DBModel {
+  saveModel(model: Omit<DBModel, 'created_at' | 'updated_at'>): DBModel {
     return this.modelsTable.create(model);
+  }
+
+  deleteModel(modelId: string): void {
+    this.modelsTable.delete(modelId);
   }
 
   addMessageToChat(chatId: string, message: DBUIMessage, idx?: number): string {
