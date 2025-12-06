@@ -9,11 +9,26 @@ import {
   PromptInputTextarea,
   type PromptInputMessage,
 } from './ai-elements/prompt-input';
+import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorLogo,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from './ai-elements/model-selector';
 import { Conversation, ConversationContent } from './ai-elements/conversation';
 import { ChatMessage } from './ChatMessage';
 import type { ChatStatus } from 'ai';
-import { GlobeIcon } from 'lucide-react';
+import { CheckIcon, GlobeIcon } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { Button } from './ui/button';
+import { useListModelsGroupedByProvider } from '@/model/api/model';
+import type { ModelId } from '@api/ai/model';
 
 export interface ChatProps {
   chatId: string | undefined;
@@ -134,14 +149,17 @@ function ChatInput(props: ChatInputProps): JSX.Element {
         <PromptInputTextarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
       </PromptInputBody>
       <PromptInputFooter className="flex justify-between">
-        <div>
+        <div className="flex gap-2">
           <PromptInputButton
             onClick={() => setUseWebSearch((prev) => !prev)}
             variant={useWebSearch ? 'default' : 'ghost'}
           >
             <GlobeIcon size={16} />
-            <span>Search</span>
+            <span>search</span>
           </PromptInputButton>
+          <React.Suspense>
+            <ModelSelectorInputButton />
+          </React.Suspense>
         </div>
         <PromptInputSubmit
           disabled={!inputValue && !status}
@@ -150,6 +168,62 @@ function ChatInput(props: ChatInputProps): JSX.Element {
         />
       </PromptInputFooter>
     </PromptInput>
+  );
+}
+
+function ModelSelectorInputButton(): JSX.Element {
+  const [open, setOpen] = React.useState(false);
+  const groupedModels = useListModelsGroupedByProvider();
+  const [selectedModel, setSelectedModel] = React.useState<ModelId | null>(null);
+
+  const selectedModelData = React.useMemo(() => {
+    const allModels = groupedModels.flatMap(([_, models]) => models);
+    return allModels.find((model) => model.id === selectedModel) || null;
+  }, [groupedModels, selectedModel]);
+
+  return (
+    <div>
+      <ModelSelector onOpenChange={setOpen} open={open}>
+        <ModelSelectorTrigger asChild>
+          <Button className="justify-between" variant="outline">
+            {selectedModelData && (
+              <>
+                <ModelSelectorLogo provider={selectedModelData.provider} />
+                <ModelSelectorName>{selectedModelData.name}</ModelSelectorName>
+              </>
+            )}
+          </Button>
+        </ModelSelectorTrigger>
+        <ModelSelectorContent aria-describedby="model-selector-input">
+          <ModelSelectorInput id="model-selector-input" placeholder="search models..." />
+          <ModelSelectorList>
+            <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
+            {groupedModels.map(([provider, models]) => (
+              <ModelSelectorGroup heading={provider} key={provider}>
+                {models.map((model) => (
+                  <ModelSelectorItem
+                    key={model.id}
+                    onSelect={() => {
+                      setSelectedModel(model.id);
+                      setOpen(false);
+                    }}
+                    value={model.id}
+                  >
+                    <ModelSelectorLogo provider={model.provider} />
+                    <ModelSelectorName>{model.name}</ModelSelectorName>
+                    {selectedModel === model.id ? (
+                      <CheckIcon className="ml-auto size-4" />
+                    ) : (
+                      <div className="ml-auto size-4" />
+                    )}
+                  </ModelSelectorItem>
+                ))}
+              </ModelSelectorGroup>
+            ))}
+          </ModelSelectorList>
+        </ModelSelectorContent>
+      </ModelSelector>
+    </div>
   );
 }
 

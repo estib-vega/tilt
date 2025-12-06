@@ -1,5 +1,6 @@
-import type { Model, ModelId } from '@api/ai/model';
+import type { Model, ModelId, ModelProvider, ModelWithId } from '@api/ai/model';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import React from 'react';
 
 export const modelsQueryOptions = {
   queryKey: ['models'],
@@ -9,6 +10,24 @@ export const modelsQueryOptions = {
 
 export function useListModels() {
   return useSuspenseQuery(modelsQueryOptions);
+}
+
+export function useListModelsGroupedByProvider(): [ModelProvider, ModelWithId[]][] {
+  const { data: models } = useListModels();
+  const groups = React.useMemo(() => {
+    const grouped: Partial<Record<ModelProvider, ModelWithId[]>> = {};
+    for (const model of models) {
+      const group = grouped[model.provider];
+      if (!group) {
+        grouped[model.provider] = [model];
+        continue;
+      }
+      group.push(model);
+    }
+    return grouped;
+  }, [models]);
+
+  return Object.entries(groups) as [ModelProvider, ModelWithId[]][];
 }
 
 export function createModelMutaion() {
