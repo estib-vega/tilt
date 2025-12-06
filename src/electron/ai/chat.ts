@@ -129,14 +129,14 @@ export default class ChatManager {
     const lastIdx = messages.length - 1;
     if (lastIdx >= 0) {
       const lastMessage = messages[messages.length - 1];
-      // TODO: ensure that lastMessage is serializable
-      this.db.addMessageToChat(chatId, lastMessage as DBUIMessage, lastIdx);
-
       if (lastMessage.role !== 'user') {
         // This signals that there is a chat session
         // is resuming, so we don't need to trigger generation again.
         return '';
       }
+
+      // TODO: ensure that lastMessage is serializable
+      this.db.addMessageToChat(chatId, lastMessage as DBUIMessage, lastIdx);
     }
 
     this.ensureChatHasTitle(chatId, messages[0]).catch((err) => {
