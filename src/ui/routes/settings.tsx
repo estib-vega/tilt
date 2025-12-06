@@ -27,7 +27,7 @@ function ModelSettings() {
       <div className="w-full flex justify-end mb-2">
         <AddModelDialog />
       </div>
-      <React.Suspense fallback={<div>loading models...</div>}>
+      <React.Suspense fallback={<ModelListSkeleton />}>
         <ModelsList />
       </React.Suspense>
     </div>
@@ -45,6 +45,16 @@ function ModelsList() {
     <div className="space-y-2">
       {models.map((model) => (
         <ModelItem key={model.id} model={model} />
+      ))}
+    </div>
+  );
+}
+
+function ModelListSkeleton(): JSX.Element {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <ModelItemSkeleton key={index} />
       ))}
     </div>
   );
@@ -69,6 +79,21 @@ function ModelItem(props: ModelItemProps): JSX.Element {
         <Button variant="destructive" className="float-right cursor-pointer" size="icon">
           <Trash2 />
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function ModelItemSkeleton(): JSX.Element {
+  return (
+    <div className="flex border p-4 rounded-md animate-pulse">
+      <div className="flex flex-col space-y-2">
+        <div className="h-4 w-20 bg-gray-300 rounded"></div>
+        <div className="h-6 w-32 bg-gray-300 rounded"></div>
+        <div className="h-4 w-40 bg-gray-300 rounded"></div>
+      </div>
+      <div className="flex-1">
+        <div className="h-8 w-8 bg-gray-300 rounded float-right"></div>
       </div>
     </div>
   );
