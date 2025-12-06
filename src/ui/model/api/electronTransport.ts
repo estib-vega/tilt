@@ -1,3 +1,4 @@
+import type { ModelId } from '@api/ai/model';
 import type { ChatChunkEvent, ChatEndEvent } from '@api/api';
 import type { ChatRequestOptions, ChatTransport, UIMessage, UIMessageChunk } from 'ai';
 
@@ -53,7 +54,8 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         window.api.chatStart({
           id: options.chatId,
           messages: options.messages,
-          webSerch: chatOptions.webSearch,
+          webSearch: chatOptions.webSearch,
+          modelId: chatOptions.modelId,
         });
       },
     });
@@ -99,7 +101,8 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         // trigger backend stream
         window.api.chatResume({
           id: options.chatId,
-          webSerch: chatOptions.webSearch,
+          webSearch: chatOptions.webSearch,
+          modelId: chatOptions.modelId,
         });
       },
     });
@@ -110,6 +113,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
 
 interface RequestOptions {
   webSearch: boolean;
+  modelId: ModelId | undefined;
 }
 
 interface ElectronChatRequestOptions {
@@ -120,6 +124,8 @@ function isElectronChatRequestOptions(something: unknown): something is Electron
   if (typeof something !== 'object' || something === null) return false;
   const obj = something as ElectronChatRequestOptions;
   if (obj.body && typeof obj.body.webSearch !== 'boolean') return false;
+  if (obj.body && obj.body.modelId !== undefined && typeof obj.body.modelId !== 'string')
+    return false;
   return true;
 }
 
@@ -127,10 +133,12 @@ function parseEletronChatRequestOptions(options: ChatRequestOptions): RequestOpt
   if (isElectronChatRequestOptions(options)) {
     return {
       webSearch: options.body?.webSearch ?? false,
+      modelId: options.body?.modelId,
     };
   }
 
   return {
     webSearch: false,
+    modelId: undefined,
   };
 }

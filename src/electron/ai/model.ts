@@ -49,11 +49,64 @@ export default class ModelManager {
   }
 
   /**
+   * Gets a model by its ID.
+   */
+  get(modelId: ModelId): ModelWithLLM | undefined {
+    // Look in the cache first
+    const model = this.models.get(modelId);
+    if (model) {
+      return model;
+    }
+
+    // Load from the database
+    const dbModel = this.db.getModel(modelId);
+    if (dbModel) {
+      const modelData: Model = {
+        provider: assertValidModelProvider(dbModel.provider),
+        name: dbModel.name,
+        apiKey: dbModel.api_key ? decryptString(dbModel.api_key) : null,
+        baseUrl: dbModel.base_url,
+      };
+      const llm = this.create(modelData);
+      const modelWithLLM: ModelWithLLM = {
+        ...modelData,
+        id: assertValidModelId(dbModel.id),
+        llm,
+      };
+      // Cache the model for future requests
+      this.models.set(modelId, modelWithLLM);
+      return modelWithLLM;
+    }
+
+    return undefined;
+  }
+
+  getDefault(): ModelWithLLM {
+    const models = this.models.values();
+    const first = models.next().value;
+    if (first) {
+      return first;
+    }
+
+    const dbModels = this.db.listModels();
+    if (dbModels.length > 0) {
+      const dbModelId = assertValidModelId(dbModels[0].id);
+      const dbModel = this.get(dbModelId);
+      if (dbModel) {
+        return dbModel;
+      }
+    }
+
+    throw new Error('No models available');
+  }
+
+  /**
    * Lists all models.
    */
   listModels(): ModelWithId[] {
     const dbModels = this.db.listModels();
-    return dbModels.map((dbModel) => {
+    const results: ModelWithId[] = [];
+    for (const dbModel of dbModels) {
       const model: Model = {
         provider: assertValidModelProvider(dbModel.provider),
         name: dbModel.name,
@@ -62,11 +115,13 @@ export default class ModelManager {
       };
 
       const id = createModelId(model);
-      return {
+      results.push({
         ...model,
         id,
-      };
-    });
+      });
+    }
+
+    return results;
   }
 
   private persistModel(model: ModelWithId) {
@@ -158,6 +213,22 @@ export function createModelWithId(model: Model): ModelWithId {
     ...model,
     id,
   };
+}
+
+export function isModelId(value: string): value is ModelId {
+  try {
+    parseModelId(value as ModelId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function assertValidModelId(value: string): ModelId {
+  if (!isModelId(value)) {
+    throw new Error(`Not a valid ModelId: ${value}`);
+  }
+  return value;
 }
 
 export interface ModelWithId extends Model {

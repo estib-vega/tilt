@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let mainWindow: BrowserWindow | null = null;
 const db = DB.getInstance(app.getPath('userData'));
 const modelManager = ModelManager.getInstance(db);
-const chatManager = ChatManager.getInstance(db);
+const chatManager = ChatManager.getInstance(db, modelManager);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -144,9 +144,9 @@ ipcMain.on('llm:start', async (event, params) => {
 });
 
 ipcMain.on('llm:resume', async (event, params) => {
-  const { id, webSerch } = parseLLMResumeParams(params);
+  const { id, webSearch, modelId } = parseLLMResumeParams(params);
 
-  const fullResponse = await chatManager.resumeChat(id, { webSearch: webSerch }, (chunk) => {
+  const fullResponse = await chatManager.resumeChat(id, { webSearch, modelId }, (chunk) => {
     event.sender.send('llm:chunk', { id, chunk });
   });
 

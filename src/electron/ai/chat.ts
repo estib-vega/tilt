@@ -10,7 +10,7 @@ import {
   stepCountIs,
   safeValidateUIMessages,
 } from 'ai';
-import { getOllama, getOpenAI } from './model.js';
+import ModelManager, { getOpenAI, ModelId } from './model.js';
 import WebSearch from './webSearch.js';
 import { generateTools } from './tools.js';
 import { DBUIMessage } from '@api/db/tables/messages.js';
@@ -23,7 +23,10 @@ export default class ChatManager {
   private chatTitleEventListeners: Set<ChatTitleUpdateListener>;
   private webSearch: WebSearch;
 
-  private constructor(private db: DB) {
+  private constructor(
+    private db: DB,
+    private modelManager: ModelManager,
+  ) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
     this.chatTitleEventListeners = new Set();
@@ -114,6 +117,16 @@ export default class ChatManager {
     return result.data;
   }
 
+  private getModelForChat(modelId: ModelId | undefined) {
+    if (modelId) {
+      const model = this.modelManager.get(modelId);
+      if (model) {
+        return model;
+      }
+    }
+    return this.modelManager.getDefault();
+  }
+
   /**
    * Streams a chat response from the AI model based on the provided messages.
    */
@@ -143,8 +156,10 @@ export default class ChatManager {
       console.error('Chat: Failed to ensure chat has title:', err);
     });
 
+    const model = this.getModelForChat(options.modelId);
+
     const streamResponse = streamText({
-      model: getOllama(),
+      model: model.llm,
       messages: modelMessages,
       tools: generateTools({
         useWebSearch: options.webSearch,
@@ -244,9 +259,9 @@ Answer with only the title, without any additional text.
     return controller.signal;
   }
 
-  static getInstance(db: DB): ChatManager {
+  static getInstance(db: DB, modelManager: ModelManager): ChatManager {
     if (!ChatManager.instance) {
-      ChatManager.instance = new ChatManager(db);
+      ChatManager.instance = new ChatManager(db, modelManager);
     }
     return ChatManager.instance;
   }

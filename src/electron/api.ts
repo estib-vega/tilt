@@ -1,6 +1,6 @@
 import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
-import { isModelProvider, Model, ModelId } from './ai/model.js';
+import { isModelId, isModelProvider, Model, ModelId } from './ai/model.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -17,7 +17,8 @@ export interface ChatChunkEvent {
 export interface LLMStartParams {
   id: string;
   messages: UIMessage[];
-  webSerch: boolean;
+  webSearch: boolean;
+  modelId: ModelId | undefined;
 }
 
 export function isLLMStartParams(something: unknown): something is LLMStartParams {
@@ -26,14 +27,18 @@ export function isLLMStartParams(something: unknown): something is LLMStartParam
     something !== null &&
     'id' in something &&
     'messages' in something &&
-    'webSerch' in something &&
+    'webSearch' in something &&
+    'modelId' in something &&
     typeof (something as any).id === 'string' &&
     Array.isArray((something as any).messages) &&
-    typeof (something as any).webSerch === 'boolean'
+    typeof (something as any).webSerch === 'boolean' &&
+    ((something as any).modelId === undefined ||
+      (typeof (something as any).modelId === 'string' && isModelId((something as any).modelId)))
   );
 }
 
 export interface ChatRequestOptions {
+  modelId: ModelId | undefined;
   webSearch: boolean;
 }
 
@@ -50,12 +55,13 @@ export async function parseLLMStartParams(
   }
   const { id, messages } = something;
   const validatedMessages = await validateUIMessages({ messages });
-  return [id, validatedMessages, { webSearch: something.webSerch }];
+  return [id, validatedMessages, { webSearch: something.webSearch, modelId: something.modelId }];
 }
 
 export interface LLMResumeParams {
   id: string;
-  webSerch: boolean;
+  webSearch: boolean;
+  modelId: ModelId | undefined;
 }
 
 export function isLLMResumeParams(something: unknown): something is LLMResumeParams {
@@ -63,9 +69,12 @@ export function isLLMResumeParams(something: unknown): something is LLMResumePar
     typeof something === 'object' &&
     something !== null &&
     'id' in something &&
-    'webSerch' in something &&
+    'webSearch' in something &&
+    'modelId' in something &&
     typeof (something as any).id === 'string' &&
-    typeof (something as any).webSerch === 'boolean'
+    typeof (something as any).webSearch === 'boolean' &&
+    ((something as any).modelId === undefined ||
+      (typeof (something as any).modelId === 'string' && isModelId((something as any).modelId)))
   );
 }
 
@@ -75,7 +84,8 @@ export function parseLLMResumeParams(something: unknown): LLMResumeParams {
   }
   return {
     id: something.id,
-    webSerch: something.webSerch,
+    webSearch: something.webSearch,
+    modelId: something.modelId,
   };
 }
 

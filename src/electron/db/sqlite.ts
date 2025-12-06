@@ -43,6 +43,10 @@ export default class DB {
     return this.modelsTable.getAll();
   }
 
+  getModel(modelId: string): DBModel | undefined {
+    return this.modelsTable.getById(modelId) ?? undefined;
+  }
+
   saveModel(model: Omit<DBModel, 'created_at' | 'updated_at'>): DBModel {
     return this.modelsTable.create(model);
   }
