@@ -66,7 +66,6 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
   async reconnectToStream(
     options: { chatId: string } & ChatRequestOptions,
   ): Promise<ReadableStream<UIMessageChunk> | null> {
-    console.log('Reconnecting to stream for chatId:', options.chatId);
     const chats = await window.api.listChats();
     const chatExists = chats.some((chat) => chat.id === options.chatId);
     if (!chatExists) {

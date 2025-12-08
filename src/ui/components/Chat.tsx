@@ -29,6 +29,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { Button } from './ui/button';
 import { useListModelsGroupedByProvider } from '@/model/api/model';
 import type { ModelId } from '@api/ai/model';
+import ChatContext from './ChatContext';
 
 export interface ChatProps {
   chatId: string | undefined;
@@ -71,6 +72,7 @@ function NewChat(): JSX.Element {
           status="ready"
           useWebSearch={useWebSearch}
           setUseWebSearch={setUseWebSearch}
+          chatId={undefined}
         />
         {/* TODO: Suggestions of what to search */}
       </div>
@@ -118,7 +120,7 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
           ))}
         </ConversationContent>
       </Conversation>
-      <div className="w-full p-4 flex shrink-0 gap-2 border-t">
+      <div className="w-full p-4 flex flex-col shrink-0 gap-2 border-t">
         <ChatInput
           handleSend={handleSend}
           inputValue={inputValue}
@@ -126,6 +128,7 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
           status={status}
           useWebSearch={useWebSearch}
           setUseWebSearch={setUseWebSearch}
+          chatId={chatId}
         />
       </div>
     </div>
@@ -133,6 +136,7 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
 }
 
 interface ChatInputProps {
+  chatId: string | undefined;
   handleSend: (message: PromptInputMessage) => void;
   inputValue: string;
   setInputValue: React.Dispatch<React.SetStateAction<string>>;
@@ -160,6 +164,7 @@ function ChatInput(props: ChatInputProps): JSX.Element {
           <React.Suspense>
             <ModelSelectorInputButton />
           </React.Suspense>
+          {props.chatId && <ChatContext chatId={props.chatId} />}
         </div>
         <PromptInputSubmit
           disabled={!inputValue && !status}

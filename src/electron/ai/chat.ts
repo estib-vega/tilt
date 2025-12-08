@@ -9,6 +9,7 @@ import {
   createIdGenerator,
   stepCountIs,
   safeValidateUIMessages,
+  LanguageModelUsage,
 } from 'ai';
 import ModelManager, { getOpenAI, ModelId } from './model.js';
 import WebSearch from './webSearch.js';
@@ -135,6 +136,7 @@ export default class ChatManager {
     messages: UIMessage[],
     options: ChatRequestOptions,
     onUpdate: (chunk: UIMessageChunk) => void,
+    onUsage: (usage: LanguageModelUsage) => void,
   ): Promise<string> {
     const abortSignal = this.getAbortControllerSignal(chatId);
     const modelMessages = convertToModelMessages(messages);
@@ -185,6 +187,9 @@ export default class ChatManager {
       onUpdate(chunk);
     }
 
+    // Emit usage info
+    streamResponse.usage.then(onUsage);
+
     return streamResponse.text;
   }
 
@@ -195,9 +200,10 @@ export default class ChatManager {
     chatId: string,
     options: ChatRequestOptions,
     onUpdate: (chunk: UIMessageChunk) => void,
+    onUsage: (usage: LanguageModelUsage) => void,
   ): Promise<string> {
     const messages = await this.getChatMessages(chatId);
-    return this.chat(chatId, messages, options, onUpdate);
+    return this.chat(chatId, messages, options, onUpdate, onUsage);
   }
 
   private async ensureChatHasTitle(chatId: string, firstMessage: UIMessage) {

@@ -11,6 +11,7 @@ import {
 } from './api.js';
 import DB from './db/sqlite.js';
 import ModelManager from './ai/model.js';
+import { LanguageModelUsage, UIMessageChunk } from 'ai';
 
 dotenv.config();
 
@@ -136,9 +137,15 @@ ipcMain.handle('open-external', async (_event, url: string) => {
 ipcMain.on('llm:start', async (event, params) => {
   const [id, messages, options] = await parseLLMStartParams(params);
 
-  const fullResponse = await chatManager.chat(id, messages, options, (chunk) => {
+  const onUpdate = (chunk: UIMessageChunk) => {
     event.sender.send('llm:chunk', { id, chunk });
-  });
+  };
+
+  const onUsage = (usage: LanguageModelUsage) => {
+    event.sender.send('llm:usage', { id, usage });
+  };
+
+  const fullResponse = await chatManager.chat(id, messages, options, onUpdate, onUsage);
 
   event.sender.send('llm:end', { id, text: fullResponse });
 });
@@ -146,9 +153,15 @@ ipcMain.on('llm:start', async (event, params) => {
 ipcMain.on('llm:resume', async (event, params) => {
   const { id, webSearch, modelId } = parseLLMResumeParams(params);
 
-  const fullResponse = await chatManager.resumeChat(id, { webSearch, modelId }, (chunk) => {
+  const onUpdate = (chunk: UIMessageChunk) => {
     event.sender.send('llm:chunk', { id, chunk });
-  });
+  };
+
+  const onUsage = (usage: LanguageModelUsage) => {
+    event.sender.send('llm:usage', { id, usage });
+  };
+
+  const fullResponse = await chatManager.resumeChat(id, { webSearch, modelId }, onUpdate, onUsage);
 
   event.sender.send('llm:end', { id, text: fullResponse });
 });

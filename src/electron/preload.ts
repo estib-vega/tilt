@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import {
   ChatChunkEvent,
   ChatEndEvent,
+  ChatUsageEvent,
   CreateModelRequest,
   CustomUIMessage,
   DeleteModelRequest,
@@ -41,6 +42,10 @@ export interface ElectronAPI {
    * Listens for chat response chunks.
    */
   onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn;
+  /**
+   * Listens for usage updates during a chat session.
+   */
+  onChatUsage: (cb: (event: ChatUsageEvent) => void) => CleanUpFn;
   /**
    * Listens for the end of a chat session.
    */
@@ -124,6 +129,15 @@ const api: ElectronAPI = {
     ipcRenderer.on('llm:chunk', listener);
     return () => {
       ipcRenderer.removeListener('llm:chunk', listener);
+    };
+  },
+
+  // Listen for chat usage updates
+  onChatUsage: (cb: (event: ChatUsageEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: ChatUsageEvent) => cb(data);
+    ipcRenderer.on('llm:usage', listener);
+    return () => {
+      ipcRenderer.removeListener('llm:usage', listener);
     };
   },
 

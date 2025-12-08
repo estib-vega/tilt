@@ -3,7 +3,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@ta
 import ElectronTransport from './electronTransport';
 import type { CustomUIMessage, UpdateChatTitleParams } from '@api/api';
 import React from 'react';
-import { generateId } from 'ai';
+import { generateId, type LanguageModelUsage } from 'ai';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
@@ -129,4 +129,22 @@ export function deleteChatMutation() {
       queryClient.invalidateQueries({ queryKey: ['chat-messages', chatId] });
     },
   });
+}
+
+export function useChatUsage(chatId: string) {
+  const [usage, setUsage] = React.useState<LanguageModelUsage | null>(null);
+
+  React.useEffect(() => {
+    const removeListener = window.api.onChatUsage((data) => {
+      if (data.id === chatId) {
+        setUsage(data.usage);
+      }
+    });
+
+    return () => {
+      removeListener();
+    };
+  }, [chatId]);
+
+  return usage;
 }

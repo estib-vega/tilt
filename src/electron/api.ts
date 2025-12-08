@@ -1,4 +1,4 @@
-import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
+import { LanguageModelUsage, UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
 import { isModelId, isModelProvider, Model, ModelId } from './ai/model.js';
 
@@ -12,6 +12,11 @@ export interface ChatEndEvent {
 export interface ChatChunkEvent {
   id: string;
   chunk: UIMessageChunk;
+}
+
+export interface ChatUsageEvent {
+  id: string;
+  usage: LanguageModelUsage;
 }
 
 export interface LLMStartParams {
@@ -28,10 +33,9 @@ export function isLLMStartParams(something: unknown): something is LLMStartParam
     'id' in something &&
     'messages' in something &&
     'webSearch' in something &&
-    'modelId' in something &&
     typeof (something as any).id === 'string' &&
     Array.isArray((something as any).messages) &&
-    typeof (something as any).webSerch === 'boolean' &&
+    typeof (something as any).webSearch === 'boolean' &&
     ((something as any).modelId === undefined ||
       (typeof (something as any).modelId === 'string' && isModelId((something as any).modelId)))
   );
@@ -51,7 +55,7 @@ export async function parseLLMStartParams(
   something: unknown,
 ): Promise<[string, UIMessage[], ChatRequestOptions]> {
   if (!isLLMStartParams(something)) {
-    throw new Error('Invalid LLM start parameters');
+    throw new Error('Invalid LLM start parameters: ' + JSON.stringify(something));
   }
   const { id, messages } = something;
   const validatedMessages = await validateUIMessages({ messages });
@@ -70,7 +74,6 @@ export function isLLMResumeParams(something: unknown): something is LLMResumePar
     something !== null &&
     'id' in something &&
     'webSearch' in something &&
-    'modelId' in something &&
     typeof (something as any).id === 'string' &&
     typeof (something as any).webSearch === 'boolean' &&
     ((something as any).modelId === undefined ||
