@@ -23,12 +23,12 @@ export default function ChatContex(props: ChatContextProps): JSX.Element {
 
   const usedTokens = React.useMemo(() => {
     return (
-      (usage?.inputTokens ?? 0) +
-      (usage?.outputTokens ?? 0) +
-      (usage?.reasoningTokens ?? 0) +
-      (usage?.cachedInputTokens ?? 0)
+      (usage?.usage.inputTokens ?? 0) +
+      (usage?.usage.outputTokens ?? 0) +
+      (usage?.usage.reasoningTokens ?? 0) +
+      (usage?.usage.cachedInputTokens ?? 0)
     );
-  }, [usage]);
+  }, [usage?.usage]);
 
   if (!usage) {
     return <></>;
@@ -37,12 +37,13 @@ export default function ChatContex(props: ChatContextProps): JSX.Element {
   return (
     <Context
       maxTokens={128_000}
+      modelId={usage.provider + ':' + usage.name}
       usage={{
-        inputTokens: usage.inputTokens,
-        outputTokens: usage.outputTokens,
-        totalTokens: usage.totalTokens,
-        cachedInputTokens: usage.cachedInputTokens,
-        reasoningTokens: usage.reasoningTokens,
+        inputTokens: usage.usage.inputTokens,
+        outputTokens: usage.usage.outputTokens,
+        totalTokens: usage.usage.totalTokens,
+        cachedInputTokens: usage.usage.cachedInputTokens,
+        reasoningTokens: usage.usage.reasoningTokens,
       }}
       usedTokens={usedTokens}
     >

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import ChatManager from './ai/chat.js';
+import ChatManager, { UsageUpdate } from './ai/chat.js';
 import dotenv from 'dotenv';
 import {
   isCreateModelRequest,
@@ -11,7 +11,7 @@ import {
 } from './api.js';
 import DB from './db/sqlite.js';
 import ModelManager from './ai/model.js';
-import { LanguageModelUsage, UIMessageChunk } from 'ai';
+import { UIMessageChunk } from 'ai';
 
 dotenv.config();
 
@@ -141,7 +141,7 @@ ipcMain.on('llm:start', async (event, params) => {
     event.sender.send('llm:chunk', { id, chunk });
   };
 
-  const onUsage = (usage: LanguageModelUsage) => {
+  const onUsage = (usage: UsageUpdate) => {
     event.sender.send('llm:usage', { id, usage });
   };
 
@@ -157,7 +157,7 @@ ipcMain.on('llm:resume', async (event, params) => {
     event.sender.send('llm:chunk', { id, chunk });
   };
 
-  const onUsage = (usage: LanguageModelUsage) => {
+  const onUsage = (usage: UsageUpdate) => {
     event.sender.send('llm:usage', { id, usage });
   };
 

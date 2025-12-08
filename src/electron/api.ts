@@ -1,6 +1,7 @@
-import { LanguageModelUsage, UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
+import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
 import { isModelId, isModelProvider, Model, ModelId } from './ai/model.js';
+import { UsageUpdate } from './ai/chat';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -16,7 +17,7 @@ export interface ChatChunkEvent {
 
 export interface ChatUsageEvent {
   id: string;
-  usage: LanguageModelUsage;
+  usage: UsageUpdate;
 }
 
 export interface LLMStartParams {

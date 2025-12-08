@@ -52,4 +52,6 @@ function generateWebTools(webSearch: WebSearch) {
 export type WebTools = ReturnType<typeof generateWebTools>;
 export type WebToolsTypes = keyof WebTools;
 
-export type Tools = InferUITools<WebTools>;
+export type AllTools = WebTools;
+
+export type Tools = InferUITools<AllTools>;

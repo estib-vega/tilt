@@ -10,11 +10,19 @@ import {
   stepCountIs,
   safeValidateUIMessages,
   LanguageModelUsage,
+  PrepareStepResult,
+  ModelMessage,
 } from 'ai';
-import ModelManager, { getOpenAI, ModelId } from './model.js';
+import ModelManager, { getOpenAI, ModelId, ModelProvider } from './model.js';
 import WebSearch from './webSearch.js';
-import { generateTools } from './tools.js';
+import { AllTools, generateTools } from './tools.js';
 import { DBUIMessage } from '@api/db/tables/messages.js';
+import { cleanModelMessages, getModelMessageTokenCount } from './context.js';
+import {
+  promptForCondensedConversation,
+  systemPromptForCondensedConversation,
+  systemPromptForContinuedConversation,
+} from './prompt.js';
 
 type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
 
@@ -136,7 +144,7 @@ export default class ChatManager {
     messages: UIMessage[],
     options: ChatRequestOptions,
     onUpdate: (chunk: UIMessageChunk) => void,
-    onUsage: (usage: LanguageModelUsage) => void,
+    onUsage: (usage: UsageUpdate) => void,
   ): Promise<string> {
     const abortSignal = this.getAbortControllerSignal(chatId);
     const modelMessages = convertToModelMessages(messages);
@@ -167,6 +175,7 @@ export default class ChatManager {
         useWebSearch: options.webSearch,
         webSearch: this.webSearch,
       }),
+      prepareStep: async ({ messages }) => this.prepareStep(messages, 30_000),
       stopWhen: stepCountIs(15),
       abortSignal,
     });
@@ -188,9 +197,58 @@ export default class ChatManager {
     }
 
     // Emit usage info
-    streamResponse.usage.then(onUsage);
+    streamResponse.usage.then((usage) => {
+      onUsage({
+        chatId,
+        modelId: model.id,
+        name: model.name,
+        provider: model.provider,
+        usage,
+      });
+    });
 
     return streamResponse.text;
+  }
+
+  private async prepareStep(
+    messages: ModelMessage[],
+    threshold: number,
+  ): Promise<PrepareStepResult<AllTools>> {
+    const totalTokens = messages.reduce((sum, msg) => sum + getModelMessageTokenCount(msg), 0);
+
+    if (totalTokens < threshold) {
+      return undefined;
+    }
+
+    if (messages.length <= 2) {
+      // Should not happen, but just in case
+      console.warn('prepareStep: Not enough messages to condense conversation.');
+      return undefined;
+    }
+
+    // TODO: If the last message is a tool call, probably we need to keep it.
+    // For now, we just clean out the messages, removing the tool calls and results.
+
+    const cleanMessages = cleanModelMessages(messages);
+
+    const [previousMessages, lastMessage] = [
+      cleanMessages.slice(0, -1),
+      cleanMessages[cleanMessages.length - 1],
+    ];
+
+    const system = systemPromptForCondensedConversation();
+    const prompt = promptForCondensedConversation(previousMessages);
+
+    const textResponse = await generateText({
+      model: getOpenAI({ model: 'gpt-5-nano' }),
+      system,
+      prompt,
+    });
+
+    return {
+      system: systemPromptForContinuedConversation(textResponse.text),
+      messages: [lastMessage],
+    };
   }
 
   /**
@@ -200,7 +258,7 @@ export default class ChatManager {
     chatId: string,
     options: ChatRequestOptions,
     onUpdate: (chunk: UIMessageChunk) => void,
-    onUsage: (usage: LanguageModelUsage) => void,
+    onUsage: (usage: UsageUpdate) => void,
   ): Promise<string> {
     const messages = await this.getChatMessages(chatId);
     return this.chat(chatId, messages, options, onUpdate, onUsage);
@@ -282,3 +340,11 @@ Answer with only the title, without any additional text.
     ChatManager.instance = undefined;
   }
 }
+
+export type UsageUpdate = {
+  chatId: string;
+  modelId: ModelId | undefined;
+  provider: ModelProvider;
+  name: string;
+  usage: LanguageModelUsage;
+};
