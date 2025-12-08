@@ -11,13 +11,12 @@ import {
   safeValidateUIMessages,
   LanguageModelUsage,
   PrepareStepResult,
-  ModelMessage,
 } from 'ai';
 import ModelManager, { getOpenAI, ModelId, ModelProvider } from './model.js';
 import WebSearch from './webSearch.js';
 import { AllTools, generateTools } from './tools.js';
 import { DBUIMessage } from '@api/db/tables/messages.js';
-import { cleanModelMessages, getModelMessageTokenCount } from './context.js';
+import { getModelMessageTokenCount } from './context.js';
 import {
   promptForCondensedConversation,
   systemPromptForCondensedConversation,
@@ -175,7 +174,7 @@ export default class ChatManager {
         useWebSearch: options.webSearch,
         webSearch: this.webSearch,
       }),
-      prepareStep: async ({ messages }) => this.prepareStep(messages, 30_000),
+      prepareStep: () => this.prepareStep(chatId, messages, 30_000),
       stopWhen: stepCountIs(15),
       abortSignal,
     });
@@ -210,34 +209,64 @@ export default class ChatManager {
     return streamResponse.text;
   }
 
+  /**
+   * Prepare the next step in the chat by condensing messages if needed.
+   */
   private async prepareStep(
-    messages: ModelMessage[],
+    chatId: string,
+    messages: UIMessage[],
     threshold: number,
   ): Promise<PrepareStepResult<AllTools>> {
-    const totalTokens = messages.reduce((sum, msg) => sum + getModelMessageTokenCount(msg), 0);
+    const previousSummary = this.db.getChatSummary(chatId);
+
+    // No previous summary, do full condensation
+    if (!previousSummary) {
+      return this.condenseMessages(chatId, messages, undefined, threshold);
+    }
+
+    // There is a previous summary, do a continued condensation
+    const lastMessageIndex = messages.findIndex(
+      (msg) => msg.id === previousSummary.last_message_id,
+    );
+    if (lastMessageIndex === -1 || lastMessageIndex === messages.length - 1) {
+      // No new messages to summarize
+      return undefined;
+    }
+    const newMessages = messages.slice(lastMessageIndex + 1);
+
+    return this.condenseMessages(chatId, newMessages, previousSummary.summary, threshold);
+  }
+
+  /**
+   * Condense the messages if needed based on the token threshold.
+   *
+   * If condensation is performed, returns a PrepareStepResult containing
+   * the updated system prompt and the last message to continue the chat.
+   * If no condensation is needed, returns undefined.
+   */
+  private async condenseMessages(
+    chatId: string,
+    messages: UIMessage[],
+    existingSummary: string | undefined,
+    threshold: number,
+  ): Promise<PrepareStepResult<AllTools>> {
+    const modelMessages = convertToModelMessages(messages);
+    const totalTokens = modelMessages.reduce((sum, msg) => sum + getModelMessageTokenCount(msg), 0);
 
     if (totalTokens < threshold) {
+      return { messages: modelMessages };
+    }
+
+    if (modelMessages.length <= 2) {
+      console.warn('prepareStep: Not enough new messages to condense conversation.');
       return undefined;
     }
 
-    if (messages.length <= 2) {
-      // Should not happen, but just in case
-      console.warn('prepareStep: Not enough messages to condense conversation.');
-      return undefined;
-    }
-
-    // TODO: If the last message is a tool call, probably we need to keep it.
-    // For now, we just clean out the messages, removing the tool calls and results.
-
-    const cleanMessages = cleanModelMessages(messages);
-
-    const [previousMessages, lastMessage] = [
-      cleanMessages.slice(0, -1),
-      cleanMessages[cleanMessages.length - 1],
-    ];
+    const [previousMessages, lastMessage] = [messages.slice(0, -1), messages[messages.length - 1]];
 
     const system = systemPromptForCondensedConversation();
-    const prompt = promptForCondensedConversation(previousMessages);
+    const previousModelMessages = convertToModelMessages(previousMessages);
+    const prompt = promptForCondensedConversation(existingSummary, previousModelMessages);
 
     const textResponse = await generateText({
       model: getOpenAI({ model: 'gpt-5-nano' }),
@@ -245,9 +274,18 @@ export default class ChatManager {
       prompt,
     });
 
+    const lastModelMessage = convertToModelMessages([lastMessage]);
+
+    // Save or update the summary
+    this.db.upsertChatSummary({
+      chat_id: chatId,
+      summary: textResponse.text,
+      last_message_id: lastMessage.id,
+    });
+
     return {
       system: systemPromptForContinuedConversation(textResponse.text),
-      messages: [lastMessage],
+      messages: lastModelMessage,
     };
   }
 

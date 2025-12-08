@@ -4,6 +4,7 @@ import DBMessages, { DBUIMessage } from './tables/messages.js';
 import DBChats, { DBUIChat } from './tables/chats.js';
 import { randomUUID } from 'crypto';
 import DBModels, { DBModel } from './tables/models.js';
+import DBChatSummaries, { DBChatSummary } from './tables/chatSummaries.js';
 
 export default class DB {
   private static instance: DB | undefined;
@@ -12,6 +13,7 @@ export default class DB {
 
   // TABLES
   private chatsTable: DBChats;
+  private chatSummariesTable: DBChatSummaries;
   private messagesTable: DBMessages;
   private modelsTable: DBModels;
 
@@ -23,6 +25,7 @@ export default class DB {
     // Use WAL for better concurrency (optional)
     this.db.pragma('journal_mode = WAL');
     this.chatsTable = new DBChats(this.db);
+    this.chatSummariesTable = new DBChatSummaries(this.db);
     this.messagesTable = new DBMessages(this.db);
     this.modelsTable = new DBModels(this.db);
   }
@@ -37,6 +40,14 @@ export default class DB {
   close() {
     this.db.close();
     DB.instance = undefined;
+  }
+
+  upsertChatSummary(summary: Omit<DBChatSummary, 'created_at' | 'updated_at'>): void {
+    this.chatSummariesTable.upsert(summary);
+  }
+
+  getChatSummary(chatId: string): DBChatSummary | undefined {
+    return this.chatSummariesTable.getByChatId(chatId);
   }
 
   listModels(): DBModel[] {
@@ -86,6 +97,7 @@ export default class DB {
 
   deleteChat(chatId: string): void {
     this.messagesTable.deleteMessagesByChat(chatId);
+    this.chatSummariesTable.delete(chatId);
     this.chatsTable.delete(chatId);
   }
 
