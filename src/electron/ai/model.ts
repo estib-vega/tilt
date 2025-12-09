@@ -1,4 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import CredentialsManager from '@api/model/credentials';
 import { createOllama } from 'ollama-ai-provider-v2';
 
 const MODEL_PROVIDERS = ['ollama', 'openai'] as const;
@@ -26,12 +27,17 @@ export function isModelIdentifier(something: unknown): something is ModelIdentif
   return true;
 }
 
-export function getModel(modelIdentifier: ModelIdentifier) {
+export function getModel(modelIdentifier: ModelIdentifier, credentialsManager: CredentialsManager) {
   switch (modelIdentifier.provider) {
     case 'ollama':
       return getOllama({ model: modelIdentifier.name });
-    case 'openai':
-      return getOpenAI({ model: modelIdentifier.name });
+    case 'openai': {
+      const apiKey = credentialsManager.getCredential('openai');
+      if (!apiKey) {
+        throw new Error('OpenAI API key not found in credentials manager');
+      }
+      return getOpenAI({ model: modelIdentifier.name, apiKey });
+    }
   }
 }
 

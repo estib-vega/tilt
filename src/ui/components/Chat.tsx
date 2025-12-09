@@ -27,9 +27,9 @@ import type { ChatStatus } from 'ai';
 import { CheckIcon, GlobeIcon } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from './ui/button';
-import { useListModelsGroupedByProvider } from '@/model/api/model';
-import type { ModelId } from '@api/ai/model';
 import ChatContext from './ChatContext';
+import { useListModels, useModelSelector, type ModelInfo } from '@/model/models';
+import type { ModelIdentifier } from '@api/ai/model';
 
 export interface ChatProps {
   chatId: string | undefined;
@@ -51,7 +51,6 @@ function NewChat(): JSX.Element {
   const navigation = useNavigate();
   const createChat = createChatMutation();
   const [inputValue, setInputValue] = React.useState('');
-  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
 
   const handleSend = async (message: PromptInputMessage): Promise<void> => {
     if (message.text.trim() === '') return;
@@ -70,8 +69,6 @@ function NewChat(): JSX.Element {
           inputValue={inputValue}
           setInputValue={setInputValue}
           status="ready"
-          useWebSearch={useWebSearch}
-          setUseWebSearch={setUseWebSearch}
           chatId={undefined}
         />
         {/* TODO: Suggestions of what to search */}
@@ -88,9 +85,12 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
   const { chatId } = props;
   const { messages, sendMessage, status, stop } = useElectronChat(chatId);
   const [inputValue, setInputValue] = React.useState('');
-  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
 
-  const handleSend = (message: PromptInputMessage): boolean => {
+  const handleSend = (
+    message: PromptInputMessage,
+    useWebSearch: boolean,
+    modelIdentifier: ModelIdentifier,
+  ): boolean => {
     switch (status) {
       case 'error':
         return false;
@@ -99,7 +99,11 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
         return false;
       case 'ready': {
         if (message.text.trim() === '') return false;
-        sendMessage({ role: 'user', parts: [{ type: 'text', text: message.text }] }, useWebSearch);
+        sendMessage(
+          { role: 'user', parts: [{ type: 'text', text: message.text }] },
+          useWebSearch,
+          modelIdentifier,
+        );
         setInputValue('');
         return true;
       }
@@ -126,8 +130,6 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
           inputValue={inputValue}
           setInputValue={setInputValue}
           status={status}
-          useWebSearch={useWebSearch}
-          setUseWebSearch={setUseWebSearch}
           chatId={chatId}
         />
       </div>
@@ -137,18 +139,24 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
 
 interface ChatInputProps {
   chatId: string | undefined;
-  handleSend: (message: PromptInputMessage) => void;
+  handleSend: (
+    message: PromptInputMessage,
+    useWebSearch: boolean,
+    modelIdentifier: ModelIdentifier,
+  ) => void;
   inputValue: string;
   setInputValue: React.Dispatch<React.SetStateAction<string>>;
-  useWebSearch: boolean;
-  setUseWebSearch: React.Dispatch<React.SetStateAction<boolean>>;
   status: ChatStatus;
 }
 
 function ChatInput(props: ChatInputProps): JSX.Element {
-  const { handleSend, inputValue, setInputValue, status, useWebSearch, setUseWebSearch } = props;
+  const { handleSend, inputValue, setInputValue, status } = props;
+  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
+  const modelSelectorHook = useModelSelector();
   return (
-    <PromptInput onSubmit={handleSend}>
+    <PromptInput
+      onSubmit={(message) => handleSend(message, useWebSearch, modelSelectorHook.selectedModel)}
+    >
       <PromptInputBody>
         <PromptInputTextarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
       </PromptInputBody>
@@ -162,7 +170,7 @@ function ChatInput(props: ChatInputProps): JSX.Element {
             <span>search</span>
           </PromptInputButton>
           <React.Suspense>
-            <ModelSelectorInputButton />
+            <ModelSelectorInputButton {...modelSelectorHook} />
           </React.Suspense>
           {props.chatId && <ChatContext chatId={props.chatId} />}
         </div>
@@ -176,47 +184,44 @@ function ChatInput(props: ChatInputProps): JSX.Element {
   );
 }
 
-function ModelSelectorInputButton(): JSX.Element {
-  const [open, setOpen] = React.useState(false);
-  const groupedModels = useListModelsGroupedByProvider();
-  const [selectedModel, setSelectedModel] = React.useState<ModelId | null>(null);
+interface ModelSelectorInputButtonProps {
+  selectedModel: ModelInfo;
+  setSelectedModel: React.Dispatch<React.SetStateAction<ModelInfo>>;
+  isSelectedModel: (model: ModelInfo) => boolean;
+}
 
-  const selectedModelData = React.useMemo(() => {
-    const allModels = groupedModels.flatMap(([_, models]) => models);
-    return allModels.find((model) => model.id === selectedModel) || null;
-  }, [groupedModels, selectedModel]);
+function ModelSelectorInputButton(props: ModelSelectorInputButtonProps): JSX.Element {
+  const { selectedModel, setSelectedModel, isSelectedModel } = props;
+  const [open, setOpen] = React.useState(false);
+  const modelsList = useListModels();
 
   return (
     <div>
       <ModelSelector onOpenChange={setOpen} open={open}>
         <ModelSelectorTrigger asChild>
           <Button className="justify-between" variant="outline">
-            {selectedModelData && (
-              <>
-                <ModelSelectorLogo provider={selectedModelData.provider} />
-                <ModelSelectorName>{selectedModelData.name}</ModelSelectorName>
-              </>
-            )}
+            <ModelSelectorLogo provider={selectedModel.provider} />
+            <ModelSelectorName>{selectedModel.name}</ModelSelectorName>
           </Button>
         </ModelSelectorTrigger>
         <ModelSelectorContent aria-describedby="model-selector-input">
           <ModelSelectorInput id="model-selector-input" placeholder="search models..." />
           <ModelSelectorList>
             <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-            {groupedModels.map(([provider, models]) => (
+            {modelsList.map(([provider, models]) => (
               <ModelSelectorGroup heading={provider} key={provider}>
                 {models.map((model) => (
                   <ModelSelectorItem
-                    key={model.id}
+                    key={model.name}
                     onSelect={() => {
-                      setSelectedModel(model.id);
+                      setSelectedModel(model);
                       setOpen(false);
                     }}
-                    value={model.id}
+                    value={model.name}
                   >
-                    <ModelSelectorLogo provider={model.provider} />
-                    <ModelSelectorName>{model.name}</ModelSelectorName>
-                    {selectedModel === model.id ? (
+                    <ModelSelectorLogo provider={provider} />
+                    <ModelSelectorName>{model.displayName}</ModelSelectorName>
+                    {isSelectedModel(model) ? (
                       <CheckIcon className="ml-auto size-4" />
                     ) : (
                       <div className="ml-auto size-4" />

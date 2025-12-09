@@ -4,6 +4,7 @@ import DBMessages, { DBUIMessage } from './tables/messages.js';
 import DBChats, { DBUIChat } from './tables/chats.js';
 import { randomUUID } from 'crypto';
 import DBChatSummaries, { DBChatSummary } from './tables/chatSummaries.js';
+import DBCredentials, { DBCredential } from './tables/credentials.js';
 
 export default class DB {
   private static instance: DB | undefined;
@@ -14,6 +15,7 @@ export default class DB {
   private chatsTable: DBChats;
   private chatSummariesTable: DBChatSummaries;
   private messagesTable: DBMessages;
+  private credentialsTable: DBCredentials;
 
   private constructor(private dataDir: string) {
     console.log('Initializing database at', dataDir);
@@ -25,6 +27,7 @@ export default class DB {
     this.chatsTable = new DBChats(this.db);
     this.chatSummariesTable = new DBChatSummaries(this.db);
     this.messagesTable = new DBMessages(this.db);
+    this.credentialsTable = new DBCredentials(this.db);
   }
 
   static getInstance(dataDir: string): DB {
@@ -37,6 +40,22 @@ export default class DB {
   close() {
     this.db.close();
     DB.instance = undefined;
+  }
+
+  addCredential(credential: DBCredential): string {
+    return this.credentialsTable.add(credential);
+  }
+
+  getCredentialsByService(service: string): DBCredential[] {
+    return this.credentialsTable.getByService(service);
+  }
+
+  deleteCredential(credentialId: string): void {
+    this.credentialsTable.delete(credentialId);
+  }
+
+  listCredentials(): DBCredential[] {
+    return this.credentialsTable.getAll();
   }
 
   upsertChatSummary(summary: Omit<DBChatSummary, 'created_at' | 'updated_at'>): void {

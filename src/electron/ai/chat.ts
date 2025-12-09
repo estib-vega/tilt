@@ -22,6 +22,7 @@ import {
   systemPromptForCondensedConversation,
   systemPromptForContinuedConversation,
 } from './prompt.js';
+import CredentialsManager from '@api/model/credentials.js';
 
 type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
 
@@ -31,7 +32,10 @@ export default class ChatManager {
   private chatTitleEventListeners: Set<ChatTitleUpdateListener>;
   private webSearch: WebSearch;
 
-  private constructor(private db: DB) {
+  private constructor(
+    private db: DB,
+    private credentialsManager: CredentialsManager,
+  ) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
     this.chatTitleEventListeners = new Set();
@@ -152,7 +156,7 @@ export default class ChatManager {
       console.error('Chat: Failed to ensure chat has title:', err);
     });
 
-    const model = getModel(options.modelIdentifier);
+    const model = getModel(options.modelIdentifier, this.credentialsManager);
 
     const streamResponse = streamText({
       model: model,
@@ -321,7 +325,7 @@ Answer with only the title, without any additional text.
 `;
 
     const title = await generateText({
-      model: getOpenAI({ model: 'gpt-5-nano' }),
+      model: getOpenAI({ model: 'gpt-4.1-mini' }),
       prompt,
     });
 
@@ -348,9 +352,9 @@ Answer with only the title, without any additional text.
     return controller.signal;
   }
 
-  static getInstance(db: DB): ChatManager {
+  static getInstance(db: DB, credentialsManager: CredentialsManager): ChatManager {
     if (!ChatManager.instance) {
-      ChatManager.instance = new ChatManager(db);
+      ChatManager.instance = new ChatManager(db, credentialsManager);
     }
     return ChatManager.instance;
   }

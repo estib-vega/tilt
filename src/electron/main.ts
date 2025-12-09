@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { parseLLMCreateChatParams, parseLLMResumeParams, parseLLMStartParams } from './api.js';
 import DB from './db/sqlite.js';
 import { UIMessageChunk } from 'ai';
+import CredentialsManager from './model/credentials.js';
 
 dotenv.config();
 
@@ -14,7 +15,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Keep a global reference of the window object to prevent garbage collection
 let mainWindow: BrowserWindow | null = null;
 const db = DB.getInstance(app.getPath('userData'));
-const chatManager = ChatManager.getInstance(db);
+const credentialsManager = CredentialsManager.getInstance(db);
+const chatManager = ChatManager.getInstance(db, credentialsManager);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -59,6 +61,7 @@ function createWindow(): void {
     db.close();
 
     // Destroy managers
+    credentialsManager.destroy();
     chatManager.destroy();
   });
 

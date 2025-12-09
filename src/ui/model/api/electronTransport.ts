@@ -1,4 +1,4 @@
-import type { ModelId } from '@api/ai/model';
+import type { ModelIdentifier } from '@api/ai/model';
 import type { ChatChunkEvent, ChatEndEvent } from '@api/api';
 import type { ChatRequestOptions, ChatTransport, UIMessage, UIMessageChunk } from 'ai';
 
@@ -55,7 +55,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
           id: options.chatId,
           messages: options.messages,
           webSearch: chatOptions.webSearch,
-          modelId: chatOptions.modelId,
+          modelIdentifier: chatOptions.modelIdentifier,
         });
       },
     });
@@ -101,7 +101,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         window.api.chatResume({
           id: options.chatId,
           webSearch: chatOptions.webSearch,
-          modelId: chatOptions.modelId,
+          modelIdentifier: chatOptions.modelIdentifier,
         });
       },
     });
@@ -112,32 +112,27 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
 
 interface RequestOptions {
   webSearch: boolean;
-  modelId: ModelId | undefined;
+  modelIdentifier: ModelIdentifier;
 }
 
 interface ElectronChatRequestOptions {
-  body?: RequestOptions;
+  body: RequestOptions;
 }
 
 function isElectronChatRequestOptions(something: unknown): something is ElectronChatRequestOptions {
   if (typeof something !== 'object' || something === null) return false;
+  if (!(something as any).body) return false;
   const obj = something as ElectronChatRequestOptions;
-  if (obj.body && typeof obj.body.webSearch !== 'boolean') return false;
-  if (obj.body && obj.body.modelId !== undefined && typeof obj.body.modelId !== 'string')
-    return false;
-  return true;
+  return typeof obj.body.webSearch === 'boolean' && typeof obj.body.modelIdentifier === 'object';
 }
 
 function parseEletronChatRequestOptions(options: ChatRequestOptions): RequestOptions {
   if (isElectronChatRequestOptions(options)) {
     return {
-      webSearch: options.body?.webSearch ?? false,
-      modelId: options.body?.modelId,
+      webSearch: options.body.webSearch ?? false,
+      modelIdentifier: options.body.modelIdentifier,
     };
   }
 
-  return {
-    webSearch: false,
-    modelId: undefined,
-  };
+  throw new Error('Invalid chat request options for Electron transport');
 }

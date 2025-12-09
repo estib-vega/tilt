@@ -5,6 +5,7 @@ import type { CustomUIMessage, UpdateChatTitleParams } from '@api/api';
 import React from 'react';
 import { generateId } from 'ai';
 import type { UsageUpdate } from '@api/ai/chat';
+import type { ModelIdentifier } from '@api/ai/model';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
@@ -26,10 +27,15 @@ export function useElectronChat(chatId: string) {
 
   type MessageType = Parameters<typeof chat.sendMessage>[0];
 
-  const sendMessage = async (message: MessageType, webSearch: boolean): Promise<void> => {
+  const sendMessage = async (
+    message: MessageType,
+    webSearch: boolean,
+    modelIdentifier: ModelIdentifier,
+  ): Promise<void> => {
     await chat.sendMessage(message, {
       body: {
         webSearch,
+        modelIdentifier,
       },
     });
   };
