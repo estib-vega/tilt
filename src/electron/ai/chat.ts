@@ -12,7 +12,7 @@ import {
   LanguageModelUsage,
   PrepareStepResult,
 } from 'ai';
-import ModelManager, { getOpenAI, ModelId, ModelProvider } from './model.js';
+import { getModel, getOpenAI, ModelProvider } from './model.js';
 import WebSearch from './webSearch.js';
 import { AllTools, generateTools } from './tools.js';
 import { DBUIMessage } from '@api/db/tables/messages.js';
@@ -31,10 +31,7 @@ export default class ChatManager {
   private chatTitleEventListeners: Set<ChatTitleUpdateListener>;
   private webSearch: WebSearch;
 
-  private constructor(
-    private db: DB,
-    private modelManager: ModelManager,
-  ) {
+  private constructor(private db: DB) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
     this.chatTitleEventListeners = new Set();
@@ -125,16 +122,6 @@ export default class ChatManager {
     return result.data;
   }
 
-  private getModelForChat(modelId: ModelId | undefined) {
-    if (modelId) {
-      const model = this.modelManager.get(modelId);
-      if (model) {
-        return model;
-      }
-    }
-    return this.modelManager.getDefault();
-  }
-
   /**
    * Streams a chat response from the AI model based on the provided messages.
    */
@@ -165,10 +152,10 @@ export default class ChatManager {
       console.error('Chat: Failed to ensure chat has title:', err);
     });
 
-    const model = this.getModelForChat(options.modelId);
+    const model = getModel(options.modelIdentifier);
 
     const streamResponse = streamText({
-      model: model.llm,
+      model: model,
       messages: modelMessages,
       tools: generateTools({
         useWebSearch: options.webSearch,
@@ -199,9 +186,9 @@ export default class ChatManager {
     streamResponse.usage.then((usage) => {
       onUsage({
         chatId,
-        modelId: model.id,
-        name: model.name,
-        provider: model.provider,
+        id: model.modelId,
+        name: options.modelIdentifier.name,
+        provider: options.modelIdentifier.provider,
         usage,
       });
     });
@@ -361,9 +348,9 @@ Answer with only the title, without any additional text.
     return controller.signal;
   }
 
-  static getInstance(db: DB, modelManager: ModelManager): ChatManager {
+  static getInstance(db: DB): ChatManager {
     if (!ChatManager.instance) {
-      ChatManager.instance = new ChatManager(db, modelManager);
+      ChatManager.instance = new ChatManager(db);
     }
     return ChatManager.instance;
   }
@@ -381,8 +368,8 @@ Answer with only the title, without any additional text.
 
 export type UsageUpdate = {
   chatId: string;
-  modelId: ModelId | undefined;
-  provider: ModelProvider;
+  id: string;
   name: string;
+  provider: ModelProvider;
   usage: LanguageModelUsage;
 };

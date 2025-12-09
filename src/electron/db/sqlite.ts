@@ -3,7 +3,6 @@ import path from 'path';
 import DBMessages, { DBUIMessage } from './tables/messages.js';
 import DBChats, { DBUIChat } from './tables/chats.js';
 import { randomUUID } from 'crypto';
-import DBModels, { DBModel } from './tables/models.js';
 import DBChatSummaries, { DBChatSummary } from './tables/chatSummaries.js';
 
 export default class DB {
@@ -15,7 +14,6 @@ export default class DB {
   private chatsTable: DBChats;
   private chatSummariesTable: DBChatSummaries;
   private messagesTable: DBMessages;
-  private modelsTable: DBModels;
 
   private constructor(private dataDir: string) {
     console.log('Initializing database at', dataDir);
@@ -27,7 +25,6 @@ export default class DB {
     this.chatsTable = new DBChats(this.db);
     this.chatSummariesTable = new DBChatSummaries(this.db);
     this.messagesTable = new DBMessages(this.db);
-    this.modelsTable = new DBModels(this.db);
   }
 
   static getInstance(dataDir: string): DB {
@@ -48,22 +45,6 @@ export default class DB {
 
   getChatSummary(chatId: string): DBChatSummary | undefined {
     return this.chatSummariesTable.getByChatId(chatId);
-  }
-
-  listModels(): DBModel[] {
-    return this.modelsTable.getAll();
-  }
-
-  getModel(modelId: string): DBModel | undefined {
-    return this.modelsTable.getById(modelId) ?? undefined;
-  }
-
-  saveModel(model: Omit<DBModel, 'created_at' | 'updated_at'>): DBModel {
-    return this.modelsTable.create(model);
-  }
-
-  deleteModel(modelId: string): void {
-    this.modelsTable.delete(modelId);
   }
 
   addMessageToChat(chatId: string, message: DBUIMessage, idx?: number): string {

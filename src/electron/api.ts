@@ -1,6 +1,6 @@
 import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
-import { isModelId, isModelProvider, Model, ModelId } from './ai/model.js';
+import { isModelIdentifier, ModelIdentifier } from './ai/model.js';
 import { UsageUpdate } from './ai/chat';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
@@ -24,7 +24,7 @@ export interface LLMStartParams {
   id: string;
   messages: UIMessage[];
   webSearch: boolean;
-  modelId: ModelId | undefined;
+  modelIdentifier: ModelIdentifier;
 }
 
 export function isLLMStartParams(something: unknown): something is LLMStartParams {
@@ -37,13 +37,12 @@ export function isLLMStartParams(something: unknown): something is LLMStartParam
     typeof (something as any).id === 'string' &&
     Array.isArray((something as any).messages) &&
     typeof (something as any).webSearch === 'boolean' &&
-    ((something as any).modelId === undefined ||
-      (typeof (something as any).modelId === 'string' && isModelId((something as any).modelId)))
+    isModelIdentifier((something as any).modelIdentifier)
   );
 }
 
 export interface ChatRequestOptions {
-  modelId: ModelId | undefined;
+  modelIdentifier: ModelIdentifier;
   webSearch: boolean;
 }
 
@@ -60,13 +59,17 @@ export async function parseLLMStartParams(
   }
   const { id, messages } = something;
   const validatedMessages = await validateUIMessages({ messages });
-  return [id, validatedMessages, { webSearch: something.webSearch, modelId: something.modelId }];
+  return [
+    id,
+    validatedMessages,
+    { webSearch: something.webSearch, modelIdentifier: something.modelIdentifier },
+  ];
 }
 
 export interface LLMResumeParams {
   id: string;
   webSearch: boolean;
-  modelId: ModelId | undefined;
+  modelIdentifier: ModelIdentifier;
 }
 
 export function isLLMResumeParams(something: unknown): something is LLMResumeParams {
@@ -77,8 +80,7 @@ export function isLLMResumeParams(something: unknown): something is LLMResumePar
     'webSearch' in something &&
     typeof (something as any).id === 'string' &&
     typeof (something as any).webSearch === 'boolean' &&
-    ((something as any).modelId === undefined ||
-      (typeof (something as any).modelId === 'string' && isModelId((something as any).modelId)))
+    isModelIdentifier((something as any).modelIdentifier)
   );
 }
 
@@ -89,7 +91,7 @@ export function parseLLMResumeParams(something: unknown): LLMResumeParams {
   return {
     id: something.id,
     webSearch: something.webSearch,
-    modelId: something.modelId,
+    modelIdentifier: something.modelIdentifier,
   };
 }
 
@@ -139,41 +141,4 @@ export interface UIChatTitleUpdateEvent {
 export interface UpdateChatTitleParams {
   chatId: string;
   title: string;
-}
-
-export interface CreateModelRequest {
-  model: Model;
-}
-
-export function isModel(something: unknown): something is Model {
-  if (typeof something !== 'object' || something === null) {
-    return false;
-  }
-  if (
-    typeof (something as any).provider !== 'string' ||
-    !isModelProvider((something as any).provider)
-  ) {
-    return false;
-  }
-  if (typeof (something as any).name !== 'string') {
-    return false;
-  }
-  if ((something as any).apiKey !== null && typeof (something as any).apiKey !== 'string') {
-    return false;
-  }
-  if ((something as any).baseUrl !== null && typeof (something as any).baseUrl !== 'string') {
-    return false;
-  }
-  return true;
-}
-
-export function isCreateModelRequest(something: unknown): something is CreateModelRequest {
-  if (typeof something !== 'object' || something === null) {
-    return false;
-  }
-  return isModel((something as any).model);
-}
-
-export interface DeleteModelRequest {
-  modelId: ModelId;
 }

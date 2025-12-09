@@ -3,14 +3,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager, { UsageUpdate } from './ai/chat.js';
 import dotenv from 'dotenv';
-import {
-  isCreateModelRequest,
-  parseLLMCreateChatParams,
-  parseLLMResumeParams,
-  parseLLMStartParams,
-} from './api.js';
+import { parseLLMCreateChatParams, parseLLMResumeParams, parseLLMStartParams } from './api.js';
 import DB from './db/sqlite.js';
-import ModelManager from './ai/model.js';
 import { UIMessageChunk } from 'ai';
 
 dotenv.config();
@@ -20,8 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Keep a global reference of the window object to prevent garbage collection
 let mainWindow: BrowserWindow | null = null;
 const db = DB.getInstance(app.getPath('userData'));
-const modelManager = ModelManager.getInstance(db);
-const chatManager = ChatManager.getInstance(db, modelManager);
+const chatManager = ChatManager.getInstance(db);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -66,7 +59,6 @@ function createWindow(): void {
     db.close();
 
     // Destroy managers
-    modelManager.destroy();
     chatManager.destroy();
   });
 
@@ -151,7 +143,7 @@ ipcMain.on('llm:start', async (event, params) => {
 });
 
 ipcMain.on('llm:resume', async (event, params) => {
-  const { id, webSearch, modelId } = parseLLMResumeParams(params);
+  const { id, webSearch, modelIdentifier } = parseLLMResumeParams(params);
 
   const onUpdate = (chunk: UIMessageChunk) => {
     event.sender.send('llm:chunk', { id, chunk });
@@ -161,7 +153,12 @@ ipcMain.on('llm:resume', async (event, params) => {
     event.sender.send('llm:usage', { id, usage });
   };
 
-  const fullResponse = await chatManager.resumeChat(id, { webSearch, modelId }, onUpdate, onUsage);
+  const fullResponse = await chatManager.resumeChat(
+    id,
+    { webSearch, modelIdentifier },
+    onUpdate,
+    onUsage,
+  );
 
   event.sender.send('llm:end', { id, text: fullResponse });
 });
@@ -189,20 +186,4 @@ ipcMain.handle('llm:delete-chat', (_event, { chatId }) => {
 ipcMain.handle('llm:create-chat', async (_event, params) => {
   const [messages] = await parseLLMCreateChatParams(params);
   return chatManager.createChat(messages);
-});
-
-ipcMain.handle('models:list', () => {
-  return modelManager.listModels();
-});
-
-ipcMain.handle('models:add', (_event, modelCreationRequest) => {
-  if (!isCreateModelRequest(modelCreationRequest)) {
-    throw new Error('Invalid CreateModelRequest: ' + JSON.stringify(modelCreationRequest));
-  }
-  const { model } = modelCreationRequest;
-  return modelManager.add(model);
-});
-
-ipcMain.handle('models:delete', (_event, { modelId }) => {
-  modelManager.delete(modelId);
 });
