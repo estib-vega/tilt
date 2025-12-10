@@ -5,6 +5,13 @@ import type { ChatRequestOptions, ChatTransport, UIMessage, UIMessageChunk } fro
 export default class ElectronTransport<UI_MESSAGE extends UIMessage>
   implements ChatTransport<UI_MESSAGE>
 {
+  private static streams: Map<string, ReadableStream<UIMessageChunk>> = new Map();
+  private static chatRequestOptions: Map<string, RequestOptions> = new Map();
+
+  static setChatRequestOptions(chatId: string, options: RequestOptions): void {
+    ElectronTransport.chatRequestOptions.set(chatId, options);
+  }
+
   async sendMessages(
     options: {
       trigger: 'submit-message' | 'regenerate-message';
@@ -15,6 +22,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
     } & ChatRequestOptions,
   ): Promise<ReadableStream<UIMessageChunk>> {
     // Create a browser-readable stream that pulls data over IPC
+    const chatOptions = parseEletronChatRequestOptions(options);
     const stream = new ReadableStream<UIMessageChunk>({
       start(controller) {
         // incoming token chunks
@@ -48,8 +56,6 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         // Handle abort
         options.abortSignal?.addEventListener('abort', onAbort);
 
-        const chatOptions = parseEletronChatRequestOptions(options);
-
         // trigger backend stream
         window.api.chatStart({
           id: options.chatId,
@@ -60,17 +66,31 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
       },
     });
 
+    ElectronTransport.streams.set(options.chatId, stream);
+
     return stream;
   }
 
   async reconnectToStream(
     options: { chatId: string } & ChatRequestOptions,
   ): Promise<ReadableStream<UIMessageChunk> | null> {
+    const cachedStream = ElectronTransport.streams.get(options.chatId);
+    if (cachedStream) {
+      return ElectronTransport.streams.get(options.chatId)!;
+    }
+
     const chats = await window.api.listChats();
     const chatExists = chats.some((chat) => chat.id === options.chatId);
     if (!chatExists) {
       return null;
     }
+    const chatOptions = ElectronTransport.chatRequestOptions.get(options.chatId);
+    if (!chatOptions) {
+      // Unable to reconnect without previous chat options
+      return null;
+    }
+    ElectronTransport.chatRequestOptions.delete(options.chatId);
+
     // Create a browser-readable stream that pulls data over IPC
     const stream = new ReadableStream<UIMessageChunk>({
       start(controller) {
@@ -95,8 +115,6 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
           cleanUpEnd();
         };
 
-        const chatOptions = parseEletronChatRequestOptions(options);
-
         // trigger backend stream
         window.api.chatResume({
           id: options.chatId,
@@ -105,6 +123,8 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         });
       },
     });
+
+    ElectronTransport.streams.set(options.chatId, stream);
 
     return stream;
   }
@@ -134,5 +154,7 @@ function parseEletronChatRequestOptions(options: ChatRequestOptions): RequestOpt
     };
   }
 
-  throw new Error('Invalid chat request options for Electron transport');
+  throw new Error(
+    'Invalid chat request options for Electron transport: ' + JSON.stringify(options),
+  );
 }

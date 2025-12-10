@@ -53,11 +53,17 @@ function NewChat(): JSX.Element {
   const createChat = useCreateChatMutation();
   const [inputValue, setInputValue] = React.useState('');
 
-  const handleSend = async (message: PromptInputMessage): Promise<void> => {
+  const handleSend = async (
+    message: PromptInputMessage,
+    useWebSearch: boolean,
+    modelIdentifier: ModelIdentifier,
+  ): Promise<void> => {
     if (message.text.trim() === '') return;
-    const chatId = await createChat.mutateAsync([
-      { parts: [{ type: 'text', text: message.text }] },
-    ]);
+    const chatId = await createChat.mutateAsync({
+      messages: [{ parts: [{ type: 'text', text: message.text }] }],
+      useWebSearch,
+      modelIdentifier,
+    });
     return navigation({ to: '/chat', search: { chatId } });
   };
 
@@ -86,7 +92,7 @@ interface InitializedChatProps {
 
 function InitializedChat(props: InitializedChatProps): JSX.Element {
   const { chatId } = props;
-  const { messages, sendMessage, status, stop } = useElectronChat(chatId);
+  const { messages, sendMessage, status, stop, error } = useElectronChat(chatId);
   const [inputValue, setInputValue] = React.useState('');
 
   const handleSend = (
@@ -128,6 +134,12 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
         </ConversationContent>
       </Conversation>
       <div className="w-full p-4 flex flex-col shrink-0 gap-2 border-t">
+        {error && (
+          <div className="py-1 px-2 bg-red-100 text-red-800 rounded-md">
+            <p className="text-sm font-semibold">{error.name}</p>
+            <p className="text-xs">{error.message}</p>
+          </div>
+        )}
         <React.Suspense>
           <ChatInput
             handleSend={handleSend}

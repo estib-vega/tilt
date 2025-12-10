@@ -106,17 +106,29 @@ export function useUpdateChatTitleMutation() {
   });
 }
 
+interface CreateChatParams {
+  messages: Omit<CustomUIMessage, 'id' | 'role'>[];
+  useWebSearch: boolean;
+  modelIdentifier: ModelIdentifier;
+}
+
 export function useCreateChatMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (messages: Omit<CustomUIMessage, 'id' | 'role'>[]) => {
+    mutationFn: async (params: CreateChatParams) => {
+      const { messages, useWebSearch, modelIdentifier } = params;
       const id = generateId();
       const initialMessages: CustomUIMessage[] = messages.map((msg) => ({
         id,
         role: 'user',
         parts: msg.parts,
       }));
-      return window.api.createChat({ initialMessages });
+      const chatId = await window.api.createChat({ initialMessages });
+      ElectronTransport.setChatRequestOptions(chatId, {
+        webSearch: useWebSearch,
+        modelIdentifier,
+      });
+      return chatId;
     },
     onSuccess: (newChatId) => {
       // Invalidate chats query to refetch updated data
