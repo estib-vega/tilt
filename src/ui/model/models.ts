@@ -33,10 +33,9 @@ export function useListModels() {
 }
 
 export function useModelSelector() {
-  const [selectedModel, setSelectedModel] = React.useState<ModelInfo>({
+  const [selectedModel, setSelectedModel] = React.useState<ModelIdentifier>({
     provider: 'ollama',
     name: 'gpt-oss:20b',
-    displayName: 'GPT-OSS 20B',
   });
 
   const isSelectedModel = React.useCallback(

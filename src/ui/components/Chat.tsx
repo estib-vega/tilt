@@ -185,8 +185,8 @@ function ChatInput(props: ChatInputProps): JSX.Element {
 }
 
 interface ModelSelectorInputButtonProps {
-  selectedModel: ModelInfo;
-  setSelectedModel: React.Dispatch<React.SetStateAction<ModelInfo>>;
+  selectedModel: ModelIdentifier;
+  setSelectedModel: React.Dispatch<React.SetStateAction<ModelIdentifier>>;
   isSelectedModel: (model: ModelInfo) => boolean;
 }
 
