@@ -7,6 +7,8 @@ import { parseLLMCreateChatParams, parseLLMResumeParams, parseLLMStartParams } f
 import DB from './db/sqlite.js';
 import { UIMessageChunk } from 'ai';
 import CredentialsManager from './model/credentials.js';
+import { availableModels, defaultModelIdentifier } from './ai/model.js';
+import OllamaManager from './model/ollama.js';
 
 dotenv.config();
 
@@ -17,6 +19,7 @@ let mainWindow: BrowserWindow | null = null;
 const db = DB.getInstance(app.getPath('userData'));
 const credentialsManager = CredentialsManager.getInstance(db);
 const chatManager = ChatManager.getInstance(db, credentialsManager);
+const ollamaManager = OllamaManager.getInstance();
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -63,6 +66,7 @@ function createWindow(): void {
     // Destroy managers
     credentialsManager.destroy();
     chatManager.destroy();
+    ollamaManager.destroy();
   });
 
   const allowlistedProtocols = ['http:', 'https:'];
@@ -189,4 +193,12 @@ ipcMain.handle('llm:delete-chat', (_event, { chatId }) => {
 ipcMain.handle('llm:create-chat', async (_event, params) => {
   const [messages] = await parseLLMCreateChatParams(params);
   return chatManager.createChat(messages);
+});
+
+ipcMain.handle('llm:list-models', () => {
+  return availableModels(credentialsManager, ollamaManager);
+});
+
+ipcMain.handle('llm:default-model', () => {
+  return defaultModelIdentifier(credentialsManager, ollamaManager);
 });

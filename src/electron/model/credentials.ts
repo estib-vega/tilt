@@ -49,6 +49,12 @@ export default class CredentialsManager {
       service: assertValidCredentialService(c.service),
     }));
   }
+
+  listProviders(): CredentialService[] {
+    const creds = this.db.listCredentials();
+    const services = creds.map((c) => assertValidCredentialService(c.service));
+    return Array.from(new Set(services));
+  }
 }
 
 export interface Credential {

@@ -11,6 +11,7 @@ import {
   UIChatTitleUpdateEvent,
   UpdateChatTitleParams,
 } from './api';
+import { ModelIdentifier, ProviderModelList } from './ai/model';
 
 export type CleanUpFn = () => void;
 
@@ -75,6 +76,14 @@ export interface ElectronAPI {
    * Listens for chat title updates.
    */
   onChatTitleUpdated: (cb: (event: UIChatTitleUpdateEvent) => void) => CleanUpFn;
+  /**
+   * Lists all available models from providers.
+   */
+  listAvailableModels: () => Promise<ProviderModelList>;
+  /**
+   * Gets the default model identifier.
+   */
+  getDefaultModel: () => Promise<ModelIdentifier | null>;
 }
 
 const api: ElectronAPI = {
@@ -159,6 +168,12 @@ const api: ElectronAPI = {
       ipcRenderer.removeListener('llm:chat-title-updated', listener);
     };
   },
+
+  // List available models
+  listAvailableModels: () => ipcRenderer.invoke('llm:list-models'),
+
+  // Get default model identifier
+  getDefaultModel: () => ipcRenderer.invoke('llm:default-model'),
 };
 
 // Expose protected methods that allow the renderer process to use

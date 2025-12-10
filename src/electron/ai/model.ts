@@ -1,5 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import CredentialsManager from '@api/model/credentials';
+import OllamaManager from '@api/model/ollama';
 import { createOllama } from 'ollama-ai-provider-v2';
 
 const MODEL_PROVIDERS = ['ollama', 'openai'] as const;
@@ -71,4 +72,67 @@ export function getOpenAI(params?: OpenAIParameters) {
   });
 
   return openai(model);
+}
+
+export interface ModelInfo extends ModelIdentifier {
+  displayName: string;
+}
+
+export type ProviderModelList = [ModelProvider, ModelInfo[]][];
+
+const MODEL_PROVIDER_LIST = [
+  [
+    'openai',
+    [
+      { provider: 'openai', name: 'gpt-5', displayName: 'GPT 5' },
+      { provider: 'openai', name: 'gpt-5-mini', displayName: 'GPT 5 Mini' },
+      { provider: 'openai', name: 'gpt-5-nano', displayName: 'GPT 5 Nano' },
+      { provider: 'openai', name: 'gpt-4.1', displayName: 'GPT 4.1' },
+      { provider: 'openai', name: 'gpt-4.1-mini', displayName: 'GPT 4 Mini' },
+      { provider: 'openai', name: 'gpt-4', displayName: 'GPT 4' },
+    ],
+  ],
+] satisfies ProviderModelList;
+
+export async function availableModels(
+  credentialsManager: CredentialsManager,
+  ollamaManager: OllamaManager,
+): Promise<ProviderModelList> {
+  const availableProviders = credentialsManager.listProviders();
+  const result: ProviderModelList = [];
+
+  const remoteModels = MODEL_PROVIDER_LIST.filter(([provider]) => {
+    return availableProviders.includes(provider);
+  });
+
+  result.push(...remoteModels);
+
+  const ollamaModels = await ollamaManager.listModels();
+
+  if (ollamaModels.length > 0) {
+    const ollamaModelInfos: ModelInfo[] = ollamaModels.map((modelName) => ({
+      provider: 'ollama',
+      name: modelName,
+      displayName: modelName,
+    }));
+    result.push(['ollama', ollamaModelInfos]);
+  }
+
+  return result;
+}
+
+export async function defaultModelIdentifier(
+  credentialsManager: CredentialsManager,
+  ollamaManager: OllamaManager,
+): Promise<ModelIdentifier | null> {
+  const models = await availableModels(credentialsManager, ollamaManager);
+  const ollamaModels = models.find(([provider]) => provider === 'ollama');
+  if (ollamaModels && ollamaModels[1].length > 0) {
+    return ollamaModels[1][0];
+  }
+  const restModels = models.find(([provider]) => provider !== 'ollama');
+  if (restModels && restModels[1].length > 0) {
+    return restModels[1][0];
+  }
+  return null;
 }

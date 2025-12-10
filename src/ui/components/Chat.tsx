@@ -28,7 +28,7 @@ import { CheckIcon, GlobeIcon } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from './ui/button';
 import ChatContext from './ChatContext';
-import { useListModels, useModelSelector, type ModelInfo } from '@/model/models';
+import { useListModels, useModelSelector } from '@/model/models';
 import type { ModelIdentifier } from '@api/ai/model';
 
 export interface ChatProps {
@@ -64,13 +64,15 @@ function NewChat(): JSX.Element {
     <div className="min-h-0 h-full w-full flex justify-center items-center border-l border-t rounded-tl-md">
       <div className="max-w-3xl w-full p-4 flex flex-col items-center justify-start gap-4">
         <h1 className="text-3xl">ask away</h1>
-        <ChatInput
-          handleSend={handleSend}
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          status="ready"
-          chatId={undefined}
-        />
+        <React.Suspense>
+          <ChatInput
+            handleSend={handleSend}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            status="ready"
+            chatId={undefined}
+          />
+        </React.Suspense>
         {/* TODO: Suggestions of what to search */}
       </div>
     </div>
@@ -125,13 +127,15 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
         </ConversationContent>
       </Conversation>
       <div className="w-full p-4 flex flex-col shrink-0 gap-2 border-t">
-        <ChatInput
-          handleSend={handleSend}
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          status={status}
-          chatId={chatId}
-        />
+        <React.Suspense>
+          <ChatInput
+            handleSend={handleSend}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            status={status}
+            chatId={chatId}
+          />
+        </React.Suspense>
       </div>
     </div>
   );
@@ -153,10 +157,22 @@ function ChatInput(props: ChatInputProps): JSX.Element {
   const { handleSend, inputValue, setInputValue, status } = props;
   const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
   const modelSelectorHook = useModelSelector();
+
+  if (modelSelectorHook.selectedModel === null) {
+    return (
+      <div className="flex gap-2 items-center justify-center">
+        <p className="font-semibold text-sm">no models available</p>
+        <Button variant="ghost" className="border border-amber-400 text-amber-400">
+          configure...
+        </Button>
+      </div>
+    );
+  }
+
+  const selectedModel = modelSelectorHook.selectedModel;
+
   return (
-    <PromptInput
-      onSubmit={(message) => handleSend(message, useWebSearch, modelSelectorHook.selectedModel)}
-    >
+    <PromptInput onSubmit={(message) => handleSend(message, useWebSearch, selectedModel)}>
       <PromptInputBody>
         <PromptInputTextarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
       </PromptInputBody>
@@ -170,7 +186,7 @@ function ChatInput(props: ChatInputProps): JSX.Element {
             <span>search</span>
           </PromptInputButton>
           <React.Suspense>
-            <ModelSelectorInputButton {...modelSelectorHook} />
+            <ModelSelectorInputButton {...modelSelectorHook} selectedModel={selectedModel} />
           </React.Suspense>
           {props.chatId && <ChatContext chatId={props.chatId} />}
         </div>
@@ -186,14 +202,14 @@ function ChatInput(props: ChatInputProps): JSX.Element {
 
 interface ModelSelectorInputButtonProps {
   selectedModel: ModelIdentifier;
-  setSelectedModel: React.Dispatch<React.SetStateAction<ModelIdentifier>>;
-  isSelectedModel: (model: ModelInfo) => boolean;
+  setSelectedModel: React.Dispatch<React.SetStateAction<ModelIdentifier | null>>;
+  isSelectedModel: (model: ModelIdentifier) => boolean;
 }
 
 function ModelSelectorInputButton(props: ModelSelectorInputButtonProps): JSX.Element {
   const { selectedModel, setSelectedModel, isSelectedModel } = props;
   const [open, setOpen] = React.useState(false);
-  const modelsList = useListModels();
+  const { data: modelsList } = useListModels();
 
   return (
     <div>
