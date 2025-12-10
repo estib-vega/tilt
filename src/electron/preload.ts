@@ -1,9 +1,11 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import {
+  AddCredentialParams,
   ChatChunkEvent,
   ChatEndEvent,
   ChatUsageEvent,
   CustomUIMessage,
+  DeleteCredentialParams,
   LLMCreateChatParams,
   LLMResumeParams,
   LLMStartParams,
@@ -12,6 +14,7 @@ import {
   UpdateChatTitleParams,
 } from './api';
 import { ModelIdentifier, ProviderModelList } from './ai/model';
+import { Credential, CredentialService } from './model/credentials';
 
 export type CleanUpFn = () => void;
 
@@ -84,6 +87,22 @@ export interface ElectronAPI {
    * Gets the default model identifier.
    */
   getDefaultModel: () => Promise<ModelIdentifier | null>;
+  /**
+   * Add a new credential.
+   */
+  addCredential: (params: AddCredentialParams) => Promise<void>;
+  /**
+   * Delete a credential by ID.
+   */
+  deleteCredential: (params: DeleteCredentialParams) => Promise<void>;
+  /**
+   * Lists all credentials.
+   */
+  listCredentials: () => Promise<Credential[]>;
+  /**
+   * Lists all credential providers already configured.
+   */
+  listCredentialProviders: () => Promise<CredentialService[]>;
 }
 
 const api: ElectronAPI = {
@@ -174,6 +193,19 @@ const api: ElectronAPI = {
 
   // Get default model identifier
   getDefaultModel: () => ipcRenderer.invoke('llm:default-model'),
+
+  // Add a new credential
+  addCredential: (params: AddCredentialParams) => ipcRenderer.invoke('credentials:add', params),
+
+  // Delete a credential by ID
+  deleteCredential: (params: DeleteCredentialParams) =>
+    ipcRenderer.invoke('credentials:delete', params),
+
+  // List all credentials
+  listCredentials: () => ipcRenderer.invoke('credentials:list'),
+
+  // List all credential providers
+  listCredentialProviders: () => ipcRenderer.invoke('credentials:list-providers'),
 };
 
 // Expose protected methods that allow the renderer process to use

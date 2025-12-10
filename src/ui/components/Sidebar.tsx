@@ -1,4 +1,4 @@
-import { useListChats, deleteChatMutation, getDefaultChatId } from '@/model/api/chat';
+import { useListChats, useDeleteChatMutation, getDefaultChatId } from '@/model/api/chat';
 import { ScrollArea } from '@radix-ui/react-scroll-area';
 import React, { type JSX } from 'react';
 import { Button } from './ui/button';
@@ -114,7 +114,7 @@ function EditChatTitleButton(props: EditChatTitleButtonProps) {
   const { chatId } = props;
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const navigate = useNavigate();
-  const deleteChat = deleteChatMutation();
+  const deleteChat = useDeleteChatMutation();
 
   const handleOpenChange = (isOpen: boolean) => {
     setPopoverOpen(isOpen);

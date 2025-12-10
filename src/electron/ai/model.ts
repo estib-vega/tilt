@@ -1,9 +1,10 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import CredentialsManager from '@api/model/credentials';
 import OllamaManager from '@api/model/ollama';
 import { createOllama } from 'ollama-ai-provider-v2';
 
-const MODEL_PROVIDERS = ['ollama', 'openai'] as const;
+const MODEL_PROVIDERS = ['ollama', 'openai', 'anthropic'] as const;
 export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
 
 export function isModelProvider(something: unknown): something is ModelProvider {
@@ -38,6 +39,13 @@ export function getModel(modelIdentifier: ModelIdentifier, credentialsManager: C
         throw new Error('OpenAI API key not found in credentials manager');
       }
       return getOpenAI({ model: modelIdentifier.name, apiKey });
+    }
+    case 'anthropic': {
+      const apiKey = credentialsManager.getCredential('anthropic');
+      if (!apiKey) {
+        throw new Error('Anthropic API key not found in credentials manager');
+      }
+      return getAnthropic({ model: modelIdentifier.name, apiKey });
     }
   }
 }
@@ -74,6 +82,24 @@ export function getOpenAI(params?: OpenAIParameters) {
   return openai(model);
 }
 
+interface AnthropicParameters {
+  model?: string;
+  apiKey?: string;
+  baseUrl?: string;
+}
+
+export function getAnthropic(params?: AnthropicParameters) {
+  const model = params?.model ?? 'claude-haiku-4-5-20251101';
+  const apiKey = params?.apiKey ?? process.env.ANTHROPIC_API_KEY;
+
+  const anthropic = createAnthropic({
+    apiKey,
+    baseURL: params?.baseUrl,
+  });
+
+  return anthropic(model);
+}
+
 export interface ModelInfo extends ModelIdentifier {
   displayName: string;
 }
@@ -90,6 +116,18 @@ const MODEL_PROVIDER_LIST = [
       { provider: 'openai', name: 'gpt-4.1', displayName: 'GPT 4.1' },
       { provider: 'openai', name: 'gpt-4.1-mini', displayName: 'GPT 4 Mini' },
       { provider: 'openai', name: 'gpt-4', displayName: 'GPT 4' },
+    ],
+  ],
+  [
+    'anthropic',
+    [
+      { provider: 'anthropic', name: 'claude-opus-4-5-20251101', displayName: 'Claude 4.5 Opus' },
+      {
+        provider: 'anthropic',
+        name: 'claude-sonnet-4-5-20250929',
+        displayName: 'Claude 4.5 Sonnet',
+      },
+      { provider: 'anthropic', name: 'claude-haiku-4-5-20251001', displayName: 'Claude 4.5 Haiku' },
     ],
   ],
 ] satisfies ProviderModelList;

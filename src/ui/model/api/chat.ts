@@ -95,7 +95,7 @@ export async function getDefaultChatId(filterOut?: string[]): Promise<string | n
   return chats[0].id;
 }
 
-export function updateChatTitleMutation() {
+export function useUpdateChatTitleMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: UpdateChatTitleParams) => window.api.updateChatTitle(params),
@@ -106,7 +106,7 @@ export function updateChatTitleMutation() {
   });
 }
 
-export function createChatMutation() {
+export function useCreateChatMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (messages: Omit<CustomUIMessage, 'id' | 'role'>[]) => {
@@ -126,7 +126,7 @@ export function createChatMutation() {
   });
 }
 
-export function deleteChatMutation() {
+export function useDeleteChatMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (chatId: string) => window.api.deleteChat(chatId),

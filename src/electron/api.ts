@@ -2,6 +2,7 @@ import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
 import { isModelIdentifier, ModelIdentifier } from './ai/model.js';
 import { UsageUpdate } from './ai/chat';
+import { CredentialService, isCredentialService } from './model/credentials.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -141,4 +142,47 @@ export interface UIChatTitleUpdateEvent {
 export interface UpdateChatTitleParams {
   chatId: string;
   title: string;
+}
+
+export interface AddCredentialParams {
+  service: CredentialService;
+  secret: string;
+}
+
+function isAddCredentialParams(something: unknown): something is AddCredentialParams {
+  return (
+    typeof something === 'object' &&
+    something !== null &&
+    'service' in something &&
+    'secret' in something &&
+    typeof (something as any).secret === 'string' &&
+    isCredentialService((something as any).service)
+  );
+}
+
+export function parseAddCredentialParams(something: unknown): AddCredentialParams {
+  if (!isAddCredentialParams(something)) {
+    throw new Error('Invalid add credential parameters');
+  }
+  return something;
+}
+
+export interface DeleteCredentialParams {
+  id: string;
+}
+
+function isDeleteCredentialParams(something: unknown): something is DeleteCredentialParams {
+  return (
+    typeof something === 'object' &&
+    something !== null &&
+    'id' in something &&
+    typeof (something as any).id === 'string'
+  );
+}
+
+export function parseDeleteCredentialParams(something: unknown): DeleteCredentialParams {
+  if (!isDeleteCredentialParams(something)) {
+    throw new Error('Invalid delete credential parameters');
+  }
+  return something;
 }

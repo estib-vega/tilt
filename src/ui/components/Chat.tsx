@@ -1,4 +1,4 @@
-import { createChatMutation, useElectronChat } from '@/model/api/chat';
+import { useCreateChatMutation, useElectronChat } from '@/model/api/chat';
 import React, { type JSX } from 'react';
 import {
   PromptInput,
@@ -28,8 +28,9 @@ import { CheckIcon, GlobeIcon } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from './ui/button';
 import ChatContext from './ChatContext';
-import { useListModels, useModelSelector } from '@/model/models';
+import { useListModels, useModelSelector } from '@/model/api/models';
 import type { ModelIdentifier } from '@api/ai/model';
+import ConfigureModelsButton from './ConfigureModelsButton';
 
 export interface ChatProps {
   chatId: string | undefined;
@@ -49,7 +50,7 @@ export default function Chat(props: ChatProps): JSX.Element {
 
 function NewChat(): JSX.Element {
   const navigation = useNavigate();
-  const createChat = createChatMutation();
+  const createChat = useCreateChatMutation();
   const [inputValue, setInputValue] = React.useState('');
 
   const handleSend = async (message: PromptInputMessage): Promise<void> => {
@@ -162,9 +163,7 @@ function ChatInput(props: ChatInputProps): JSX.Element {
     return (
       <div className="flex gap-2 items-center justify-center">
         <p className="font-semibold text-sm">no models available</p>
-        <Button variant="ghost" className="border border-amber-400 text-amber-400">
-          configure...
-        </Button>
+        <ConfigureModelsButton />
       </div>
     );
   }

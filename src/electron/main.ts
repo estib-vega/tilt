@@ -3,7 +3,13 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager, { UsageUpdate } from './ai/chat.js';
 import dotenv from 'dotenv';
-import { parseLLMCreateChatParams, parseLLMResumeParams, parseLLMStartParams } from './api.js';
+import {
+  parseAddCredentialParams,
+  parseDeleteCredentialParams,
+  parseLLMCreateChatParams,
+  parseLLMResumeParams,
+  parseLLMStartParams,
+} from './api.js';
 import DB from './db/sqlite.js';
 import { UIMessageChunk } from 'ai';
 import CredentialsManager from './model/credentials.js';
@@ -201,4 +207,22 @@ ipcMain.handle('llm:list-models', () => {
 
 ipcMain.handle('llm:default-model', () => {
   return defaultModelIdentifier(credentialsManager, ollamaManager);
+});
+
+ipcMain.handle('credentials:list', () => {
+  return credentialsManager.listCredentials();
+});
+
+ipcMain.handle('credentials:list-providers', () => {
+  return credentialsManager.listProviders();
+});
+
+ipcMain.handle('credentials:add', (_event, params) => {
+  const { service, secret } = parseAddCredentialParams(params);
+  return credentialsManager.addCredential(service, secret);
+});
+
+ipcMain.handle('credentials:remove', (_event, params) => {
+  const { id } = parseDeleteCredentialParams(params);
+  return credentialsManager.deleteCredential(id);
 });

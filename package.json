@@ -17,6 +17,7 @@
     "rebuild:sqlite": "electron-rebuild -f -w better-sqlite3"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.54",
     "@ai-sdk/openai": "^2.0.72",
     "@ai-sdk/react": "^2.0.101",
     "@radix-ui/react-collapsible": "^1.1.12",

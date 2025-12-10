@@ -33,6 +33,10 @@ export default class CredentialsManager {
     });
   }
 
+  deleteCredential(id: string): void {
+    this.db.deleteCredential(id);
+  }
+
   getCredential(service: CredentialService): string | null {
     const creds = this.db.getCredentialsByService(service);
     if (creds.length === 0) {
@@ -62,7 +66,7 @@ export interface Credential {
   service: CredentialService;
 }
 
-const VALID_SERVICES = ['github', 'openai', 'tavily'] as const;
+const VALID_SERVICES = ['github', 'anthropic', 'openai', 'tavily'] as const;
 
 export type CredentialService = (typeof VALID_SERVICES)[number];
 
