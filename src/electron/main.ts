@@ -226,3 +226,7 @@ ipcMain.handle('credentials:remove', (_event, params) => {
   const { id } = parseDeleteCredentialParams(params);
   return credentialsManager.deleteCredential(id);
 });
+
+ipcMain.handle('ollama:get-status', async () => {
+  return ollamaManager.getStatus();
+});

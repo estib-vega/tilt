@@ -1,8 +1,12 @@
 import { useDeleteCredentialMutation, useListCredentials } from '@/model/api/credentials';
 import { Button } from '@/components/ui/button';
 import { createFileRoute } from '@tanstack/react-router';
-import React from 'react';
+import React, { type JSX } from 'react';
 import AddCredentialModal from '@/components/AddCredentialModal';
+import { useOllamaStatus } from '@/model/api/ollama';
+import { Badge } from '@/components/ui/badge';
+import { Check, CircleX, TriangleAlert } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const Route = createFileRoute('/settings')({
   component: RouteComponent,
@@ -13,12 +17,88 @@ function RouteComponent() {
     <div className="max-h-0 h-full w-full p-4 box-border flex justify-center">
       <div className="max-w-2xl w-full flex flex-col gap-6">
         <h1 className="text-2xl font-bold">settings</h1>
+        <OllamaStatus />
         <React.Suspense>
           <CredentialsList />
         </React.Suspense>
       </div>
     </div>
   );
+}
+
+function OllamaStatus(): JSX.Element {
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-lg font-semibold">ollama</h2>
+      <React.Suspense>
+        <OllamaStatusBadge />
+      </React.Suspense>
+    </div>
+  );
+}
+
+function OllamaStatusBadge(): JSX.Element {
+  const { data: status } = useOllamaStatus();
+
+  switch (status.type) {
+    case 'available':
+      return (
+        <div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="text-green-400">
+                <Check />
+                connected
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="flex flex-col gap-1">
+                <p>Ollama server is available.</p>
+                <p>version: {status.version}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
+    case 'unavailable':
+      return (
+        <div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="text-amber-400">
+                <TriangleAlert />
+                disconnected
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="flex flex-col gap-1">
+                <p>Ollama server is unavailable.</p>
+                <p>Please ensure it is running.</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
+    case 'error':
+      return (
+        <div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="destructive">
+                <CircleX />
+                error
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="flex flex-col gap-1">
+                <p>Failed to contact server.</p>
+                <p>{status.message}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
+  }
 }
 
 function CredentialsList() {

@@ -15,6 +15,7 @@ import {
 } from './api';
 import { ModelIdentifier, ProviderModelList } from './ai/model';
 import { Credential, CredentialService } from './model/credentials';
+import { OllamaStatus } from './model/ollama';
 
 export type CleanUpFn = () => void;
 
@@ -103,6 +104,10 @@ export interface ElectronAPI {
    * Lists all credential providers already configured.
    */
   listCredentialProviders: () => Promise<CredentialService[]>;
+  /**
+   * Gets the status of the Ollama server.
+   */
+  ollamaGetStatus: () => Promise<OllamaStatus>;
 }
 
 const api: ElectronAPI = {
@@ -206,6 +211,9 @@ const api: ElectronAPI = {
 
   // List all credential providers
   listCredentialProviders: () => ipcRenderer.invoke('credentials:list-providers'),
+
+  // Get Ollama server status
+  ollamaGetStatus: () => ipcRenderer.invoke('ollama:get-status'),
 };
 
 // Expose protected methods that allow the renderer process to use
