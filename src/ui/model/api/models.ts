@@ -16,9 +16,11 @@ export function useDefaultModel() {
   });
 }
 
-export function useModelSelector() {
+export function useModelSelector(initialModel?: ModelIdentifier) {
   const { data: defaultModel } = useDefaultModel();
-  const [selectedModel, setSelectedModel] = React.useState<ModelIdentifier | null>(defaultModel);
+  const [selectedModel, setSelectedModel] = React.useState<ModelIdentifier | null>(
+    initialModel ?? defaultModel,
+  );
 
   const isSelectedModel = React.useCallback(
     (model: ModelIdentifier) =>

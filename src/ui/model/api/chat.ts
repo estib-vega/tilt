@@ -1,11 +1,12 @@
 import { useChat } from '@ai-sdk/react';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import ElectronTransport from './electronTransport';
+import ElectronTransport, { type RequestOptions } from './electronTransport';
 import type { CustomUIMessage, UpdateChatTitleParams } from '@api/api';
 import React from 'react';
 import { generateId } from 'ai';
 import type { UsageUpdate } from '@api/ai/chat';
 import type { ModelIdentifier } from '@api/ai/model';
+import { useModelSelector } from './models';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
@@ -166,4 +167,27 @@ export function useChatUsage(chatId: string) {
   }, [chatId]);
 
   return usage;
+}
+
+interface ChatParamsHook {
+  useWebSearch: boolean;
+  setUseWebSearch: React.Dispatch<React.SetStateAction<boolean>>;
+  modelSelectorHook: ReturnType<typeof useModelSelector>;
+}
+
+export function useChatParams(chatId: string | undefined): ChatParamsHook {
+  const params: RequestOptions | undefined = React.useMemo(() => {
+    if (!chatId) {
+      return undefined;
+    }
+    return ElectronTransport.getChatRequestOptions(chatId);
+  }, [chatId]);
+  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(params?.webSearch ?? false);
+  const modelSelectorHook = useModelSelector(params?.modelIdentifier);
+
+  return {
+    useWebSearch,
+    setUseWebSearch,
+    modelSelectorHook,
+  };
 }

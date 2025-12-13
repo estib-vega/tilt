@@ -1,4 +1,4 @@
-import { useCreateChatMutation, useElectronChat } from '@/model/api/chat';
+import { useChatParams, useCreateChatMutation, useElectronChat } from '@/model/api/chat';
 import React, { type JSX } from 'react';
 import {
   PromptInput,
@@ -28,7 +28,7 @@ import { CheckIcon, GlobeIcon } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from './ui/button';
 import ChatContext from './ChatContext';
-import { useListModels, useModelSelector } from '@/model/api/models';
+import { useListModels } from '@/model/api/models';
 import type { ModelIdentifier } from '@api/ai/model';
 import ConfigureModelsButton from './ConfigureModelsButton';
 
@@ -168,8 +168,7 @@ interface ChatInputProps {
 
 function ChatInput(props: ChatInputProps): JSX.Element {
   const { handleSend, inputValue, setInputValue, status } = props;
-  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(false);
-  const modelSelectorHook = useModelSelector();
+  const { useWebSearch, setUseWebSearch, modelSelectorHook } = useChatParams(props.chatId);
 
   if (modelSelectorHook.selectedModel === null) {
     return (

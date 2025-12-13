@@ -12,6 +12,10 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
     ElectronTransport.chatRequestOptions.set(chatId, options);
   }
 
+  static getChatRequestOptions(chatId: string): RequestOptions | undefined {
+    return ElectronTransport.chatRequestOptions.get(chatId);
+  }
+
   async sendMessages(
     options: {
       trigger: 'submit-message' | 'regenerate-message';
@@ -130,7 +134,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
   }
 }
 
-interface RequestOptions {
+export interface RequestOptions {
   webSearch: boolean;
   modelIdentifier: ModelIdentifier;
 }
