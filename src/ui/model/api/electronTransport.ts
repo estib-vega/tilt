@@ -55,6 +55,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
           cleanUpChunk();
           cleanUpEnd();
           options.abortSignal?.removeEventListener('abort', onAbort);
+          ElectronTransport.chatRequestOptions.delete(options.chatId);
         };
 
         // Handle abort
@@ -117,6 +118,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
         const cleanup = () => {
           cleanUpChunk();
           cleanUpEnd();
+          ElectronTransport.chatRequestOptions.delete(options.chatId);
         };
 
         // trigger backend stream
