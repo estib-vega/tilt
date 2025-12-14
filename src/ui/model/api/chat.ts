@@ -125,10 +125,16 @@ export function useCreateChatMutation() {
         parts: msg.parts,
       }));
       const chatId = await window.api.createChat({ initialMessages });
-      ElectronTransport.setChatRequestOptions(chatId, {
-        webSearch: useWebSearch,
-        modelIdentifier,
-      });
+      ElectronTransport.createChatStream(
+        {
+          chatId,
+          trigger: 'submit-message',
+          messageId: id,
+          messages: initialMessages,
+          abortSignal: undefined,
+        },
+        { webSearch: useWebSearch, modelIdentifier },
+      );
       return chatId;
     },
     onSuccess: (newChatId) => {

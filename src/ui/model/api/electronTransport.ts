@@ -27,6 +27,22 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
   ): Promise<ReadableStream<UIMessageChunk>> {
     // Create a browser-readable stream that pulls data over IPC
     const chatOptions = parseEletronChatRequestOptions(options);
+    const stream = ElectronTransport.createChatStream(options, chatOptions);
+
+    return stream;
+  }
+
+  static createChatStream(
+    options: {
+      trigger: 'submit-message' | 'regenerate-message';
+      chatId: string;
+      messageId: string | undefined;
+      messages: UIMessage[];
+      abortSignal: AbortSignal | undefined;
+    } & ChatRequestOptions,
+    chatOptions: RequestOptions,
+  ) {
+    ElectronTransport.chatRequestOptions.set(options.chatId, chatOptions);
     const stream = new ReadableStream<UIMessageChunk>({
       start(controller) {
         // incoming token chunks
@@ -72,7 +88,6 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
     });
 
     ElectronTransport.streams.set(options.chatId, stream);
-
     return stream;
   }
 
