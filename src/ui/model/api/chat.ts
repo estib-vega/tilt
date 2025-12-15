@@ -6,7 +6,7 @@ import React from 'react';
 import { generateId } from 'ai';
 import type { ModelIdentifier } from '@api/ai/model';
 import { useModelSelector } from './models';
-import useChatStore from '@/store';
+import { useChatStore } from '@/store';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();

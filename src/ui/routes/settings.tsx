@@ -7,6 +7,7 @@ import { useOllamaStatus } from '@/model/api/ollama';
 import { Badge } from '@/components/ui/badge';
 import { Check, CircleX, TriangleAlert } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useThemeToggle } from '@/model/ui';
 
 export const Route = createFileRoute('/settings')({
   component: RouteComponent,
@@ -17,10 +18,28 @@ function RouteComponent() {
     <div className="max-h-0 h-full w-full p-4 box-border flex justify-center">
       <div className="max-w-2xl w-full flex flex-col gap-6">
         <h1 className="text-2xl font-bold">settings</h1>
+        <AppearanceSettings />
         <OllamaStatus />
         <React.Suspense>
           <CredentialsList />
         </React.Suspense>
+      </div>
+    </div>
+  );
+}
+
+function AppearanceSettings(): JSX.Element {
+  const [theme, toggleDarkmode] = useThemeToggle();
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-lg font-semibold">appearance</h2>
+      <div className="flex items-center justify-between">
+        <label htmlFor="darkmode-toggle" className="text-sm">
+          current theme: {theme}
+        </label>
+        <Button id="darkmode-toggle" variant="outline" size="sm" onClick={toggleDarkmode}>
+          toggle
+        </Button>
       </div>
     </div>
   );

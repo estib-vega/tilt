@@ -1,4 +1,4 @@
-import useChatStore from '@/store';
+import { useChatStore } from '@/store';
 import type { ModelIdentifier } from '@api/ai/model';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import React from 'react';

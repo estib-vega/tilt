@@ -3,7 +3,7 @@ import type { ModelIdentifier } from '@api/ai/model';
 import { create } from 'zustand';
 import { persist, combine } from 'zustand/middleware';
 
-const useChatStore = create(
+export const useChatStore = create(
   persist(
     combine(
       {
@@ -48,4 +48,23 @@ const useChatStore = create(
   ),
 );
 
-export default useChatStore;
+type UITheme = 'light' | 'dark';
+
+interface UISettingsStore {
+  theme: UITheme;
+}
+
+const initialUISettingsStore: UISettingsStore = {
+  theme: 'dark',
+};
+
+export const useUiSettingsStore = create(
+  persist(
+    combine(initialUISettingsStore, (set) => ({
+      toggleDarkmode: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+    })),
+    {
+      name: 'ui-settings-store',
+    },
+  ),
+);
