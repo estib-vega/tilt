@@ -117,6 +117,14 @@ code {
     }
   }
 
+  ul li {
+    @apply list-disc
+  }
+
+  ol li {
+    @apply list-decimal
+  }
+
   /* Heading styles */
   h1,
   h2,
