@@ -108,6 +108,22 @@ export interface ElectronAPI {
    * Gets the status of the Ollama server.
    */
   ollamaGetStatus: () => Promise<OllamaStatus>;
+  /**
+   * Get a new note path.
+   */
+  newNote: (content: string) => Promise<string>;
+  /**
+   * Read the content of a note from a given file path.
+   */
+  readNote: (filePath: string) => Promise<string>;
+  /**
+   * Write content to a note at a given file path.
+   */
+  writeNote: (filePath: string, content: string) => Promise<void>;
+  /**
+   * Delete a note at a given file path.
+   */
+  deleteNote: (filePath: string) => Promise<void>;
 }
 
 const api: ElectronAPI = {
@@ -214,6 +230,19 @@ const api: ElectronAPI = {
 
   // Get Ollama server status
   ollamaGetStatus: () => ipcRenderer.invoke('ollama:get-status'),
+
+  // Create a new note path
+  newNote: (content: string) => ipcRenderer.invoke('notes:new', { content }),
+
+  // Read note content
+  readNote: (filePath: string) => ipcRenderer.invoke('notes:read-note', { filePath }),
+
+  // Write note content
+  writeNote: (filePath: string, content: string) =>
+    ipcRenderer.invoke('notes:write-note', { filePath, content }),
+
+  // Delete a note
+  deleteNote: (filePath: string) => ipcRenderer.invoke('note:delete-note', { filePath }),
 };
 
 // Expose protected methods that allow the renderer process to use

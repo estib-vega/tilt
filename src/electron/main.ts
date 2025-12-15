@@ -15,14 +15,16 @@ import { UIMessageChunk } from 'ai';
 import CredentialsManager from './model/credentials.js';
 import { availableModels, defaultModelIdentifier } from './ai/model.js';
 import OllamaManager from './model/ollama.js';
+import { deleteNote, newNotePath, readNoteContent, writeNoteContent } from './model/notes.js';
 
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const appDir = app.getPath('userData');
 // Keep a global reference of the window object to prevent garbage collection
 let mainWindow: BrowserWindow | null = null;
-const db = DB.getInstance(app.getPath('userData'));
+const db = DB.getInstance(appDir);
 const credentialsManager = CredentialsManager.getInstance(db);
 const chatManager = ChatManager.getInstance(db, credentialsManager);
 const ollamaManager = OllamaManager.getInstance();
@@ -229,4 +231,22 @@ ipcMain.handle('credentials:remove', (_event, params) => {
 
 ipcMain.handle('ollama:get-status', async () => {
   return ollamaManager.getStatus();
+});
+
+ipcMain.handle('notes:new', (_event, { content }) => {
+  const filePath = newNotePath(appDir);
+  writeNoteContent(filePath, content);
+  return filePath;
+});
+
+ipcMain.handle('notes:read-note', (_event, { filePath }) => {
+  return readNoteContent(filePath);
+});
+
+ipcMain.handle('notes:write-note', (_event, { filePath, content }) => {
+  return writeNoteContent(filePath, content);
+});
+
+ipcMain.handle('notes:delete-note', (_event, { filePath }) => {
+  return deleteNote(filePath);
 });
