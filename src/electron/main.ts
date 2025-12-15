@@ -15,7 +15,7 @@ import { UIMessageChunk } from 'ai';
 import CredentialsManager from './model/credentials.js';
 import { availableModels, defaultModelIdentifier } from './ai/model.js';
 import OllamaManager from './model/ollama.js';
-import { deleteNote, newNotePath, readNoteContent, writeNoteContent } from './model/notes.js';
+import NotesManager from './model/notes.js';
 
 dotenv.config();
 
@@ -28,6 +28,7 @@ const db = DB.getInstance(appDir);
 const credentialsManager = CredentialsManager.getInstance(db);
 const chatManager = ChatManager.getInstance(db, credentialsManager);
 const ollamaManager = OllamaManager.getInstance();
+const notesManager = NotesManager.getInstance(appDir, db);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -75,6 +76,7 @@ function createWindow(): void {
     credentialsManager.destroy();
     chatManager.destroy();
     ollamaManager.destroy();
+    notesManager.destroy();
   });
 
   const allowlistedProtocols = ['http:', 'https:'];
@@ -234,19 +236,19 @@ ipcMain.handle('ollama:get-status', async () => {
 });
 
 ipcMain.handle('notes:new', (_event, { content }) => {
-  const filePath = newNotePath(appDir);
-  writeNoteContent(filePath, content);
+  const filePath = notesManager.newNotePath();
+  notesManager.writeNoteContent(filePath, content);
   return filePath;
 });
 
 ipcMain.handle('notes:read-note', (_event, { filePath }) => {
-  return readNoteContent(filePath);
+  return notesManager.readNoteContent(filePath);
 });
 
 ipcMain.handle('notes:write-note', (_event, { filePath, content }) => {
-  return writeNoteContent(filePath, content);
+  return notesManager.writeNoteContent(filePath, content);
 });
 
 ipcMain.handle('notes:delete-note', (_event, { filePath }) => {
-  return deleteNote(filePath);
+  return notesManager.deleteNote(filePath);
 });

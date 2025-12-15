@@ -5,6 +5,7 @@ import DBChats, { DBUIChat } from './tables/chats.js';
 import { randomUUID } from 'crypto';
 import DBChatSummaries, { DBChatSummary } from './tables/chatSummaries.js';
 import DBCredentials, { DBCredential } from './tables/credentials.js';
+import DBNotes from './tables/notes.js';
 
 export default class DB {
   private static instance: DB | undefined;
@@ -16,6 +17,7 @@ export default class DB {
   private chatSummariesTable: DBChatSummaries;
   private messagesTable: DBMessages;
   private credentialsTable: DBCredentials;
+  private notesTable: DBNotes;
 
   private constructor(private dataDir: string) {
     console.log('Initializing database at', dataDir);
@@ -28,6 +30,7 @@ export default class DB {
     this.chatSummariesTable = new DBChatSummaries(this.db);
     this.messagesTable = new DBMessages(this.db);
     this.credentialsTable = new DBCredentials(this.db);
+    this.notesTable = new DBNotes(this.db);
   }
 
   static getInstance(dataDir: string): DB {
@@ -40,6 +43,27 @@ export default class DB {
   close() {
     this.db.close();
     DB.instance = undefined;
+  }
+
+  listNotes() {
+    return this.notesTable.listWithoutProject();
+  }
+
+  createNote(
+    path: string,
+    title: string | null,
+    description: string | null,
+    projectId: string | null,
+  ) {
+    return this.notesTable.add(path, title, description, projectId);
+  }
+
+  deleteNote(noteId: number) {
+    return this.notesTable.deleteById(noteId);
+  }
+
+  deleteNoteByPath(notePath: string) {
+    return this.notesTable.deleteByPath(notePath);
   }
 
   addCredential(credential: DBCredential): string {

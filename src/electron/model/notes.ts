@@ -1,46 +1,95 @@
+import DB from '@api/db/sqlite';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
 const NOTES_DIR = 'notes';
 
-export function newNotePath(appDir: string): string {
-  const iso = new Date().toDateString();
-  const today = iso.split('T')[0];
-  if (!today) {
-    // The world is wrong if this happens
-    throw new Error('Failed to generate date string for new note path');
+export default class NotesManager {
+  private static instance: NotesManager | undefined;
+  private constructor(
+    private appDir: string,
+    private db: DB,
+  ) {}
+
+  static getInstance(appDir: string, db: DB): NotesManager {
+    if (!NotesManager.instance) {
+      NotesManager.instance = new NotesManager(appDir, db);
+    }
+    return NotesManager.instance;
   }
 
-  return path.join(appDir, NOTES_DIR, today, createNoteName());
-}
-
-function createNoteName(): string {
-  return randomUUID() + '.md';
-}
-
-export function readNoteContent(filePath: string): string {
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    return content;
-  } catch (error) {
-    console.error(`Error reading note content from ${filePath}:`, error);
-    return '';
+  destroy() {
+    NotesManager.instance = undefined;
   }
-}
 
-export function writeNoteContent(filePath: string, content: string): void {
-  try {
-    fs.writeFileSync(filePath, content, 'utf-8');
-  } catch (error) {
-    console.error(`Error writing note content to ${filePath}:`, error);
+  newNotePath(): string {
+    const iso = new Date().toDateString();
+    const today = iso.split('T')[0];
+    if (!today) {
+      // The world is wrong if this happens
+      throw new Error('Failed to generate date string for new note path');
+    }
+
+    return path.join(this.appDir, NOTES_DIR, today, this.createNoteName());
   }
-}
 
-export function deleteNote(filePath: string): void {
-  try {
-    fs.unlinkSync(filePath);
-  } catch (error) {
-    console.error(`Error deleting note at ${filePath}:`, error);
+  private createNoteName(): string {
+    return randomUUID() + '.md';
+  }
+
+  readNoteContent(filePath: string): string {
+    try {
+      const content = fs.readFileSync(filePath, { encoding: 'utf-8' });
+      return content;
+    } catch (error) {
+      console.error(`Error reading note content from ${filePath}:`, error);
+      return '';
+    }
+  }
+
+  writeNoteContent(filePath: string, content: string): void {
+    let isFirstWrite = false;
+    try {
+      const dir = path.dirname(filePath);
+
+      // Ensure the file exists
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      if (!fs.existsSync(filePath)) {
+        isFirstWrite = true;
+      }
+
+      fs.writeFileSync(filePath, content, 'utf-8');
+
+      if (isFirstWrite) {
+        const title = this.getInitialTitle(content);
+        this.db.createNote(filePath, title, null, null);
+      }
+    } catch (error) {
+      console.error(`Error writing note content to ${filePath}:`, error);
+    }
+  }
+
+  private getInitialTitle(content: string): string | null {
+    const lines = content.trim().split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.length > 0) {
+        return trimmed.length <= 100 ? trimmed : trimmed.slice(0, 100);
+      }
+    }
+    return null;
+  }
+
+  deleteNote(filePath: string): void {
+    try {
+      fs.unlinkSync(filePath);
+      this.db.deleteNoteByPath(filePath);
+    } catch (error) {
+      console.error(`Error deleting note at ${filePath}:`, error);
+    }
   }
 }
