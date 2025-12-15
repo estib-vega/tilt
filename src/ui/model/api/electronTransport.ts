@@ -6,15 +6,6 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
   implements ChatTransport<UI_MESSAGE>
 {
   private static streams: Map<string, ReadableStream<UIMessageChunk>> = new Map();
-  private static chatRequestOptions: Map<string, RequestOptions> = new Map();
-
-  static setChatRequestOptions(chatId: string, options: RequestOptions): void {
-    ElectronTransport.chatRequestOptions.set(chatId, options);
-  }
-
-  static getChatRequestOptions(chatId: string): RequestOptions | undefined {
-    return ElectronTransport.chatRequestOptions.get(chatId);
-  }
 
   async sendMessages(
     options: {
@@ -42,7 +33,6 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
     } & ChatRequestOptions,
     chatOptions: RequestOptions,
   ) {
-    ElectronTransport.chatRequestOptions.set(options.chatId, chatOptions);
     const stream = new ReadableStream<UIMessageChunk>({
       start(controller) {
         // incoming token chunks
@@ -71,7 +61,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
           cleanUpChunk();
           cleanUpEnd();
           options.abortSignal?.removeEventListener('abort', onAbort);
-          ElectronTransport.chatRequestOptions.delete(options.chatId);
+          ElectronTransport.streams.delete(options.chatId);
         };
 
         // Handle abort
@@ -98,56 +88,7 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
     if (cachedStream) {
       return ElectronTransport.streams.get(options.chatId)!;
     }
-
-    const chats = await window.api.listChats();
-    const chatExists = chats.some((chat) => chat.id === options.chatId);
-    if (!chatExists) {
-      return null;
-    }
-    const chatOptions = ElectronTransport.chatRequestOptions.get(options.chatId);
-    if (!chatOptions) {
-      // Unable to reconnect without previous chat options
-      return null;
-    }
-    ElectronTransport.chatRequestOptions.delete(options.chatId);
-
-    // Create a browser-readable stream that pulls data over IPC
-    const stream = new ReadableStream<UIMessageChunk>({
-      start(controller) {
-        // incoming token chunks
-        const onChunk = (data: ChatChunkEvent) => {
-          if (data.id !== options.chatId) return;
-          controller.enqueue(data.chunk);
-        };
-
-        const onEnd = (data: ChatEndEvent) => {
-          if (data.id !== options.chatId) return;
-          controller.close();
-          cleanup();
-        };
-
-        const cleanUpChunk = window.api.onChatChunk(onChunk);
-        const cleanUpEnd = window.api.onChatEnd(onEnd);
-
-        // Clean up
-        const cleanup = () => {
-          cleanUpChunk();
-          cleanUpEnd();
-          ElectronTransport.chatRequestOptions.delete(options.chatId);
-        };
-
-        // trigger backend stream
-        window.api.chatResume({
-          id: options.chatId,
-          webSearch: chatOptions.webSearch,
-          modelIdentifier: chatOptions.modelIdentifier,
-        });
-      },
-    });
-
-    ElectronTransport.streams.set(options.chatId, stream);
-
-    return stream;
+    return null;
   }
 }
 

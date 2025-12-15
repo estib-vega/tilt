@@ -4,9 +4,9 @@ import ElectronTransport, { type RequestOptions } from './electronTransport';
 import type { CustomUIMessage, UpdateChatTitleParams } from '@api/api';
 import React from 'react';
 import { generateId } from 'ai';
-import type { UsageUpdate } from '@api/ai/chat';
 import type { ModelIdentifier } from '@api/ai/model';
 import { useModelSelector } from './models';
+import useChatStore from '@/store';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
@@ -114,7 +114,10 @@ interface CreateChatParams {
 }
 
 export function useCreateChatMutation() {
+  const setChatUsesWebSearch = useChatStore((state) => state.setChatUsesWebSearch);
+  const setChatUsesModelIdentifier = useChatStore((state) => state.setChatUsesModelIdentifier);
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (params: CreateChatParams) => {
       const { messages, useWebSearch, modelIdentifier } = params;
@@ -125,6 +128,8 @@ export function useCreateChatMutation() {
         parts: msg.parts,
       }));
       const chatId = await window.api.createChat({ initialMessages });
+      setChatUsesWebSearch(chatId, useWebSearch);
+      setChatUsesModelIdentifier(chatId, modelIdentifier);
       ElectronTransport.createChatStream(
         {
           chatId,
@@ -158,12 +163,16 @@ export function useDeleteChatMutation() {
 }
 
 export function useChatUsage(chatId: string) {
-  const [usage, setUsage] = React.useState<UsageUpdate | null>(null);
+  const usageMap = useChatStore((state) => state.chatUsage);
+  const setUsage = useChatStore((state) => state.setChatUsage);
+  const usage = React.useMemo(() => {
+    return usageMap[chatId];
+  }, [usageMap, chatId]);
 
   React.useEffect(() => {
     const removeListener = window.api.onChatUsage((data) => {
       if (data.id === chatId) {
-        setUsage(data.usage);
+        setUsage(chatId, data.usage);
       }
     });
 
@@ -182,17 +191,32 @@ interface ChatParamsHook {
 }
 
 export function useChatParams(chatId: string | undefined): ChatParamsHook {
-  const params: RequestOptions | undefined = React.useMemo(() => {
-    if (!chatId) {
-      return undefined;
-    }
-    return ElectronTransport.getChatRequestOptions(chatId);
-  }, [chatId]);
-  const [useWebSearch, setUseWebSearch] = React.useState<boolean>(params?.webSearch ?? false);
-  const modelSelectorHook = useModelSelector(params?.modelIdentifier);
+  const defaultedChatId = chatId ?? 'new-chat';
+  const chatUsesWebSearch = useChatStore((state) => state.chatUsesWebSearch);
+  const chatUsesModelIdentifier = useChatStore((state) => state.chatUsesModelIdentifier);
+  const setChatUsesWebSearch = useChatStore((state) => state.setChatUsesWebSearch);
+
+  const params: RequestOptions = React.useMemo(() => {
+    const webSearch = chatUsesWebSearch[defaultedChatId] ?? false;
+    const modelIdentifier = chatUsesModelIdentifier[defaultedChatId] ?? undefined;
+    return {
+      webSearch,
+      modelIdentifier,
+    };
+  }, [defaultedChatId, chatUsesWebSearch, chatUsesModelIdentifier]);
+
+  const modelSelectorHook = useModelSelector(defaultedChatId);
+
+  const setUseWebSearch = React.useCallback<React.Dispatch<React.SetStateAction<boolean>>>(
+    (value) => {
+      const nextValue = typeof value === 'function' ? value(params.webSearch) : value;
+      setChatUsesWebSearch(defaultedChatId, nextValue);
+    },
+    [chatId, setChatUsesWebSearch, params.webSearch, defaultedChatId],
+  );
 
   return {
-    useWebSearch,
+    useWebSearch: params.webSearch ?? false,
     setUseWebSearch,
     modelSelectorHook,
   };
