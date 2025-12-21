@@ -38,6 +38,28 @@ export default class NotesManager {
     return randomUUID() + '.md';
   }
 
+  listNotes(): Note[] {
+    const notes = this.db.listNotes();
+    return notes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      description: n.description,
+    }));
+  }
+
+  getPathForNoteId(noteId: number): string {
+    const note = this.db.getNoteById(noteId);
+    if (!note) {
+      throw new Error(`Note with ID ${noteId} not found`);
+    }
+    return note.path;
+  }
+
+  getIdForNotePath(filePath: string): number | null {
+    const note = this.db.getNoteByPath(filePath);
+    return note ? note.id : null;
+  }
+
   readNoteContent(filePath: string): string {
     try {
       const content = fs.readFileSync(filePath, { encoding: 'utf-8' });
@@ -92,4 +114,10 @@ export default class NotesManager {
       console.error(`Error deleting note at ${filePath}:`, error);
     }
   }
+}
+
+export interface Note {
+  id: number;
+  title: string | null;
+  description: string | null;
 }

@@ -4,11 +4,15 @@ import path from 'node:path';
 import ChatManager, { UsageUpdate } from './ai/chat.js';
 import dotenv from 'dotenv';
 import {
+  DeleteNoteParamsSchema,
+  NewNoteParamsSchema,
   parseAddCredentialParams,
   parseDeleteCredentialParams,
   parseLLMCreateChatParams,
   parseLLMResumeParams,
   parseLLMStartParams,
+  ReadNoteParamsSchema,
+  WriteNoteParamsSchema,
 } from './api.js';
 import DB from './db/sqlite.js';
 import { UIMessageChunk } from 'ai';
@@ -235,20 +239,38 @@ ipcMain.handle('ollama:get-status', async () => {
   return ollamaManager.getStatus();
 });
 
-ipcMain.handle('notes:new', (_event, { content }) => {
+ipcMain.handle('notes:new', (_event, params) => {
+  const parsedParams = NewNoteParamsSchema.parse(params);
   const filePath = notesManager.newNotePath();
-  notesManager.writeNoteContent(filePath, content);
-  return filePath;
+  notesManager.writeNoteContent(filePath, parsedParams.content);
+  const id = notesManager.getIdForNotePath(filePath);
+  if (!id) {
+    throw new Error('Failed to retrieve note ID after creating new note');
+  }
+  return id;
 });
 
-ipcMain.handle('notes:read-note', (_event, { filePath }) => {
+ipcMain.handle('notes:read-note', (_event, params) => {
+  const parsedParams = ReadNoteParamsSchema.parse(params);
+  const { id } = parsedParams;
+  const filePath = notesManager.getPathForNoteId(id);
   return notesManager.readNoteContent(filePath);
 });
 
-ipcMain.handle('notes:write-note', (_event, { filePath, content }) => {
+ipcMain.handle('notes:write-note', (_event, params) => {
+  const parsedParams = WriteNoteParamsSchema.parse(params);
+  const { id, content } = parsedParams;
+  const filePath = notesManager.getPathForNoteId(id);
   return notesManager.writeNoteContent(filePath, content);
 });
 
-ipcMain.handle('notes:delete-note', (_event, { filePath }) => {
+ipcMain.handle('notes:delete-note', (_event, params) => {
+  const parsedParams = DeleteNoteParamsSchema.parse(params);
+  const { id } = parsedParams;
+  const filePath = notesManager.getPathForNoteId(id);
   return notesManager.deleteNote(filePath);
+});
+
+ipcMain.handle('notes:list-notes', () => {
+  return notesManager.listNotes();
 });

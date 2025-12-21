@@ -3,6 +3,7 @@ import { Tools } from './ai/tools';
 import { isModelIdentifier, ModelIdentifier } from './ai/model.js';
 import { UsageUpdate } from './ai/chat';
 import { CredentialService, isCredentialService } from './model/credentials.js';
+import z from 'zod';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -186,3 +187,28 @@ export function parseDeleteCredentialParams(something: unknown): DeleteCredentia
   }
   return something;
 }
+
+export const NewNoteParamsSchema = z.object({
+  content: z.string(),
+});
+
+export type NewNoteParams = z.infer<typeof NewNoteParamsSchema>;
+
+export const ReadNoteParamsSchema = z.object({
+  id: z.number(),
+});
+
+export type ReadNoteParams = z.infer<typeof ReadNoteParamsSchema>;
+
+export const WriteNoteParamsSchema = z.object({
+  id: z.number(),
+  content: z.string(),
+});
+
+export type WriteNoteParams = z.infer<typeof WriteNoteParamsSchema>;
+
+export const DeleteNoteParamsSchema = z.object({
+  id: z.number(),
+});
+
+export type DeleteNoteParams = z.infer<typeof DeleteNoteParamsSchema>;

@@ -49,6 +49,14 @@ export default class DB {
     return this.notesTable.listWithoutProject();
   }
 
+  getNoteById(noteId: number) {
+    return this.notesTable.getById(noteId);
+  }
+
+  getNoteByPath(notePath: string) {
+    return this.notesTable.getByPath(notePath);
+  }
+
   createNote(
     path: string,
     title: string | null,

@@ -6,16 +6,21 @@ import {
   ChatUsageEvent,
   CustomUIMessage,
   DeleteCredentialParams,
+  DeleteNoteParams,
   LLMCreateChatParams,
   LLMResumeParams,
   LLMStartParams,
+  NewNoteParams,
+  ReadNoteParams,
   UIChat,
   UIChatTitleUpdateEvent,
   UpdateChatTitleParams,
+  WriteNoteParams,
 } from './api';
 import { ModelIdentifier, ProviderModelList } from './ai/model';
 import { Credential, CredentialService } from './model/credentials';
 import { OllamaStatus } from './model/ollama';
+import { Note } from './model/notes';
 
 export type CleanUpFn = () => void;
 
@@ -110,20 +115,26 @@ export interface ElectronAPI {
   ollamaGetStatus: () => Promise<OllamaStatus>;
   /**
    * Get a new note path.
+   *
+   * Returns the note id.
    */
-  newNote: (content: string) => Promise<string>;
+  newNote: (params: NewNoteParams) => Promise<number>;
   /**
    * Read the content of a note from a given file path.
    */
-  readNote: (filePath: string) => Promise<string>;
+  readNote: (params: ReadNoteParams) => Promise<string>;
   /**
    * Write content to a note at a given file path.
    */
-  writeNote: (filePath: string, content: string) => Promise<void>;
+  writeNote: (params: WriteNoteParams) => Promise<void>;
   /**
    * Delete a note at a given file path.
    */
-  deleteNote: (filePath: string) => Promise<void>;
+  deleteNote: (params: DeleteNoteParams) => Promise<void>;
+  /**
+   * List notes.
+   */
+  listNotes: () => Promise<Note[]>;
 }
 
 const api: ElectronAPI = {
@@ -232,17 +243,19 @@ const api: ElectronAPI = {
   ollamaGetStatus: () => ipcRenderer.invoke('ollama:get-status'),
 
   // Create a new note path
-  newNote: (content: string) => ipcRenderer.invoke('notes:new', { content }),
+  newNote: (params: NewNoteParams) => ipcRenderer.invoke('notes:new', params),
 
   // Read note content
-  readNote: (filePath: string) => ipcRenderer.invoke('notes:read-note', { filePath }),
+  readNote: (params: ReadNoteParams) => ipcRenderer.invoke('notes:read-note', params),
 
   // Write note content
-  writeNote: (filePath: string, content: string) =>
-    ipcRenderer.invoke('notes:write-note', { filePath, content }),
+  writeNote: (params: WriteNoteParams) => ipcRenderer.invoke('notes:write-note', params),
 
   // Delete a note
-  deleteNote: (filePath: string) => ipcRenderer.invoke('note:delete-note', { filePath }),
+  deleteNote: (params: DeleteNoteParams) => ipcRenderer.invoke('notes:delete-note', params),
+
+  // List notes
+  listNotes: () => ipcRenderer.invoke('notes:list-notes'),
 };
 
 // Expose protected methods that allow the renderer process to use
