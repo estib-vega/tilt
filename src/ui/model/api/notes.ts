@@ -1,3 +1,4 @@
+import type { WriteNoteParams } from '@api/api';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
 const useListNotesQueryOptions = queryOptions({
@@ -32,6 +33,16 @@ export function useDeleteNoteMutation() {
     mutationFn: (noteId: number) => window.api.deleteNote({ id: noteId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: useListNotesQueryOptions.queryKey });
+    },
+  });
+}
+
+export function useWrieNoteMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: WriteNoteParams) => window.api.writeNote(params),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['note', String(variables.id)] });
     },
   });
 }
