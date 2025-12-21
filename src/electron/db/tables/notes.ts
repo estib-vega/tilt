@@ -12,6 +12,8 @@ export type DBNote = {
   title: string | null;
   description: string | null;
   project_id: string | null;
+  created_at: number;
+  updated_at: number;
 };
 
 export default class DBNotes {
@@ -23,7 +25,9 @@ export default class DBNotes {
       path TEXT NOT NULL UNIQUE,
       title TEXT,
       description TEXT,
-      project_id TEXT
+      project_id TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_project ON notes(project_id, path);
@@ -32,11 +36,12 @@ export default class DBNotes {
 
   add(path: string, title: string | null, description: string | null, projectId: string | null) {
     const stmt = this.db.prepare(`
-    INSERT INTO notes (path, title, description, project_id)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO notes (path, title, description, project_id, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
-    const result = stmt.run(path, title, description, projectId);
-    return result.lastInsertRowid as number;
+    const now = Date.now();
+    const result = stmt.run(path, title, description, projectId, now, now);
+    return Number(result.lastInsertRowid);
   }
 
   getById(id: number): DBNote | null {
@@ -47,6 +52,12 @@ export default class DBNotes {
   getByPath(path: string): DBNote | null {
     const row = this.db.prepare<[string], DBNote>('SELECT * FROM notes WHERE path = ?').get(path);
     return row ?? null;
+  }
+
+  markAsUpdated(id: number): void {
+    const now = Date.now();
+    const stmt = this.db.prepare<[number, number]>('UPDATE notes SET updated_at = ? WHERE id = ?');
+    stmt.run(now, id);
   }
 
   listWithoutProject(): DBNote[] {

@@ -55,7 +55,15 @@ export default class DB {
     description: string | null,
     projectId: string | null,
   ) {
+    const existing = this.notesTable.getByPath(path);
+    if (existing) {
+      return existing.id;
+    }
     return this.notesTable.add(path, title, description, projectId);
+  }
+
+  markNoteAsUpdated(noteId: number) {
+    this.notesTable.markAsUpdated(noteId);
   }
 
   deleteNote(noteId: number) {
