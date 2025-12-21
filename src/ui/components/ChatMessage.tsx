@@ -88,7 +88,7 @@ function ChatMessageResponse(props: ChatMessageResponseProps): JSX.Element {
   const mode = props.streaming ? 'streaming' : 'static';
   return (
     <MessageResponse
-      shikiTheme={['dark-plus', 'github-light']}
+      shikiTheme={['light-plus', 'dark-plus']}
       mode={mode}
       components={{
         a: ({ href, children }) => (
@@ -101,13 +101,6 @@ function ChatMessageResponse(props: ChatMessageResponseProps): JSX.Element {
             {children}
           </a>
         ),
-        p: ({ children }) => <p className="mb-4">{children}</p>,
-        ul: ({ children }) => <ul className="list-disc list-inside mb-4">{children}</ul>,
-        ol: ({ children }) => <ol className="list-decimal list-inside mb-4">{children}</ol>,
-        li: ({ children }) => <li className="mb-1 list-disc">{children}</li>,
-        h1: ({ children }) => <h1 className="text-2xl font-bold mb-4">{children}</h1>,
-        h2: ({ children }) => <h2 className="text-xl font-bold mb-3">{children}</h2>,
-        h3: ({ children }) => <h3 className="text-lg font-bold mb-2">{children}</h3>,
       }}
     >
       {content}
