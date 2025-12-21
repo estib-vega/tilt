@@ -39,10 +39,7 @@ export default function TextEditor(props: TextEditorProps) {
   };
 
   return (
-    <div
-      onClick={handleClickOnWrapper}
-      className="box-border border border-accent focus-within:border-accent-foreground/10 p-2 h-full"
-    >
+    <div onClick={handleClickOnWrapper} className="box-border h-full">
       <EditorContent editor={editor} />
     </div>
   );

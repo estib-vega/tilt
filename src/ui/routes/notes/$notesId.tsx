@@ -11,7 +11,7 @@ export const Route = createFileRoute('/notes/$notesId')({
 function RouteComponent() {
   const params = Route.useParams();
   return (
-    <div className="min-h-0 h-full w-full p-4 flex justify-center">
+    <div className="min-h-0 h-full w-full flex justify-center">
       <React.Suspense>
         <Note notesId={params.notesId} />
       </React.Suspense>
@@ -47,7 +47,7 @@ function Note(props: NoteProps) {
   const debouncedSave = React.useMemo(() => debounce(save, 500), [save]);
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full border-l ml-4 p-2 border-t rounded-tl-md border-accent focus-within:border-accent-foreground/10">
       <TextEditor onBlur={debouncedSave} onChange={debouncedSave} initialContent={note} />
     </div>
   );
