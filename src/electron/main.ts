@@ -20,6 +20,7 @@ import CredentialsManager from './model/credentials.js';
 import { availableModels, defaultModelIdentifier } from './ai/model.js';
 import OllamaManager from './model/ollama.js';
 import NotesManager from './model/notes.js';
+import Navigator from './model/navigator/index.js';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ const credentialsManager = CredentialsManager.getInstance(db);
 const chatManager = ChatManager.getInstance(db, credentialsManager);
 const ollamaManager = OllamaManager.getInstance();
 const notesManager = NotesManager.getInstance(appDir, db);
+const navigator = Navigator.getInstance();
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -81,6 +83,7 @@ function createWindow(): void {
     chatManager.destroy();
     ollamaManager.destroy();
     notesManager.destroy();
+    navigator.destroy();
   });
 
   const allowlistedProtocols = ['http:', 'https:'];
@@ -97,7 +100,6 @@ function createWindow(): void {
   });
 }
 
-// This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
   createWindow();
 
