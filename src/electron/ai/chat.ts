@@ -23,6 +23,7 @@ import {
   systemPromptForContinuedConversation,
 } from './prompt.js';
 import CredentialsManager from '@api/model/credentials.js';
+import Navigator from '@api/model/navigator/index.js';
 
 type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
 
@@ -35,11 +36,12 @@ export default class ChatManager {
   private constructor(
     private db: DB,
     private credentialsManager: CredentialsManager,
+    navigator: Navigator,
   ) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
     this.chatTitleEventListeners = new Set();
-    this.webSearch = new WebSearch();
+    this.webSearch = new WebSearch(navigator);
   }
 
   addChatTitleUpdateListener(listener: ChatTitleUpdateListener): void {
@@ -158,7 +160,14 @@ export default class ChatManager {
 
     const model = getModel(options.modelIdentifier, this.credentialsManager);
 
+    const system = `
+You are a helpful AI assistant. Provide clear and concise responses based on the user's queries.
+The current date is ${new Date().toDateString()}.
+Prefer being concise unless more detail is requested.
+`.trim();
+
     const streamResponse = streamText({
+      system,
       model: model,
       messages: modelMessages,
       tools: generateTools({
@@ -245,7 +254,7 @@ export default class ChatManager {
     const totalTokens = modelMessages.reduce((sum, msg) => sum + getModelMessageTokenCount(msg), 0);
 
     if (totalTokens < threshold) {
-      return { messages: modelMessages };
+      return undefined;
     }
 
     if (modelMessages.length <= 2) {
@@ -352,9 +361,13 @@ Answer with only the title, without any additional text.
     return controller.signal;
   }
 
-  static getInstance(db: DB, credentialsManager: CredentialsManager): ChatManager {
+  static getInstance(
+    db: DB,
+    credentialsManager: CredentialsManager,
+    navigator: Navigator,
+  ): ChatManager {
     if (!ChatManager.instance) {
-      ChatManager.instance = new ChatManager(db, credentialsManager);
+      ChatManager.instance = new ChatManager(db, credentialsManager, navigator);
     }
     return ChatManager.instance;
   }

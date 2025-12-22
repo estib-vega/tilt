@@ -39,7 +39,6 @@
     "@tanstack/react-router": "^1.132.0",
     "@tanstack/react-router-devtools": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
-    "@tavily/core": "^0.5.13",
     "@tiptap/markdown": "^3.13.0",
     "@tiptap/pm": "^3.13.0",
     "@tiptap/react": "^3.13.0",

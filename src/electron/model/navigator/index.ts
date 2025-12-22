@@ -36,7 +36,6 @@ export default class Navigator {
       console.error('Failed to retrieve page for URL:', url);
       return [];
     }
-
     await page.waitForNetworkIdle();
 
     const ecosiaPage = new EcosiaPage(page);
@@ -44,19 +43,26 @@ export default class Navigator {
   }
 
   async getTextContentFromUrl(url: string): Promise<string | null> {
-    const page = await this.getPage(url);
-    if (!page) {
-      console.error('Failed to retrieve page for URL:', url);
-      return null;
-    }
-
-    await page.waitForNetworkIdle();
-
     try {
-      const html = await page.content();
+      const html = await fetch(url).then((res) => res.text());
       const $ = cheerio.load(html);
-      const content = $('body').text().replace(/\s+/g, ' ').trim();
-      return content;
+
+      const content = new Set<string>();
+
+      $('article').each((_, elem) => {
+        content.add($(elem).text());
+      });
+
+      $('main').each((_, elem) => {
+        content.add($(elem).text());
+      });
+
+      $('p').each((_, elem) => {
+        content.add($(elem).text());
+      });
+
+      const contentArray = Array.from(content).filter((text) => text.trim().length > 0);
+      return contentArray.join('\n\n').replace(/\s+/g, ' ').trim();
     } catch (error) {
       console.error('Error extracting text content:', error);
       return null;

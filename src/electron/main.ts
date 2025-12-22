@@ -31,10 +31,10 @@ const appDir = app.getPath('userData');
 let mainWindow: BrowserWindow | null = null;
 const db = DB.getInstance(appDir);
 const credentialsManager = CredentialsManager.getInstance(db);
-const chatManager = ChatManager.getInstance(db, credentialsManager);
+const navigator = Navigator.getInstance();
+const chatManager = ChatManager.getInstance(db, credentialsManager, navigator);
 const ollamaManager = OllamaManager.getInstance();
 const notesManager = NotesManager.getInstance(appDir, db);
-const navigator = Navigator.getInstance();
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 

@@ -13,6 +13,7 @@ export default {
       console: 'readonly',
       Buffer: 'readonly',
       setTimeout: 'readonly',
+      fetch: 'readonly',
     },
   },
   plugins: {
