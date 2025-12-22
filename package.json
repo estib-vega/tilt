@@ -46,6 +46,7 @@
     "@tiptap/starter-kit": "^3.13.0",
     "ai": "^5.0.101",
     "better-sqlite3": "^12.5.0",
+    "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

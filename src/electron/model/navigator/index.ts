@@ -1,4 +1,5 @@
 import { BrowserWindow, app } from 'electron';
+import * as cheerio from 'cheerio';
 import pie from './pupeteer.js';
 import puppeteer, { Browser, Frame, Page } from 'puppeteer-core';
 
@@ -40,6 +41,26 @@ export default class Navigator {
 
     const ecosiaPage = new EcosiaPage(page);
     return ecosiaPage.getResults();
+  }
+
+  async getTextContentFromUrl(url: string): Promise<string | null> {
+    const page = await this.getPage(url);
+    if (!page) {
+      console.error('Failed to retrieve page for URL:', url);
+      return null;
+    }
+
+    await page.waitForNetworkIdle();
+
+    try {
+      const html = await page.content();
+      const $ = cheerio.load(html);
+      const content = $('body').text().replace(/\s+/g, ' ').trim();
+      return content;
+    } catch (error) {
+      console.error('Error extracting text content:', error);
+      return null;
+    }
   }
 
   private async getPage(url: string) {
