@@ -21,7 +21,7 @@ export default function NewChatButton(props: NewChatButtonProps): JSX.Element {
   }, [location.pathname, location.search]);
 
   return (
-    <div className="px-4 flex text-sm">
+    <div className="min-w-0 min-h-0 w-full px-4 flex text-sm">
       <Button
         variant={disabled ? 'outline' : 'default'}
         className="cursor-pointer flex justify-between items-center w-full px-2 py-1 rounded-md"

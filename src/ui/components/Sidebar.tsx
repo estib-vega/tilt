@@ -1,5 +1,4 @@
 import { useListChats, useDeleteChatMutation, getDefaultChatId } from '@/model/api/chat';
-import { ScrollArea } from '@radix-ui/react-scroll-area';
 import React, { type JSX } from 'react';
 import { Button } from './ui/button';
 import { EllipsisVertical } from 'lucide-react';
@@ -13,19 +12,15 @@ interface SideBarProps {
   selectedChatId: string | undefined;
 }
 
-export default function Sidebar(props: SideBarProps): JSX.Element {
+export default function SideBar(props: SideBarProps): JSX.Element {
   return (
-    <div className="min-h-0 h-full w-64 shrink-0">
-      <ScrollArea>
-        <div>
-          <h3 className="w-full px-4 text-xs">chats</h3>
-          <React.Suspense
-            fallback={<div className="p-2 text-sm text-muted-foreground">loading chats...</div>}
-          >
-            <ChatList selectedChatId={props.selectedChatId} />
-          </React.Suspense>
-        </div>
-      </ScrollArea>
+    <div className="min-h-0 h-full w-64 shrink-0 flex flex-col gap-1">
+      <h3 className="w-full px-4 text-xs">chats</h3>
+      <React.Suspense
+        fallback={<div className="p-2 text-sm text-muted-foreground">loading chats...</div>}
+      >
+        <ChatList selectedChatId={props.selectedChatId} />
+      </React.Suspense>
     </div>
   );
 }
@@ -47,22 +42,29 @@ function ChatList(props: ChatListProps): JSX.Element {
   }
 
   return (
-    <div className="flex flex-col gap-2 py-2">
+    <div className="min-h-0 min-w-0 size-full flex flex-col">
       <NewChatButton />
-      <Flipper flipKey={chatsKey}>
-        {chats.map((chat) => (
-          <Flipped key={chat.id} flipId={chat.id}>
-            {(flippedProps) => (
-              <ChatListItem
-                flippedProps={flippedProps}
-                title={chat.title}
-                id={chat.id}
-                selected={chat.id === props.selectedChatId}
-              />
-            )}
-          </Flipped>
-        ))}
-      </Flipper>
+      <div className="min-h-0 min-w-0 size-full flex">
+        <div className="pt-2 min-w-0 min-h-0 flex flex-col size-full overflow-x-scroll scrollbar-muted">
+          <Flipper flipKey={chatsKey}>
+            {chats.map((chat) => (
+              <Flipped key={chat.id} flipId={chat.id}>
+                {(flippedProps) => (
+                  <ChatListItem
+                    flippedProps={flippedProps}
+                    title={chat.title}
+                    id={chat.id}
+                    selected={chat.id === props.selectedChatId}
+                  />
+                )}
+              </Flipped>
+            ))}
+          </Flipper>
+          <div className="h-64 shrink-0">
+            {/* This is the padding at the end to be able to scroll more */}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -80,7 +82,7 @@ const ChatListItem = React.memo(
 
     const itemClassNames = [
       'cursor-pointer',
-      'flex justify-between items-center w-full pl-2 rounded-md',
+      'flex justify-between items-center w-full min-w-0 pl-2 rounded-md',
       props.selected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50',
     ].join(' ');
 

@@ -1,5 +1,5 @@
 import Chat from '@/components/Chat';
-import Sidebar from '@/components/SideBar';
+import SideBar from '@/components/SideBar';
 import { chatsQueryOptions } from '@/model/api/chat';
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
@@ -20,8 +20,8 @@ export const Route = createFileRoute('/chat')({
 function ChatPage() {
   const { chatId } = Route.useSearch();
   return (
-    <div className="min-h-0 h-full w-full flex">
-      <Sidebar selectedChatId={chatId} />
+    <div className="min-h-0 min-w-0 h-full w-full flex">
+      <SideBar selectedChatId={chatId} />
       <Chat chatId={chatId} />
     </div>
   );

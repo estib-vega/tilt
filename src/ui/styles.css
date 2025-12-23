@@ -248,3 +248,33 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Hide scrollbars but keep scrolling */
+  .scrollbar-hide {
+    /* Chrome, Safari, Edge */
+    scrollbar-width: none;          /* Firefox */
+    -ms-overflow-style: none;       /* IE 10+ */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;                  /* Chrome, Safari, Edge */
+  }
+
+  .scrollbar-muted {
+    --scrollbar-thumb: theme('colors.muted.foreground');
+    --scrollbar-track: theme('colors.muted');
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+  .scrollbar-muted::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollbar-muted::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  .scrollbar-muted::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 6px;
+    border: 3px solid var(--scrollbar-track); /* creates a margin */
+  }
+}
