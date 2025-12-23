@@ -29,16 +29,14 @@ function generateWebTools(webSearch: WebSearch) {
     searchWeb: tool({
       description: `
 <description>
-    Use this tool to perform a web search and retrieve recent and relevant information from the internet.
-    The results are returned in xml-like format with <search-result>, <link-label>, and <result-content> tags.
-    Results may include irrelevant or outdated information, so use discretion when incorporating them into your response.
+    Returns a natural language answer based on recent web search results.
 </description>
 
 <notes>
-  - Use this tool to get recent information that may not be in the AI's training data.
+  - Prefer multiple specific queries over a single broad one.
+  - Plan out multiple searches if necessary.
   - Provide specific and relevant search queries to get the best results.
   - Use short and concise queries.
-  - Prefer multiple specific queries over a single broad one.
 </notes>
 `.trim(),
       inputSchema: WebSearchToolInputSchema,
