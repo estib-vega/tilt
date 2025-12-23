@@ -14,6 +14,7 @@ import {
   ReadNoteParams,
   UIChat,
   UIChatTitleUpdateEvent,
+  UIChatToolUpdateEvent,
   UpdateChatTitleParams,
   WriteNoteParams,
 } from './api';
@@ -135,6 +136,10 @@ export interface ElectronAPI {
    * List notes.
    */
   listNotes: () => Promise<Note[]>;
+  /**
+   * Listen for tool update events during chat sessions.
+   */
+  onChatToolUpdate: (cb: (event: UIChatToolUpdateEvent) => void) => CleanUpFn;
 }
 
 const api: ElectronAPI = {
@@ -256,6 +261,15 @@ const api: ElectronAPI = {
 
   // List notes
   listNotes: () => ipcRenderer.invoke('notes:list-notes'),
+
+  // Listen for tool update events
+  onChatToolUpdate: (cb: (event: UIChatToolUpdateEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: UIChatToolUpdateEvent) => cb(data);
+    ipcRenderer.on('chat:tool-update', listener);
+    return () => {
+      ipcRenderer.removeListener('chat:tool-update', listener);
+    };
+  },
 };
 
 // Expose protected methods that allow the renderer process to use

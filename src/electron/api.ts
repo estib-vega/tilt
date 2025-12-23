@@ -1,9 +1,9 @@
-import { UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
+import { LanguageModelUsage, UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
 import { Tools } from './ai/tools';
-import { isModelIdentifier, ModelIdentifier } from './ai/model.js';
-import { UsageUpdate } from './ai/chat';
+import { isModelIdentifier, ModelIdentifier, ModelProvider } from './ai/model.js';
 import { CredentialService, isCredentialService } from './model/credentials.js';
 import z from 'zod';
+import { WebSearchEvent } from './ai/webSearch.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -135,10 +135,45 @@ export interface UIChat {
   updatedAt: number;
 }
 
-export interface UIChatTitleUpdateEvent {
+export type UsageUpdate = {
+  chatId: string;
   id: string;
+  name: string;
+  provider: ModelProvider;
+  usage: LanguageModelUsage;
+};
+
+interface BaseUIChatEvent {
+  type: 'title-updated' | 'tool-update';
+  /**
+   * The chat ID associated with this event.
+   */
+  id: string;
+}
+
+export interface UIChatTitleUpdateEvent extends BaseUIChatEvent {
+  type: 'title-updated';
   title: string | null;
 }
+
+interface BaseChatToolUpdateEvent {
+  tool: 'web-search';
+  callId: string;
+}
+
+export interface UIChatWebSearchToolUpdateEvent extends BaseChatToolUpdateEvent {
+  tool: 'web-search';
+  event: WebSearchEvent;
+}
+
+export type UIChatToolUpdateEventContent = UIChatWebSearchToolUpdateEvent;
+
+export interface UIChatToolUpdateEvent extends BaseUIChatEvent {
+  type: 'tool-update';
+  event: UIChatToolUpdateEventContent;
+}
+
+export type UIChatEvent = UIChatTitleUpdateEvent | UIChatToolUpdateEvent;
 
 export interface UpdateChatTitleParams {
   chatId: string;

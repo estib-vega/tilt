@@ -1,4 +1,4 @@
-import { ChatRequestOptions, UIChat, UIChatTitleUpdateEvent } from '@api/api';
+import { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api';
 import DB from '@api/db/sqlite';
 import {
   streamText,
@@ -9,10 +9,9 @@ import {
   createIdGenerator,
   stepCountIs,
   safeValidateUIMessages,
-  LanguageModelUsage,
   PrepareStepResult,
 } from 'ai';
-import { getModel, getOpenAI, ModelProvider } from './model.js';
+import { getModel, getOpenAI } from './model.js';
 import WebSearch from './webSearch.js';
 import { AllTools, generateTools } from './tools.js';
 import { DBUIMessage } from '@api/db/tables/messages.js';
@@ -25,31 +24,29 @@ import {
 import CredentialsManager from '@api/model/credentials.js';
 import Navigator from '@api/model/navigator/index.js';
 
-type ChatTitleUpdateListener = (event: UIChatTitleUpdateEvent) => void;
+type ChatEventListner = (event: UIChatEvent) => void;
 
 export default class ChatManager {
   private static instance: ChatManager | undefined;
   private activeControllers = new Map<string, AbortController>(); // id → abortController
-  private chatTitleEventListeners: Set<ChatTitleUpdateListener>;
-  private webSearch: WebSearch;
+  private chatEventListeners: Set<ChatEventListner> = new Set();
 
   private constructor(
     private db: DB,
     private credentialsManager: CredentialsManager,
-    navigator: Navigator,
+    private navigator: Navigator,
   ) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
-    this.chatTitleEventListeners = new Set();
-    this.webSearch = new WebSearch(navigator);
+    this.chatEventListeners = new Set();
   }
 
-  addChatTitleUpdateListener(listener: ChatTitleUpdateListener): void {
-    this.chatTitleEventListeners.add(listener);
+  addChatEventListener(listener: ChatEventListner): void {
+    this.chatEventListeners.add(listener);
   }
 
-  private notifyChatTitleUpdate(event: UIChatTitleUpdateEvent): void {
-    for (const listener of this.chatTitleEventListeners) {
+  private notifyChatEvent(event: UIChatEvent): void {
+    for (const listener of this.chatEventListeners) {
       listener(event);
     }
   }
@@ -59,7 +56,7 @@ export default class ChatManager {
    */
   updateChatTitle(chatId: string, title: string): UIChat {
     const chat = this.db.updateChatTitle(chatId, title);
-    this.notifyChatTitleUpdate({ id: chat.id, title: chat.title });
+    this.notifyChatEvent({ type: 'title-updated', id: chat.id, title: chat.title });
     return {
       id: chat.id,
       title: chat.title,
@@ -166,13 +163,26 @@ The current date is ${new Date().toDateString()}.
 Prefer being concise unless more detail is requested.
 `.trim();
 
+    // Instantiate WebSearch with event emitter
+    const webSearch = new WebSearch(this.navigator, (callId, event) => {
+      this.notifyChatEvent({
+        type: 'tool-update',
+        id: chatId,
+        event: {
+          tool: 'web-search',
+          callId,
+          event,
+        },
+      });
+    });
+
     const streamResponse = streamText({
       system,
       model: model,
       messages: modelMessages,
       tools: generateTools({
         useWebSearch: options.webSearch,
-        webSearch: this.webSearch,
+        webSearch,
       }),
       prepareStep: () => this.prepareStep(chatId, messages, 30_000),
       stopWhen: stepCountIs(15),
@@ -378,15 +388,7 @@ Answer with only the title, without any additional text.
       controller.abort();
     });
     this.activeControllers.clear();
-    this.chatTitleEventListeners.clear();
+    this.chatEventListeners.clear();
     ChatManager.instance = undefined;
   }
 }
-
-export type UsageUpdate = {
-  chatId: string;
-  id: string;
-  name: string;
-  provider: ModelProvider;
-  usage: LanguageModelUsage;
-};

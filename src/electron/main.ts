@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import ChatManager, { UsageUpdate } from './ai/chat.js';
+import ChatManager from './ai/chat.js';
 import dotenv from 'dotenv';
 import {
   DeleteNoteParamsSchema,
@@ -12,6 +12,8 @@ import {
   parseLLMResumeParams,
   parseLLMStartParams,
   ReadNoteParamsSchema,
+  UIChatEvent,
+  UsageUpdate,
   WriteNoteParamsSchema,
 } from './api.js';
 import DB from './db/sqlite.js';
@@ -37,6 +39,17 @@ const ollamaManager = OllamaManager.getInstance();
 const notesManager = NotesManager.getInstance(appDir, db);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+
+function setupChatEventListeners(event: UIChatEvent): true {
+  switch (event.type) {
+    case 'title-updated':
+      mainWindow?.webContents.send('chat:title-updated', event);
+      return true;
+    case 'tool-update':
+      mainWindow?.webContents.send('chat:tool-update', event);
+      return true;
+  }
+}
 
 function createWindow(): void {
   // Create the browser window
@@ -95,8 +108,8 @@ function createWindow(): void {
     return { action: 'deny' };
   });
 
-  chatManager.addChatTitleUpdateListener((event) => {
-    mainWindow?.webContents.send('llm:chat-title-updated', event);
+  chatManager.addChatEventListener((event) => {
+    setupChatEventListeners(event);
   });
 }
 

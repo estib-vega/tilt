@@ -40,8 +40,8 @@ function generateWebTools(webSearch: WebSearch) {
 </notes>
 `.trim(),
       inputSchema: WebSearchToolInputSchema,
-      execute: async ({ query }) => {
-        return webSearch.search(query);
+      execute: async ({ query }, { toolCallId }) => {
+        return webSearch.search(query, toolCallId);
       },
     }),
   } satisfies ToolSet;
