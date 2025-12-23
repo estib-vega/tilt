@@ -9,6 +9,7 @@ type MessagePart = CustomUIMessage['parts'][number];
 type MessageRole = CustomUIMessage['role'];
 
 export interface ChatMessageProps {
+  chatId: string;
   isLast: boolean;
   message: CustomUIMessage;
 }
@@ -20,7 +21,7 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
       {message.parts.map((part, i) => (
         <Message from={message.role} key={`message-part-${i}`}>
           <MessageContent>
-            <ChatMessagePart key={i} part={part} isLastMessage={isLast} />
+            <ChatMessagePart key={i} chatId={props.chatId} part={part} isLastMessage={isLast} />
           </MessageContent>
         </Message>
       ))}
@@ -46,6 +47,7 @@ function ChatMessageWrapper(props: ChatMessageWrapperProps): React.ReactNode {
 }
 
 interface ChatMessagePartProps {
+  chatId: string;
   isLastMessage: boolean;
   part: MessagePart;
 }
@@ -59,7 +61,7 @@ function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
     case 'step-start':
       return <></>;
     case 'tool-searchWeb':
-      return <ChatTool toolPart={part} />;
+      return <ChatTool chatId={props.chatId} toolPart={part} />;
     case 'reasoning': {
       const isStreaming = part.state === 'streaming' && isLastMessage;
 

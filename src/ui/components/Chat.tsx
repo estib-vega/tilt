@@ -129,7 +129,12 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
       <Conversation>
         <ConversationContent className="overflow-y-auto">
           {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} isLast={index === lastMessageIndex} />
+            <ChatMessage
+              key={index}
+              chatId={props.chatId}
+              message={message}
+              isLast={index === lastMessageIndex}
+            />
           ))}
         </ConversationContent>
       </Conversation>

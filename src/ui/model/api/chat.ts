@@ -1,7 +1,11 @@
 import { useChat } from '@ai-sdk/react';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import ElectronTransport, { type RequestOptions } from './electronTransport';
-import type { CustomUIMessage, UpdateChatTitleParams } from '@api/api';
+import type {
+  CustomUIMessage,
+  UIChatToolUpdateEventContent,
+  UpdateChatTitleParams,
+} from '@api/api';
 import React from 'react';
 import { generateId } from 'ai';
 import type { ModelIdentifier } from '@api/ai/model';
@@ -86,6 +90,23 @@ function useWatchChatTitleUpdates() {
 export function useListChats() {
   useWatchChatTitleUpdates();
   return useSuspenseQuery(chatsQueryOptions);
+}
+
+export function useWatchChatToolUpdates(
+  chatId: string,
+  cb: (content: UIChatToolUpdateEventContent) => void,
+) {
+  React.useEffect(() => {
+    const removeListener = window.api.onChatToolUpdate((data) => {
+      if (data.id === chatId) {
+        cb(data.event);
+      }
+    });
+
+    return () => {
+      removeListener();
+    };
+  }, [chatId, cb]);
 }
 
 export async function getDefaultChatId(filterOut?: string[]): Promise<string | null> {

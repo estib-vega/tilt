@@ -2,24 +2,115 @@ import type { ToolUIPart } from 'ai';
 import type { JSX } from 'react';
 import type { Tools } from '@api/ai/tools';
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from './ai-elements/tool';
+import { useWatchChatToolUpdates } from '@/model/api/chat';
+import type { UIChatToolUpdateEventContent } from '@api/api';
+import React from 'react';
+import type { WebSearchEvent } from '@api/ai/webSearch';
+import { Shimmer } from './ai-elements/shimmer';
 
 interface ChatToolProps {
+  chatId: string;
   toolPart: ToolUIPart<Tools>;
 }
 
 export default function ChatTool(props: ChatToolProps): JSX.Element {
   switch (props.toolPart.type) {
     case 'tool-searchWeb':
-      return (
-        <Tool>
-          <ToolHeader type={props.toolPart.type} state={props.toolPart.state} />
-          <ToolContent>
-            <ToolInput input={props.toolPart.input} />
-            <ToolOutput output={props.toolPart.output} errorText={props.toolPart.errorText} />
-          </ToolContent>
-        </Tool>
-      );
+      return <WebTool chatId={props.chatId} description={props.toolPart} />;
     default:
       return <div>Unknown Tool</div>;
   }
+}
+
+type WebToolDescription = ToolUIPart<Pick<Tools, 'searchWeb'>>;
+
+interface WebToolProps {
+  chatId: string;
+  description: WebToolDescription;
+}
+
+function WebTool(props: WebToolProps): JSX.Element {
+  const [isDone, lastEvent] = useWatchWebToolUpdates(props.chatId, props.description.toolCallId);
+
+  return (
+    <div className="w-full mb-4 flex flex-col gap-1">
+      <WebToolStatus isDone={isDone} lastEvent={lastEvent} />
+      <Tool className="mb-0">
+        <ToolHeader type={props.description.type} state={props.description.state} />
+        <ToolContent>
+          <ToolInput input={props.description.input} />
+          <ToolOutput output={props.description.output} errorText={props.description.errorText} />
+        </ToolContent>
+      </Tool>
+    </div>
+  );
+}
+
+interface WebToolStatusProps {
+  isDone: boolean;
+  lastEvent: WebSearchEvent | undefined;
+}
+
+function WebToolStatus(props: WebToolStatusProps): JSX.Element {
+  if (props.lastEvent === undefined) return <></>;
+  if (props.isDone)
+    return (
+      <div className="w-full">
+        <p className="text-muted-foreground">{getWebSearchEventTitle(props.lastEvent)}</p>
+      </div>
+    );
+  return (
+    <div className="w-full">
+      <Shimmer duration={1}>{getWebSearchEventTitle(props.lastEvent)}</Shimmer>
+    </div>
+  );
+}
+
+function getWebSearchEventTitle(event: WebSearchEvent): string {
+  switch (event.type) {
+    case 'start':
+      return `beginning search: ${event.query}`;
+    case 'received-results':
+      return `processing ${event.results.length} results`;
+    case 'processed-results':
+      return `finished processing results`;
+    case 'started-summarization':
+      return `starting summarization`;
+    case 'completed-summarization':
+      return `summary completed`;
+    case 'error':
+      return `error encountered`;
+    case 'end':
+      return `done`;
+  }
+}
+
+function useWatchWebToolUpdates(chatId: string, toolCallId: string) {
+  const [events, setEvents] = React.useState<WebSearchEvent[]>([]);
+  const lastEvent = React.useMemo(() => {
+    if (events.length === 0) {
+      return undefined;
+    }
+    return events[events.length - 1];
+  }, [events]);
+  const isDone = React.useMemo(() => {
+    if (events.length === 0 || lastEvent === undefined) {
+      return false;
+    }
+    return lastEvent.type === 'end' || lastEvent.type === 'error';
+  }, [events, lastEvent]);
+
+  const watcher = React.useCallback(
+    (content: UIChatToolUpdateEventContent) => {
+      if (content.tool !== 'web-search' || content.callId !== toolCallId) {
+        // Ignore if it's not this tool.
+        return;
+      }
+      setEvents((prev) => [...prev, content.event]);
+    },
+    [setEvents, toolCallId],
+  );
+  useWatchChatToolUpdates(chatId, watcher);
+
+  return [isDone, lastEvent, events] as const;
 }
