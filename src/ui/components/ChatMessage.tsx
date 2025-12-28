@@ -19,7 +19,11 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
   return (
     <ChatMessageWrapper from={message.role}>
       {message.parts.map((part, i) => (
-        <Message from={message.role} key={`message-part-${i}`}>
+        <Message
+          from={message.role}
+          key={`message-part-${i}`}
+          className="overflow-y-scroll min-w-0 w-full"
+        >
           <MessageContent>
             <ChatMessagePart key={i} chatId={props.chatId} part={part} isLastMessage={isLast} />
           </MessageContent>
@@ -42,7 +46,7 @@ function ChatMessageWrapper(props: ChatMessageWrapperProps): React.ReactNode {
     case 'system':
       return <Message from="system">{children}</Message>;
     case 'assistant':
-      return <div className="px-7">{children}</div>;
+      return <div className="min-w-0 w-full  px-7">{children}</div>;
   }
 }
 
@@ -61,7 +65,11 @@ function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
     case 'step-start':
       return <></>;
     case 'tool-searchWeb':
-      return <ChatTool chatId={props.chatId} toolPart={part} />;
+      return (
+        <div className="min-w-0 w-full">
+          <ChatTool chatId={props.chatId} toolPart={part} />
+        </div>
+      );
     case 'reasoning': {
       const isStreaming = part.state === 'streaming' && isLastMessage;
 

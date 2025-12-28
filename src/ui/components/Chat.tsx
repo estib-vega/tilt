@@ -127,7 +127,7 @@ function InitializedChat(props: InitializedChatProps): JSX.Element {
   return (
     <div className="min-h-0 h-full w-full flex flex-col border-l border-t rounded-tl-md overflow-hidden">
       <Conversation>
-        <ConversationContent className="overflow-y-auto">
+        <ConversationContent className="min-w-0 w-full">
           {messages.map((message, index) => (
             <ChatMessage
               key={index}
