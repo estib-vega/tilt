@@ -33,10 +33,7 @@ function generateWebTools(webSearch: WebSearch) {
 </description>
 
 <notes>
-  - Prefer multiple specific queries over a single broad one.
-  - Plan out multiple searches if necessary.
-  - Provide specific and relevant search queries to get the best results.
-  - Use short and concise queries.
+  - Use detailed, specific queries to find accurate information.
 </notes>
 `.trim(),
       inputSchema: WebSearchToolInputSchema,

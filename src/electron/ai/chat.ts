@@ -10,8 +10,9 @@ import {
   stepCountIs,
   safeValidateUIMessages,
   PrepareStepResult,
+  LanguageModel,
 } from 'ai';
-import { getModel, getOpenAI } from './model.js';
+import { getModel } from './model.js';
 import WebSearch from './webSearch.js';
 import { AllTools, generateTools } from './tools.js';
 import { DBUIMessage } from '@api/db/tables/messages.js';
@@ -164,17 +165,7 @@ Prefer being concise unless more detail is requested.
 `.trim();
 
     // Instantiate WebSearch with event emitter
-    const webSearch = new WebSearch(this.navigator, (callId, event) => {
-      this.notifyChatEvent({
-        type: 'tool-update',
-        id: chatId,
-        event: {
-          tool: 'web-search',
-          callId,
-          event,
-        },
-      });
-    });
+    const webSearch = this.createWebSearch(model, chatId);
 
     const streamResponse = streamText({
       system,
@@ -217,6 +208,23 @@ Prefer being concise unless more detail is requested.
     });
 
     return streamResponse.text;
+  }
+
+  /**
+   * Initialize a WebSearch instance with event handling for chat updates.
+   */
+  private createWebSearch(model: LanguageModel, chatId: string) {
+    return new WebSearch(this.navigator, model, (callId, event) => {
+      this.notifyChatEvent({
+        type: 'tool-update',
+        id: chatId,
+        event: {
+          tool: 'web-search',
+          callId,
+          event,
+        },
+      });
+    });
   }
 
   /**
@@ -279,7 +287,7 @@ Prefer being concise unless more detail is requested.
     const prompt = promptForCondensedConversation(existingSummary, previousModelMessages);
 
     const textResponse = await generateText({
-      model: getOpenAI({ model: 'gpt-5-nano' }),
+      model: getModel({ name: 'gpt-4.1-mini', provider: 'openai' }, this.credentialsManager),
       system,
       prompt,
     });
@@ -344,7 +352,7 @@ Answer with only the title, without any additional text.
 `;
 
     const title = await generateText({
-      model: getOpenAI({ model: 'gpt-4.1-mini' }),
+      model: getModel({ name: 'gpt-4.1-mini', provider: 'openai' }, this.credentialsManager),
       prompt,
     });
 

@@ -1,6 +1,5 @@
 import Navigator, { SearchResult } from '@api/model/navigator';
-import { generateText } from 'ai';
-import { getOllama } from './model.js';
+import { generateText, LanguageModel } from 'ai';
 import { promptForWebResultsSummary, systemPromptForWebResultsSummary } from './prompt.js';
 
 const MAX_CONTENT_LENGTH = 10000;
@@ -8,6 +7,7 @@ const MAX_CONTENT_LENGTH = 10000;
 export default class WebSearch {
   constructor(
     private navigator: Navigator,
+    private model: LanguageModel,
     private emitter: WebSearchEventListener,
   ) {}
 
@@ -71,9 +71,7 @@ export default class WebSearch {
     const prompt = promptForWebResultsSummary(query, results);
     const answer = await generateText({
       system,
-      model: getOllama({
-        model: 'gemma3:4b',
-      }),
+      model: this.model,
       prompt,
     });
 

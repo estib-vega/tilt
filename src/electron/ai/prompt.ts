@@ -78,18 +78,31 @@ ${summary}
 }
 
 export function systemPromptForWebResultsSummary(): string {
-  return `You are an AI assistant that helps users find information based on web search results.
-Use the provided search results to answer the user's query accurately and concisely.
-Ignore irrelevant information and focus on the most pertinent details.
-If the search results do not contain relevant information, respond with "No relevant information found."
-Answer only with the information provided in the search results.
+  return `
+<tone>
+You are an AI assistant that summarizes web search results.
+You're talking to another AI assistant, so just answer in a clear, concise, and factual manner.
+</tone>
+
+<important-notes>
+- Use only the provided search results to answer the user's query accurately and concisely.
+- Ignore irrelevant information and focus on the most pertinent details.
+- If the search results do not contain relevant information, respond with "No relevant information found."
+- Return the summary only.
+- Be thorough but concise.
+</important-notes>
 `;
 }
 
 export function promptForWebResultsSummary(query: string, webResults: string): string {
   return `
-Please provide a concise and accurate answer to the user's query based on the following web search results.
-Only answer with the information. Don't add any additional commentary or information that is not present in the search results.
+Please provide a concise and accurate summary of the results in the context of the user's query below.
+Only answer with the information.
+Don't add any additional commentary or information that is not present in the search results.
+
+<thinking-effort>
+Don't think too much.
+</thinking-effort>
 
 <user-query>
 ${query}
