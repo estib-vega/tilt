@@ -78,7 +78,7 @@ function SearchResultTextContent(props: SearchResultTextContentProps): JSX.Eleme
             key={index}
             className="w-full p-2 mb-2 border border-border rounded-md bg-secondary/50"
           >
-            <p>{content}</p>
+            <pre className="text-wrap">{content}</pre>
           </div>
         ))}
       </div>
