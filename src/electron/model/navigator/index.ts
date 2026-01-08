@@ -42,7 +42,7 @@ export default class Navigator {
     return ecosiaPage.getResults();
   }
 
-  async getTextContentFromUrl(url: string): Promise<string | null> {
+  async getContentFromUrl(url: string): Promise<WebPageContents | null> {
     try {
       const html = await fetch(url).then((res) => res.text());
       const $ = cheerio.load(html);
@@ -61,8 +61,29 @@ export default class Navigator {
         content.add($(elem).text());
       });
 
+      const title = $('head > title').text().trim() || url;
+
       const contentArray = Array.from(content).filter((text) => text.trim().length > 0);
-      return contentArray.join('\n\n').replace(/\s+/g, ' ').trim();
+      const text = contentArray.join('\n\n').replace(/\s+/g, ' ').trim();
+
+      // Search for explicit <link> tags
+      const iconLinks = $('link[rel="icon"], link[rel="shortcut icon"], link[rel*="icon"]');
+      let icon: string | null = null;
+
+      if (iconLinks.length) {
+        const href = iconLinks.first().attr('href')?.trim();
+        // Resolve relative URLs
+        if (href) {
+          icon = new URL(href, url).href;
+        }
+      }
+
+      return {
+        title,
+        url,
+        icon,
+        text,
+      };
     } catch (error) {
       console.error('Error extracting text content:', error);
       return null;
@@ -272,4 +293,11 @@ class EcosiaPage {
 export interface SearchResult {
   href: string;
   label: string;
+}
+
+export interface WebPageContents {
+  url: string;
+  title: string;
+  icon: string | null;
+  text: string;
 }

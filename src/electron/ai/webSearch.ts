@@ -1,4 +1,4 @@
-import Navigator, { SearchResult } from '@api/model/navigator';
+import Navigator, { SearchResult, WebPageContents } from '@api/model/navigator';
 import { generateText, LanguageModel } from 'ai';
 import { promptForWebResultsSummary, systemPromptForWebResultsSummary } from './prompt.js';
 
@@ -26,18 +26,26 @@ export default class WebSearch {
       results,
     });
 
-    const fetchContent = async (res: SearchResult): Promise<string | null> => {
-      const content = await this.navigator.getTextContentFromUrl(res.href);
+    const fetchContent = async (res: SearchResult): Promise<WebPageContents | null> => {
+      const content = await this.navigator.getContentFromUrl(res.href);
       if (!content) {
         return null;
       }
+      const text = this.formatSearchResult(res, content.text);
 
-      return this.formatSearchResult(res, content);
+      if (!text) {
+        return null;
+      }
+
+      return {
+        ...content,
+        text,
+      };
     };
 
     const contentPromises = results.map((res) => fetchContent(res));
     const responses = await Promise.all(contentPromises).then((responses) =>
-      responses.filter((res): res is string => res !== null),
+      responses.filter((res): res is WebPageContents => res !== null),
     );
 
     this.emitter(callId, {
@@ -46,7 +54,7 @@ export default class WebSearch {
       processedResults: responses,
     });
 
-    const result = responses.join('\n\n');
+    const result = responses.map((res) => res.text).join('\n\n');
     const answer = await this.answerQuery(callId, query, result);
     this.emitter(callId, {
       type: 'completed-summarization',
@@ -78,10 +86,7 @@ export default class WebSearch {
     return answer.text.trim();
   }
 
-  private formatSearchResult(
-    res: SearchResult,
-    content: string,
-  ): string | PromiseLike<string | null> | null {
+  private formatSearchResult(res: SearchResult, content: string): string | null {
     return `
   <search-result>
     <link-label>
@@ -128,7 +133,7 @@ export interface WebSearchReceivedResultsEvent extends BaseWebSearchEvent {
 
 export interface WebSearchProcessedResultsEvent extends BaseWebSearchEvent {
   type: 'processed-results';
-  processedResults: string[];
+  processedResults: WebPageContents[];
 }
 
 export interface WebSearchStartedSummarizationEvent extends BaseWebSearchEvent {

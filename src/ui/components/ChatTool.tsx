@@ -9,6 +9,7 @@ import type { WebSearchEvent } from '@api/ai/webSearch';
 import { Shimmer } from './ai-elements/shimmer';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { ChevronDownIcon, Globe } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChatToolProps {
   chatId: string;
@@ -32,17 +33,27 @@ interface WebToolProps {
 }
 
 function WebTool(props: WebToolProps): JSX.Element {
-  const [isDone, lastEvent] = useWatchWebToolUpdates(props.chatId, props.description.toolCallId);
+  const [isDone, lastEvent, icons] = useWatchWebToolUpdates(
+    props.chatId,
+    props.description.toolCallId,
+  );
 
   return (
     <div className="min-w-0 w-full mb-4 flex flex-col gap-1">
       <Tool className="mb-0">
-        <CollapsibleTrigger className="cursor-pointer flex flex-col w-full items-center justify-between gap-4 p-3">
+        <CollapsibleTrigger className="cursor-pointer flex  w-full items-center justify-between gap-4 p-3">
           <div className="flex items-center gap-2">
             <Globe className="size-4 text-muted-foreground" />
             <WebToolStatus isDone={isDone} lastEvent={lastEvent} description={props.description} />
             <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
           </div>
+          {icons.length > 0 && (
+            <div className="flex items-center gap-1 overflow-x-auto">
+              {icons.map((icon, index) => (
+                <WebPageIcon key={index} url={icon.url} title={icon.title} index={index} />
+              ))}
+            </div>
+          )}
         </CollapsibleTrigger>
         <ToolContent>
           <ToolInput input={props.description.input} />
@@ -53,6 +64,31 @@ function WebTool(props: WebToolProps): JSX.Element {
   );
 }
 
+interface WebPageIconProps {
+  url: string;
+  title: string;
+  index: number;
+}
+
+function WebPageIcon(props: WebPageIconProps): JSX.Element {
+  const [loaded, setLoaded] = React.useState(false);
+  const delay = props.index * 300;
+  return (
+    <img
+      src={props.url}
+      title={props.title}
+      alt={props.title}
+      loading="lazy"
+      onLoad={() => setLoaded(true)}
+      className={cn(
+        'size-5 rounded-sm object-contain bg-muted transition-opacity duration-300',
+        !loaded && 'opacity-0',
+        loaded && 'opacity-100 animate-appear-up',
+        `transition-delay-[${delay}ms]`,
+      )}
+    />
+  );
+}
 interface WebToolStatusProps {
   isDone: boolean;
   lastEvent: WebSearchEvent | undefined;
@@ -120,12 +156,33 @@ function useWatchWebToolUpdates(chatId: string, toolCallId: string) {
     }
     return events[events.length - 1];
   }, [events]);
+
   const isDone = React.useMemo(() => {
     if (events.length === 0 || lastEvent === undefined) {
       return false;
     }
     return lastEvent.type === 'end' || lastEvent.type === 'error';
   }, [events, lastEvent]);
+
+  const icons = React.useMemo(() => {
+    const results = events.find((event) => event.type === 'processed-results')?.processedResults;
+    if (!results) {
+      return [];
+    }
+    const urlMap = new Map<string, string>();
+    results.forEach((result) => {
+      if (result.icon) {
+        urlMap.set(result.icon, result.title);
+      }
+    });
+
+    const urls: { url: string; title: string }[] = [];
+    urlMap.forEach((title, url) => {
+      urls.push({ url, title });
+    });
+    urls.sort((a, b) => a.title.localeCompare(b.title));
+    return urls;
+  }, [events]);
 
   const watcher = React.useCallback(
     (content: UIChatToolUpdateEventContent) => {
@@ -139,5 +196,5 @@ function useWatchWebToolUpdates(chatId: string, toolCallId: string) {
   );
   useWatchChatToolUpdates(chatId, watcher);
 
-  return [isDone, lastEvent, events] as const;
+  return [isDone, lastEvent, icons, events] as const;
 }
