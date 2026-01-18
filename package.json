@@ -9,6 +9,7 @@
     "build:ui": "vite build && tsc",
     "watch:electron": "tsc -p tsconfig.electron.json --watch",
     "build:electron": "tsc -p tsconfig.electron.json",
+    "build": "npm run build:ui && npm run build:electron",
     "serve": "vite preview",
     "test": "vitest run",
     "lint": "eslint --config eslint.config.js",
