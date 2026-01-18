@@ -1,9 +1,10 @@
 import type { JSX } from 'react';
-import { Message, MessageContent, MessageResponse } from './ai-elements/message';
+import { Message, MessageContent } from './ai-elements/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning';
 import React from 'react';
 import type { CustomUIMessage } from '@api/api';
 import ChatTool from './ChatTool';
+import ChatMessageResponse from './ChatMessageResponse';
 
 type MessagePart = CustomUIMessage['parts'][number];
 type MessageRole = CustomUIMessage['role'];
@@ -86,34 +87,4 @@ function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
     default:
       return <pre className="text-xs">{JSON.stringify(part, null, 2)}</pre>;
   }
-}
-
-interface ChatMessageResponseProps {
-  content: string;
-  streaming: boolean;
-}
-
-function ChatMessageResponse(props: ChatMessageResponseProps): JSX.Element {
-  const { content } = props;
-  const mode = props.streaming ? 'streaming' : 'static';
-  return (
-    <MessageResponse
-      shikiTheme={['light-plus', 'dark-plus']}
-      mode={mode}
-      components={{
-        a: ({ href, children }) => (
-          <a
-            href={href}
-            className="text-blue-600 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {children}
-          </a>
-        ),
-      }}
-    >
-      {content}
-    </MessageResponse>
-  );
 }

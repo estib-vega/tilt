@@ -10,6 +10,7 @@ import { Shimmer } from './ai-elements/shimmer';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { ChevronDownIcon, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ChatMessageResponse from './ChatMessageResponse';
 
 interface ChatToolProps {
   chatId: string;
@@ -33,10 +34,12 @@ interface WebToolProps {
 }
 
 function WebTool(props: WebToolProps): JSX.Element {
-  const [isDone, lastEvent, icons, resultContents] = useWatchWebToolUpdates(
+  const [isDone, lastEvent, icons, resultContents, summary] = useWatchWebToolUpdates(
     props.chatId,
     props.description.toolCallId,
   );
+
+  const showSummary = summary.length > 0;
 
   return (
     <div className="min-w-0 w-full mb-4 flex flex-col gap-1">
@@ -49,6 +52,15 @@ function WebTool(props: WebToolProps): JSX.Element {
             <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 shrink-0" />
           </div>
         </CollapsibleTrigger>
+        {showSummary && (
+          <div
+            className={cn(
+              'px-4 pb-2 text-muted-foreground italic max-h-60 overflow-y-auto scrollbar-muted flex flex-col-reverse',
+            )}
+          >
+            <ChatMessageResponse content={summary} streaming={!isDone} />
+          </div>
+        )}
         <ToolContent>
           <ToolInput input={props.description.input} />
           <SearchResultTextContent resultContents={resultContents} />
@@ -178,6 +190,8 @@ function getWebSearchEventTitle(event: WebSearchEvent): string {
       return `finished processing results`;
     case 'started-summarization':
       return `starting summarization`;
+    case 'delta-summarization':
+      return `summarization in progress`;
     case 'completed-summarization':
       return `summary completed`;
     case 'error':
@@ -195,6 +209,7 @@ function useWatchWebToolUpdates(chatId: string, toolCallId: string) {
 
   const icons = useIcons(events);
   const resultContents = useResultContents(events);
+  const summary = useSummaryDelta(events);
 
   const watcher = React.useCallback(
     (content: UIChatToolUpdateEventContent) => {
@@ -208,7 +223,19 @@ function useWatchWebToolUpdates(chatId: string, toolCallId: string) {
   );
   useWatchChatToolUpdates(chatId, watcher);
 
-  return [isDone, lastEvent, icons, resultContents, events] as const;
+  return [isDone, lastEvent, icons, resultContents, summary, events] as const;
+}
+
+function useSummaryDelta(events: WebSearchEvent[]): string {
+  return React.useMemo(() => {
+    const buffer: string[] = [];
+    events.forEach((event) => {
+      if (event.type === 'delta-summarization') {
+        buffer.push(event.delta);
+      }
+    });
+    return buffer.join('');
+  }, [events]);
 }
 
 function useResultContents(events: WebSearchEvent[]) {

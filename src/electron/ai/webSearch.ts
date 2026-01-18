@@ -1,5 +1,5 @@
 import Navigator, { SearchResult, WebPageContents } from '@api/model/navigator';
-import { generateText, LanguageModel } from 'ai';
+import { LanguageModel, streamText } from 'ai';
 import { promptForWebResultsSummary, systemPromptForWebResultsSummary } from './prompt.js';
 
 const MAX_CONTENT_LENGTH = 10000;
@@ -18,7 +18,21 @@ export default class WebSearch {
       query,
     });
 
-    const results = await this.navigator.getSearchResults(query);
+    let results: SearchResult[] = [];
+    try {
+      results = await this.navigator.getSearchResults(query);
+    } catch (error) {
+      this.emitter(callId, {
+        type: 'error',
+        timestamp: Date.now(),
+        error: error instanceof Error ? error : String(error),
+      });
+      this.emitter(callId, {
+        type: 'end',
+        timestamp: Date.now(),
+      });
+      throw error;
+    }
 
     this.emitter(callId, {
       type: 'received-results',
@@ -77,13 +91,72 @@ export default class WebSearch {
     });
     const system = systemPromptForWebResultsSummary();
     const prompt = promptForWebResultsSummary(query, results);
-    const answer = await generateText({
+    const stream = await streamText({
       system,
       model: this.model,
       prompt,
     });
 
-    return answer.text.trim();
+    for await (const chunk of stream.fullStream) {
+      switch (chunk.type) {
+        case 'text-delta': {
+          const delta = chunk.text;
+          this.emitter(callId, {
+            type: 'delta-summarization',
+            timestamp: Date.now(),
+            delta,
+          });
+          break;
+        }
+        case 'reasoning-start': {
+          this.emitter(callId, {
+            type: 'delta-summarization',
+            timestamp: Date.now(),
+            delta: '**thiking**\n\n',
+          });
+          break;
+        }
+        case 'reasoning-end': {
+          this.emitter(callId, {
+            type: 'delta-summarization',
+            timestamp: Date.now(),
+            delta: '\n\n**done thinking**\n\n',
+          });
+          break;
+        }
+        case 'reasoning-delta': {
+          const delta = chunk.text;
+          this.emitter(callId, {
+            type: 'delta-summarization',
+            timestamp: Date.now(),
+            delta,
+          });
+          break;
+        }
+        case 'error':
+        case 'source':
+        case 'tool-call':
+        case 'tool-result':
+        case 'tool-error':
+        case 'text-start':
+        case 'text-end':
+        case 'tool-input-start':
+        case 'tool-input-end':
+        case 'tool-input-delta':
+        case 'file':
+        case 'start-step':
+        case 'finish-step':
+        case 'start':
+        case 'finish':
+        case 'abort':
+        case 'raw':
+          continue;
+      }
+    }
+
+    const answer = await stream.text;
+
+    return answer.trim();
   }
 
   private formatSearchResult(res: SearchResult, content: string): string | null {
@@ -93,12 +166,12 @@ export default class WebSearch {
       ${res.label}: ${res.href}
     </link-label>
     <result-content>
-      ${this.summarizeContentIfNeeded(content)}
+      ${this.truncateContentIfNeeded(content)}
     </result-content>
   </search-result>`.trim();
   }
 
-  private summarizeContentIfNeeded(content: string): string {
+  private truncateContentIfNeeded(content: string): string {
     if (content.length <= MAX_CONTENT_LENGTH) {
       return content; // No need to summarize
     }
@@ -116,6 +189,7 @@ interface BaseWebSearchEvent {
     | 'received-results'
     | 'processed-results'
     | 'started-summarization'
+    | 'delta-summarization'
     | 'completed-summarization'
     | 'error'
     | 'end';
@@ -140,6 +214,11 @@ export interface WebSearchStartedSummarizationEvent extends BaseWebSearchEvent {
   type: 'started-summarization';
 }
 
+export interface WebSearchDeltaSummarizationEvent extends BaseWebSearchEvent {
+  type: 'delta-summarization';
+  delta: string;
+}
+
 export interface WebSearchCompletedSummarizationEvent extends BaseWebSearchEvent {
   type: 'completed-summarization';
   summary: string;
@@ -159,6 +238,7 @@ export type WebSearchEvent =
   | WebSearchReceivedResultsEvent
   | WebSearchProcessedResultsEvent
   | WebSearchStartedSummarizationEvent
+  | WebSearchDeltaSummarizationEvent
   | WebSearchCompletedSummarizationEvent
   | WebSearchErrorEvent
   | WebSearchEndEvent;

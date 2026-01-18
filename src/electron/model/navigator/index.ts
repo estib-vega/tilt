@@ -30,13 +30,16 @@ export default class Navigator {
   }
 
   async getSearchResults(query: string): Promise<SearchResult[]> {
+    console.log('Starting search for query:', query);
     const url = EcosiaPage.urlFromQuery(query);
     const page = await this.getPage(url);
+    console.log('Navigated to search URL:', url);
     if (!page) {
       console.error('Failed to retrieve page for URL:', url);
       return [];
     }
     await page.waitForNetworkIdle();
+    console.log('Network is idle, proceeding to extract search results.');
 
     const ecosiaPage = new EcosiaPage(page);
     return ecosiaPage.getResults();
@@ -199,10 +202,14 @@ class EcosiaPage {
 
         const results: SearchResult[] = [];
 
-        const mainlineResultLinks = await mainline.$$(
-          `${EcosiaLocators.MainlineResultWeb} ${EcosiaLocators.MainlineResultWebLink}`,
-          { isolate: false },
-        );
+        const mainlineResultLinks = await mainline
+          .$$(`${EcosiaLocators.MainlineResultWeb} ${EcosiaLocators.MainlineResultWebLink}`, {
+            isolate: false,
+          })
+          .catch((e) => {
+            console.error('Error while querying mainline result links:', e);
+            return [];
+          });
 
         if (mainlineResultLinks.length === 0) {
           console.error('No mainline result links found.');
@@ -215,7 +222,12 @@ class EcosiaPage {
           if (results.length >= maxResults) {
             break;
           }
-          const href = await linkHandle.evaluate((node) => node.getAttribute('href'));
+          const href = await linkHandle
+            .evaluate((node) => node.getAttribute('href'))
+            .catch((e) => {
+              console.error('Error while evaluating href attribute:', e);
+              return null;
+            });
           if (!href) {
             console.warn('Skipping a result with no href attribute.');
             continue;
@@ -224,7 +236,12 @@ class EcosiaPage {
             continue;
           }
           uniqueAddresses.add(href);
-          const label = await linkHandle.evaluate((node) => node.textContent?.trim() || '');
+          const label = await linkHandle
+            .evaluate((node) => node.textContent?.trim() || '')
+            .catch((e) => {
+              console.error('Error while evaluating link text content:', e);
+              return '';
+            });
           results.push({ href, label });
         }
 
