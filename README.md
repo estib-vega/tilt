@@ -1,4 +1,12 @@
-Welcome to your new TanStack app!
+# Tilt
+
+An Electron application for search and knowledge management using AI.
+
+## About
+
+Tilt is a powerful desktop application that combines the capabilities of Electron with artificial intelligence to provide advanced search and knowledge management features. It helps you organize, search, and manage your knowledge base efficiently using AI-powered tools.
+
+---
 
 # Getting Started
 
@@ -6,7 +14,11 @@ To run this application:
 
 ```bash
 pnpm install
-pnpm start
+
+# the following commands need to be run simultaneously in different terminals
+pnpm dev:ui # Start the Frontend dev server
+pnpm watch:electron # Watch for changes in the node-side
+pnpm dev:electron # Start the development version of electron (that will call the UI from the dev server)
 ```
 
 # Building For Production
