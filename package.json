@@ -5,7 +5,7 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev:ui": "vite --port 3000",
-    "dev:electron": "NODE_ENV=development electron .",
+    "dev:electron": "NODE_ENV=development electron . --trace-warnings",
     "build:ui": "vite build && tsc",
     "watch:electron": "tsc -p tsconfig.electron.json --watch",
     "build:electron": "tsc -p tsconfig.electron.json",
