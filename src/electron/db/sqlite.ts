@@ -149,9 +149,9 @@ export default class DB {
     return this.messagesTable.get(chatId);
   }
 
-  createChat(): string {
+  createChat(projectId: ProjectId | null): string {
     const chatId = randomUUID();
-    this.chatsTable.create({ id: chatId, title: null, project_id: null });
+    this.chatsTable.create({ id: chatId, title: null, project_id: projectId });
     return chatId;
   }
 

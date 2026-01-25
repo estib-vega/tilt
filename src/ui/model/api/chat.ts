@@ -115,8 +115,10 @@ export function useWatchChatToolUpdates(
   }, [chatId, cb]);
 }
 
-export async function getDefaultChatId(filterOut?: string[]): Promise<string | null> {
-  const projectId = useProjectStore.getState().projectId;
+export async function getDefaultChatId(
+  projectId: ProjectId | null,
+  filterOut?: string[],
+): Promise<string | null> {
   const chats = await window.api
     .listChats({ projectId })
     .then((chats) => (filterOut ? chats.filter((chat) => !filterOut.includes(chat.id)) : chats));
@@ -144,7 +146,9 @@ interface CreateChatParams {
 export function useCreateChatMutation() {
   const setChatUsesWebSearch = useChatStore((state) => state.setChatUsesWebSearch);
   const setChatUsesModelIdentifier = useChatStore((state) => state.setChatUsesModelIdentifier);
+  const projectId = useProjectStore((state) => state.projectId);
   const queryClient = useQueryClient();
+  const options = chatsQueryOptions(projectId);
 
   return useMutation({
     mutationFn: async (params: CreateChatParams) => {
@@ -155,7 +159,7 @@ export function useCreateChatMutation() {
         role: 'user',
         parts: msg.parts,
       }));
-      const chatId = await window.api.createChat({ initialMessages });
+      const chatId = await window.api.createChat({ initialMessages, projectId });
       setChatUsesWebSearch(chatId, useWebSearch);
       setChatUsesModelIdentifier(chatId, modelIdentifier);
       ElectronTransport.createChatStream(
@@ -172,7 +176,7 @@ export function useCreateChatMutation() {
     },
     onSuccess: (newChatId) => {
       // Invalidate chats query to refetch updated data
-      queryClient.invalidateQueries({ queryKey: ['chats'] });
+      queryClient.invalidateQueries({ queryKey: options.queryKey });
       return newChatId;
     },
   });

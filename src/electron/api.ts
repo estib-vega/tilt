@@ -4,7 +4,7 @@ import { isModelIdentifier, ModelIdentifier, ModelProvider } from './ai/model.js
 import { CredentialService, isCredentialService } from './model/credentials.js';
 import z from 'zod';
 import { WebSearchEvent } from './ai/webSearch.js';
-import { ProjectIdSchema } from './db/tables/projects.js';
+import { ProjectId, ProjectIdSchema } from './db/tables/projects.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -105,6 +105,7 @@ export function parseLLMResumeParams(something: unknown): LLMResumeParams {
 }
 
 export interface LLMCreateChatParams {
+  projectId: ProjectId | null;
   initialMessages?: UIMessage[];
 }
 
@@ -112,6 +113,14 @@ function isLLMCreateChatParams(something: unknown): something is LLMCreateChatPa
   if (typeof something !== 'object' || something === null) {
     return false;
   }
+
+  if (
+    (something as any).projectId !== null &&
+    !ProjectIdSchema.safeParse((something as any).projectId).success
+  ) {
+    return false;
+  }
+
   const maybeInitialMessages = (something as any).initialMessages;
   if (maybeInitialMessages === undefined) {
     return true;
@@ -124,15 +133,16 @@ function isLLMCreateChatParams(something: unknown): something is LLMCreateChatPa
 
 export async function parseLLMCreateChatParams(
   something: unknown,
-): Promise<[UIMessage[] | undefined]> {
+): Promise<[UIMessage[] | undefined, ProjectId | null]> {
   if (!isLLMCreateChatParams(something)) {
     throw new Error('Invalid LLM create parameters');
   }
-  const { initialMessages } = something;
+  const { initialMessages, projectId } = something;
   if (initialMessages && initialMessages.length > 0) {
-    return validateUIMessages({ messages: initialMessages }).then((msgs) => [msgs]);
+    const messages = await validateUIMessages({ messages: initialMessages });
+    return [messages, projectId];
   }
-  return [undefined];
+  return [undefined, projectId];
 }
 
 export interface UIChat {

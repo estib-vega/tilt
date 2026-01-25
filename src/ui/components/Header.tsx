@@ -1,4 +1,4 @@
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import SettingsButton from './SettingsButton';
 import { cn } from '@/lib/utils';
 import { useListProjects } from '@/model/api/project';
@@ -14,6 +14,7 @@ import { Button } from './ui/button';
 import NewProjectModal from './NewProjectModal';
 import { useProjectStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
+import { getDefaultChatId } from '@/model/api/chat';
 
 export default function Header() {
   const location = useLocation();
@@ -59,15 +60,15 @@ function ProjectSelect() {
   const setProject = useProjectStore((state) => state.setProject);
   const [selectOpen, setSelectOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   const MAIN = 'main';
 
-  const handleValueChange = (value: string) => {
-    if (value === MAIN) {
-      setProject(null);
-      return;
-    }
-    setProject(value as ProjectId);
+  const handleValueChange = async (value: string) => {
+    const newProjectId = value === MAIN ? null : (value as ProjectId);
+    setProject(newProjectId);
+    const defaultChat = await getDefaultChatId(newProjectId);
+    await navigate({ to: '/chat', search: defaultChat ? { chatId: defaultChat } : {} });
   };
 
   const handleCreateNewProject = () => {

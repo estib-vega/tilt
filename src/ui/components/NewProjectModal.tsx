@@ -11,6 +11,8 @@ import {
 import { Input } from './ui/input';
 import { useCreateProjectMutation } from '@/model/api/project';
 import { useProjectStore } from '@/store';
+import { getDefaultChatId } from '@/model/api/chat';
+import { useNavigate } from '@tanstack/react-router';
 
 interface NewProjectModalProps {
   open: boolean;
@@ -21,6 +23,7 @@ export default function NewProjectModal(props: NewProjectModalProps) {
   const [projectName, setProjectName] = React.useState('');
   const createProjectMutation = useCreateProjectMutation();
   const setProjectId = useProjectStore((state) => state.setProject);
+  const navigate = useNavigate();
 
   const handleCancelCreate = () => {
     props.onOpenChange(false);
@@ -30,8 +33,10 @@ export default function NewProjectModal(props: NewProjectModalProps) {
   const handleConfirmCreate = async () => {
     const projectId = await createProjectMutation.mutateAsync(projectName.trim());
     setProjectId(projectId);
+    const defaultChatId = await getDefaultChatId(projectId);
     props.onOpenChange(false);
     setProjectName('');
+    navigate({ to: '/chat', search: defaultChatId ? { chatId: defaultChatId } : {} });
   };
 
   return (

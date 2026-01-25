@@ -228,8 +228,8 @@ ipcMain.handle('llm:delete-chat', (_event, { chatId }) => {
 });
 
 ipcMain.handle('llm:create-chat', async (_event, params) => {
-  const [messages] = await parseLLMCreateChatParams(params);
-  return chatManager.createChat(messages);
+  const [messages, projectId] = await parseLLMCreateChatParams(params);
+  return chatManager.createChat(projectId, messages);
 });
 
 ipcMain.handle('llm:list-models', () => {

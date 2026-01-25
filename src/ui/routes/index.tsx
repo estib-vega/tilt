@@ -1,10 +1,12 @@
 import { getDefaultChatId } from '@/model/api/chat';
+import { useProjectStore } from '@/store';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
   component: App,
   loader: async () => {
-    const defaultChatId = await getDefaultChatId();
+    const projectId = useProjectStore.getState().projectId;
+    const defaultChatId = await getDefaultChatId(projectId);
     throw redirect({
       to: '/chat',
       search: defaultChatId ? { chatId: defaultChatId } : undefined,

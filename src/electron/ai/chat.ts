@@ -70,8 +70,8 @@ export default class ChatManager {
   /**
    * Create a new chat in the database.
    */
-  createChat(initialMessages?: UIMessage[]): string {
-    const chatId = this.db.createChat();
+  createChat(projectId: ProjectId | null, initialMessages?: UIMessage[]): string {
+    const chatId = this.db.createChat(projectId);
     if (initialMessages && initialMessages.length > 0) {
       // TODO: ensuere messages are serializable
       this.db.addMessagesToChat(chatId, initialMessages as DBUIMessage[]);

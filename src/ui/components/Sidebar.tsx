@@ -7,6 +7,7 @@ import { PopoverContent } from '@radix-ui/react-popover';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import NewChatButton from './NewChatButton';
+import { useProjectStore } from '@/store';
 
 interface SideBarProps {
   selectedChatId: string | undefined;
@@ -38,7 +39,12 @@ function ChatList(props: ChatListProps): JSX.Element {
 
   if (status === 'error') console.error('Error loading chats:', error);
   if (chats.length === 0) {
-    return <div className="p-2 px-4 text-sm text-muted-foreground">no chats yet.</div>;
+    return (
+      <div>
+        <NewChatButton />
+        <div className="p-2 px-4 text-sm text-muted-foreground">no chats yet.</div>
+      </div>
+    );
   }
 
   return (
@@ -114,6 +120,7 @@ interface EditChatTitleButtonProps {
 
 function EditChatTitleButton(props: EditChatTitleButtonProps) {
   const { chatId } = props;
+  const projectId = useProjectStore((state) => state.projectId);
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const navigate = useNavigate();
   const deleteChat = useDeleteChatMutation();
@@ -124,7 +131,7 @@ function EditChatTitleButton(props: EditChatTitleButtonProps) {
 
   const handleDeleteChat = async () => {
     await deleteChat.mutateAsync(chatId);
-    const nextChat = await getDefaultChatId([chatId]);
+    const nextChat = await getDefaultChatId(projectId, [chatId]);
     setPopoverOpen(false);
     navigate({ to: '/chat', search: nextChat ? { chatId: nextChat } : {} });
   };
