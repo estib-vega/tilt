@@ -21,11 +21,11 @@ export default class DBChats {
     CREATE TABLE IF NOT EXISTS chats (
       id TEXT NOT NULL PRIMARY KEY,
       title TEXT,
+      project_id TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
 
-    ALTER TABLE chats ADD COLUMN IF NOT EXISTS project_id TEXT;
     CREATE INDEX IF NOT EXISTS idx_chats_project ON chats(project_id, id);
     `);
   }
