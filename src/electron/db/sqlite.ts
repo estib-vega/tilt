@@ -131,7 +131,7 @@ export default class DB {
 
   createChat(): string {
     const chatId = randomUUID();
-    this.chatsTable.create({ id: chatId, title: null });
+    this.chatsTable.create({ id: chatId, title: null, project_id: null });
     return chatId;
   }
 
@@ -167,7 +167,7 @@ export default class DB {
   private ensureChatExists(chatId: string): void {
     const chat = this.chatsTable.getById(chatId);
     if (!chat) {
-      this.chatsTable.create({ id: chatId, title: null });
+      this.chatsTable.create({ id: chatId, title: null, project_id: null });
     }
   }
 }
