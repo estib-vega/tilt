@@ -4,7 +4,9 @@ import path from 'node:path';
 import ChatManager from './ai/chat.js';
 import dotenv from 'dotenv';
 import {
+  CreateProjectParamsSchema,
   DeleteNoteParamsSchema,
+  DeleteProjectParamsSchema,
   NewNoteParamsSchema,
   parseAddCredentialParams,
   parseDeleteCredentialParams,
@@ -23,6 +25,7 @@ import { availableModels, defaultModelIdentifier } from './ai/model.js';
 import OllamaManager from './model/ollama.js';
 import NotesManager from './model/notes.js';
 import Navigator from './model/navigator/index.js';
+import ProjectsManager from './model/projects.js';
 
 dotenv.config();
 
@@ -37,6 +40,7 @@ const navigator = Navigator.getInstance();
 const chatManager = ChatManager.getInstance(db, credentialsManager, navigator);
 const ollamaManager = OllamaManager.getInstance();
 const notesManager = NotesManager.getInstance(appDir, db);
+const projectsManager = ProjectsManager.getInstance(db);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -97,6 +101,7 @@ function createWindow(): void {
     ollamaManager.destroy();
     notesManager.destroy();
     navigator.destroy();
+    projectsManager.destroy();
   });
 
   const allowlistedProtocols = ['http:', 'https:'];
@@ -288,4 +293,18 @@ ipcMain.handle('notes:delete-note', (_event, params) => {
 
 ipcMain.handle('notes:list-notes', () => {
   return notesManager.listNotes();
+});
+
+ipcMain.handle('projects:create-project', (_event, params) => {
+  const parsedParams = CreateProjectParamsSchema.parse(params);
+  return projectsManager.createProject(parsedParams.name);
+});
+
+ipcMain.handle('projects:delete-project', (_event, params) => {
+  const parsedParams = DeleteProjectParamsSchema.parse(params);
+  return projectsManager.deleteProject(parsedParams.projectId);
+});
+
+ipcMain.handle('projects:list-projects', () => {
+  return projectsManager.listProjects();
 });

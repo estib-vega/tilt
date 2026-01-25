@@ -4,9 +4,11 @@ import {
   ChatChunkEvent,
   ChatEndEvent,
   ChatUsageEvent,
+  CreateProjectParams,
   CustomUIMessage,
   DeleteCredentialParams,
   DeleteNoteParams,
+  DeleteProjectParams,
   LLMCreateChatParams,
   LLMResumeParams,
   LLMStartParams,
@@ -22,6 +24,7 @@ import { ModelIdentifier, ProviderModelList } from './ai/model';
 import { Credential, CredentialService } from './model/credentials';
 import { OllamaStatus } from './model/ollama';
 import { Note } from './model/notes';
+import { Project } from './db/tables/projects';
 
 export type CleanUpFn = () => void;
 
@@ -140,6 +143,18 @@ export interface ElectronAPI {
    * Listen for tool update events during chat sessions.
    */
   onChatToolUpdate: (cb: (event: UIChatToolUpdateEvent) => void) => CleanUpFn;
+  /**
+   * List all projects.
+   */
+  listProjects: () => Promise<Project>;
+  /**
+   * Create a new project.
+   */
+  createProject: (params: CreateProjectParams) => Promise<string>;
+  /**
+   * Delete a project by ID.
+   */
+  deleteProject: (params: DeleteProjectParams) => Promise<void>;
 }
 
 const api: ElectronAPI = {
@@ -261,6 +276,17 @@ const api: ElectronAPI = {
 
   // List notes
   listNotes: () => ipcRenderer.invoke('notes:list-notes'),
+
+  // List all projects
+  listProjects: () => ipcRenderer.invoke('projects:list-projects'),
+
+  // Create a new project
+  createProject: (params: CreateProjectParams) =>
+    ipcRenderer.invoke('projects:create-project', params),
+
+  // Delete a project
+  deleteProject: (params: DeleteProjectParams) =>
+    ipcRenderer.invoke('projects:delete-project', params),
 
   // Listen for tool update events
   onChatToolUpdate: (cb: (event: UIChatToolUpdateEvent) => void) => {

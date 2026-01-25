@@ -1,4 +1,4 @@
-import { BrandedID, createBrandedID } from '@api/utils/id';
+import { z } from 'zod';
 import { type Database as SQLiteDB } from 'better-sqlite3';
 
 export type DBProject = {
@@ -73,11 +73,12 @@ export default class DBProjects {
   }
 }
 
-export type ProjectId = BrandedID<'ProjectId'>;
+export const ProjectIdSchema = z.string().brand<'ProjectId'>();
+export type ProjectId = z.infer<typeof ProjectIdSchema>;
 
 function createProjectId(id: number): ProjectId {
   const projectId = `project_${id}`;
-  return createBrandedID('ProjectId', projectId);
+  return projectId as ProjectId;
 }
 
 function parseProjectId(projectId: ProjectId): number {

@@ -4,6 +4,7 @@ import { isModelIdentifier, ModelIdentifier, ModelProvider } from './ai/model.js
 import { CredentialService, isCredentialService } from './model/credentials.js';
 import z from 'zod';
 import { WebSearchEvent } from './ai/webSearch.js';
+import { ProjectIdSchema } from './db/tables/projects.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
@@ -247,3 +248,15 @@ export const DeleteNoteParamsSchema = z.object({
 });
 
 export type DeleteNoteParams = z.infer<typeof DeleteNoteParamsSchema>;
+
+export const CreateProjectParamsSchema = z.object({
+  name: z.string(),
+});
+
+export type CreateProjectParams = z.infer<typeof CreateProjectParamsSchema>;
+
+export const DeleteProjectParamsSchema = z.object({
+  projectId: ProjectIdSchema,
+});
+
+export type DeleteProjectParams = z.infer<typeof DeleteProjectParamsSchema>;
