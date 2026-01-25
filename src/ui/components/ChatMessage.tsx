@@ -20,12 +20,8 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
   return (
     <ChatMessageWrapper from={message.role}>
       {message.parts.map((part, i) => (
-        <Message
-          from={message.role}
-          key={`message-part-${i}`}
-          className="overflow-y-scroll min-w-0 w-full"
-        >
-          <MessageContent>
+        <Message from={message.role} key={`message-part-${i}`} className=" min-w-0 w-full">
+          <MessageContent className="min-w-0 w-full">
             <ChatMessagePart key={i} chatId={props.chatId} part={part} isLastMessage={isLast} />
           </MessageContent>
         </Message>
@@ -47,7 +43,7 @@ function ChatMessageWrapper(props: ChatMessageWrapperProps): React.ReactNode {
     case 'system':
       return <Message from="system">{children}</Message>;
     case 'assistant':
-      return <div className="min-w-0 w-full  px-7">{children}</div>;
+      return <div className="min-w-0 w-full">{children}</div>;
   }
 }
 
