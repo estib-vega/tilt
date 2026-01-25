@@ -12,6 +12,8 @@ import {
 import React from 'react';
 import { Button } from './ui/button';
 import NewProjectModal from './NewProjectModal';
+import { useProjectStore } from '@/store';
+import type { ProjectId } from '@api/db/tables/projects';
 
 export default function Header() {
   const location = useLocation();
@@ -53,12 +55,19 @@ export default function Header() {
 
 function ProjectSelect() {
   const { data: projects } = useListProjects();
-  const [selectedProject, setSelectedProject] = React.useState<string>('');
+  const projectId = useProjectStore((state) => state.projectId);
+  const setProject = useProjectStore((state) => state.setProject);
   const [selectOpen, setSelectOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
+  const MAIN = 'main';
+
   const handleValueChange = (value: string) => {
-    setSelectedProject(value);
+    if (value === MAIN) {
+      setProject(null);
+      return;
+    }
+    setProject(value as ProjectId);
   };
 
   const handleCreateNewProject = () => {
@@ -69,16 +78,19 @@ function ProjectSelect() {
   return (
     <>
       <Select
-        value={selectedProject}
+        value={projectId ?? MAIN}
         onValueChange={handleValueChange}
         open={selectOpen}
         onOpenChange={setSelectOpen}
       >
-        <SelectTrigger>
+        <SelectTrigger className="w-full max-w-64">
           <SelectValue placeholder="select project" />
         </SelectTrigger>
         <SelectContent>
           <Button onClick={handleCreateNewProject}>create new project</Button>
+          <SelectItem value={MAIN}>
+            <p className="text-muted-foreground">(no topic)</p>
+          </SelectItem>
           {projects.map((project) => (
             <SelectItem key={project.id} value={project.id}>
               {project.name}
