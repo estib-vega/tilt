@@ -24,7 +24,7 @@ import { ModelIdentifier, ProviderModelList } from './ai/model';
 import { Credential, CredentialService } from './model/credentials';
 import { OllamaStatus } from './model/ollama';
 import { Note } from './model/notes';
-import { Project } from './db/tables/projects';
+import { Project, ProjectId } from './db/tables/projects';
 
 export type CleanUpFn = () => void;
 
@@ -150,7 +150,7 @@ export interface ElectronAPI {
   /**
    * Create a new project.
    */
-  createProject: (params: CreateProjectParams) => Promise<string>;
+  createProject: (params: CreateProjectParams) => Promise<ProjectId>;
   /**
    * Delete a project by ID.
    */
