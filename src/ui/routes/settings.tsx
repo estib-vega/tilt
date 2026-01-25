@@ -5,7 +5,7 @@ import React, { type JSX } from 'react';
 import AddCredentialModal from '@/components/AddCredentialModal';
 import { useOllamaStatus } from '@/model/api/ollama';
 import { Badge } from '@/components/ui/badge';
-import { Check, CircleX, TriangleAlert } from 'lucide-react';
+import { Check, CircleX, RefreshCcw, TriangleAlert } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useThemeToggle } from '@/model/ui';
 
@@ -57,7 +57,7 @@ function OllamaStatus(): JSX.Element {
 }
 
 function OllamaStatusBadge(): JSX.Element {
-  const { data: status } = useOllamaStatus();
+  const { data: status, refetch } = useOllamaStatus();
 
   switch (status.type) {
     case 'available':
@@ -68,6 +68,7 @@ function OllamaStatusBadge(): JSX.Element {
               <Badge variant="outline" className="text-green-400">
                 <Check />
                 connected
+                <RefreshOllamaStatusButton refetch={refetch} />
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
@@ -87,6 +88,7 @@ function OllamaStatusBadge(): JSX.Element {
               <Badge variant="outline" className="text-amber-400">
                 <TriangleAlert />
                 disconnected
+                <RefreshOllamaStatusButton refetch={refetch} />
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
@@ -106,6 +108,7 @@ function OllamaStatusBadge(): JSX.Element {
               <Badge variant="destructive">
                 <CircleX />
                 error
+                <RefreshOllamaStatusButton refetch={refetch} />
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
@@ -118,6 +121,26 @@ function OllamaStatusBadge(): JSX.Element {
         </div>
       );
   }
+}
+
+interface RefreshOllamaStatusButtonProps {
+  refetch: () => Promise<void>;
+}
+
+function RefreshOllamaStatusButton(props: RefreshOllamaStatusButtonProps) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="ml-2 p-0 cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        props.refetch();
+      }}
+    >
+      <RefreshCcw />
+    </Button>
+  );
 }
 
 function CredentialsList() {
