@@ -146,7 +146,7 @@ export interface ElectronAPI {
   /**
    * List all projects.
    */
-  listProjects: () => Promise<Project>;
+  listProjects: () => Promise<Project[]>;
   /**
    * Create a new project.
    */
