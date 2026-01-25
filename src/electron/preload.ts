@@ -9,6 +9,8 @@ import {
   DeleteCredentialParams,
   DeleteNoteParams,
   DeleteProjectParams,
+  ListChatsParams,
+  ListNotesParams,
   LLMCreateChatParams,
   LLMResumeParams,
   LLMStartParams,
@@ -72,7 +74,7 @@ export interface ElectronAPI {
   /**
    * Lists all chats.
    */
-  listChats: () => Promise<UIChat[]>;
+  listChats: (params: ListChatsParams) => Promise<UIChat[]>;
   /**
    * Updates the title of a chat.
    */
@@ -138,7 +140,7 @@ export interface ElectronAPI {
   /**
    * List notes.
    */
-  listNotes: () => Promise<Note[]>;
+  listNotes: (params: ListNotesParams) => Promise<Note[]>;
   /**
    * Listen for tool update events during chat sessions.
    */
@@ -219,7 +221,7 @@ const api: ElectronAPI = {
   listMessages: (chatId: string) => ipcRenderer.invoke('llm:get-messages', { chatId }),
 
   // List all chats
-  listChats: () => ipcRenderer.invoke('llm:list-chats'),
+  listChats: (params: ListChatsParams) => ipcRenderer.invoke('llm:list-chats', params),
 
   // Update chat title
   updateChatTitle: (params: UpdateChatTitleParams) =>
@@ -275,7 +277,7 @@ const api: ElectronAPI = {
   deleteNote: (params: DeleteNoteParams) => ipcRenderer.invoke('notes:delete-note', params),
 
   // List notes
-  listNotes: () => ipcRenderer.invoke('notes:list-notes'),
+  listNotes: (params: ListNotesParams) => ipcRenderer.invoke('notes:list-notes', params),
 
   // List all projects
   listProjects: () => ipcRenderer.invoke('projects:list-projects'),

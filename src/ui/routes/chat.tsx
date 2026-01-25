@@ -1,6 +1,7 @@
 import Chat from '@/components/Chat';
 import SideBar from '@/components/SideBar';
 import { chatsQueryOptions } from '@/model/api/chat';
+import { useProjectStore } from '@/store';
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
@@ -11,7 +12,8 @@ const chatSearchSchema = z.object({
 export const Route = createFileRoute('/chat')({
   loaderDeps: ({ search: { chatId } }) => ({ chatId }),
   loader: ({ context: { queryClient } }) => {
-    queryClient.ensureQueryData(chatsQueryOptions);
+    const projectId = useProjectStore.getState().projectId;
+    queryClient.ensureQueryData(chatsQueryOptions(projectId));
   },
   validateSearch: chatSearchSchema,
   component: ChatPage,

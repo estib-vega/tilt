@@ -1,23 +1,30 @@
+import { useProjectStore } from '@/store';
 import type { WriteNoteParams } from '@api/api';
+import type { ProjectId } from '@api/db/tables/projects';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
-const useListNotesQueryOptions = queryOptions({
-  queryKey: ['notes'],
-  queryFn: () => window.api.listNotes(),
-});
+const useListNotesQueryOptions = (projectId: ProjectId | null) =>
+  queryOptions({
+    queryKey: ['notes', projectId ? projectId : 'all'],
+    queryFn: () => window.api.listNotes({ projectId }),
+  });
 
 export function useNewNoteMutation() {
+  const projectId = useProjectStore((state) => state.projectId);
   const queryClient = useQueryClient();
+  const options = useListNotesQueryOptions(projectId);
   return useMutation({
-    mutationFn: (content: string) => window.api.newNote({ content }),
+    mutationFn: (content: string) => window.api.newNote({ content, projectId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: useListNotesQueryOptions.queryKey });
+      queryClient.invalidateQueries({ queryKey: options.queryKey });
     },
   });
 }
 
 export function useListNotes() {
-  return useSuspenseQuery(useListNotesQueryOptions);
+  const projectId = useProjectStore((state) => state.projectId);
+  const options = useListNotesQueryOptions(projectId);
+  return useSuspenseQuery(options);
 }
 
 export function useNote(noteId: string) {
@@ -28,11 +35,13 @@ export function useNote(noteId: string) {
 }
 
 export function useDeleteNoteMutation() {
+  const projectId = useProjectStore((state) => state.projectId);
   const queryClient = useQueryClient();
+  const options = useListNotesQueryOptions(projectId);
   return useMutation({
     mutationFn: (noteId: number) => window.api.deleteNote({ id: noteId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: useListNotesQueryOptions.queryKey });
+      queryClient.invalidateQueries({ queryKey: options.queryKey });
     },
   });
 }

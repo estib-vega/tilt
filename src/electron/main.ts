@@ -7,6 +7,8 @@ import {
   CreateProjectParamsSchema,
   DeleteNoteParamsSchema,
   DeleteProjectParamsSchema,
+  ListChatsParamsSchema,
+  ListNotesParamsSchema,
   NewNoteParamsSchema,
   parseAddCredentialParams,
   parseDeleteCredentialParams,
@@ -212,8 +214,9 @@ ipcMain.handle('llm:get-messages', (_event, { chatId }) => {
   return chatManager.getChatMessages(chatId);
 });
 
-ipcMain.handle('llm:list-chats', () => {
-  return chatManager.listChats();
+ipcMain.handle('llm:list-chats', (_event, params) => {
+  const parsedParams = ListChatsParamsSchema.parse(params);
+  return chatManager.listChats(parsedParams.projectId);
 });
 
 ipcMain.handle('llm:update-chat-title', (_event, { chatId, title }) => {
@@ -261,8 +264,8 @@ ipcMain.handle('ollama:get-status', async () => {
 
 ipcMain.handle('notes:new', (_event, params) => {
   const parsedParams = NewNoteParamsSchema.parse(params);
-  const filePath = notesManager.newNotePath();
-  notesManager.writeNoteContent(filePath, parsedParams.content);
+  const filePath = notesManager.newNotePath(parsedParams.projectId);
+  notesManager.writeNoteContent(parsedParams.projectId, filePath, parsedParams.content);
   const id = notesManager.getIdForNotePath(filePath);
   if (!id) {
     throw new Error('Failed to retrieve note ID after creating new note');
@@ -281,7 +284,8 @@ ipcMain.handle('notes:write-note', (_event, params) => {
   const parsedParams = WriteNoteParamsSchema.parse(params);
   const { id, content } = parsedParams;
   const filePath = notesManager.getPathForNoteId(id);
-  return notesManager.writeNoteContent(filePath, content);
+  const projectId = notesManager.getProjectForNoteId(id);
+  return notesManager.writeNoteContent(projectId, filePath, content);
 });
 
 ipcMain.handle('notes:delete-note', (_event, params) => {
@@ -291,8 +295,9 @@ ipcMain.handle('notes:delete-note', (_event, params) => {
   return notesManager.deleteNote(filePath);
 });
 
-ipcMain.handle('notes:list-notes', () => {
-  return notesManager.listNotes();
+ipcMain.handle('notes:list-notes', (_event, params) => {
+  const parsedParams = ListNotesParamsSchema.parse(params);
+  return notesManager.listNotes(parsedParams.projectId);
 });
 
 ipcMain.handle('projects:create-project', (_event, params) => {

@@ -24,6 +24,7 @@ import {
 } from './prompt.js';
 import CredentialsManager from '@api/model/credentials.js';
 import Navigator from '@api/model/navigator/index.js';
+import { ProjectId } from '@api/db/tables/projects.js';
 
 type ChatEventListner = (event: UIChatEvent) => void;
 
@@ -88,8 +89,8 @@ export default class ChatManager {
   /**
    * List all chats from the database.
    */
-  listChats(): UIChat[] {
-    return this.db.listChats().map(
+  listChats(projectId: ProjectId | null): UIChat[] {
+    return this.db.listChats(projectId).map(
       (dbChat): UIChat => ({
         id: dbChat.id,
         title: dbChat.title,

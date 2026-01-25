@@ -8,6 +8,12 @@ import { ProjectIdSchema } from './db/tables/projects.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 
+export const ListChatsParamsSchema = z.object({
+  projectId: ProjectIdSchema.nullable(),
+});
+
+export type ListChatsParams = z.infer<typeof ListChatsParamsSchema>;
+
 export interface ChatEndEvent {
   id: string;
   text: string;
@@ -224,7 +230,14 @@ export function parseDeleteCredentialParams(something: unknown): DeleteCredentia
   return something;
 }
 
+export const ListNotesParamsSchema = z.object({
+  projectId: ProjectIdSchema.nullable(),
+});
+
+export type ListNotesParams = z.infer<typeof ListNotesParamsSchema>;
+
 export const NewNoteParamsSchema = z.object({
+  projectId: ProjectIdSchema.nullable(),
   content: z.string(),
 });
 

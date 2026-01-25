@@ -62,8 +62,11 @@ export default class DB {
     this.chatsTable.deleteByProject(projectId);
   }
 
-  listNotes() {
-    return this.notesTable.listWithoutProject();
+  listNotes(projectId: ProjectId | null) {
+    if (projectId === null) {
+      return this.notesTable.listWithoutProject();
+    }
+    return this.notesTable.listByProject(projectId);
   }
 
   getNoteById(noteId: number) {
@@ -158,8 +161,11 @@ export default class DB {
     this.chatsTable.delete(chatId);
   }
 
-  listChats(): DBUIChat[] {
-    return this.chatsTable.getAll();
+  listChats(projectId: ProjectId | null): DBUIChat[] {
+    if (projectId === null) {
+      return this.chatsTable.getWithoutProjectId();
+    }
+    return this.chatsTable.getByProjectId(projectId);
   }
 
   getChat(chatId: string): DBUIChat | undefined {

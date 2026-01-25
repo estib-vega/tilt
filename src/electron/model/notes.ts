@@ -1,4 +1,5 @@
 import DB from '@api/db/sqlite';
+import { ProjectId } from '@api/db/tables/projects';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -23,12 +24,16 @@ export default class NotesManager {
     NotesManager.instance = undefined;
   }
 
-  newNotePath(): string {
+  newNotePath(projectId: ProjectId | null): string {
     const iso = new Date().toDateString();
     const today = iso.split('T')[0];
     if (!today) {
       // The world is wrong if this happens
       throw new Error('Failed to generate date string for new note path');
+    }
+
+    if (projectId) {
+      return path.join(this.appDir, NOTES_DIR, projectId, today, this.createNoteName());
     }
 
     return path.join(this.appDir, NOTES_DIR, today, this.createNoteName());
@@ -38,8 +43,8 @@ export default class NotesManager {
     return randomUUID() + '.md';
   }
 
-  listNotes(): Note[] {
-    const notes = this.db.listNotes();
+  listNotes(projectId: ProjectId | null): Note[] {
+    const notes = this.db.listNotes(projectId);
     return notes.map((n) => ({
       id: n.id,
       title: n.title,
@@ -53,6 +58,14 @@ export default class NotesManager {
       throw new Error(`Note with ID ${noteId} not found`);
     }
     return note.path;
+  }
+
+  getProjectForNoteId(noteId: number): ProjectId | null {
+    const note = this.db.getNoteById(noteId);
+    if (!note) {
+      throw new Error(`Note with ID ${noteId} not found`);
+    }
+    return note.project_id;
   }
 
   getIdForNotePath(filePath: string): number | null {
@@ -70,7 +83,7 @@ export default class NotesManager {
     }
   }
 
-  writeNoteContent(filePath: string, content: string): void {
+  writeNoteContent(projectId: ProjectId | null, filePath: string, content: string): void {
     let isFirstWrite = false;
     try {
       const dir = path.dirname(filePath);
@@ -88,7 +101,7 @@ export default class NotesManager {
 
       if (isFirstWrite) {
         const title = this.getInitialTitle(content);
-        this.db.createNote(filePath, title, null, null);
+        this.db.createNote(filePath, title, null, projectId);
       }
     } catch (error) {
       console.error(`Error writing note content to ${filePath}:`, error);

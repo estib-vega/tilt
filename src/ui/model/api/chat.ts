@@ -10,7 +10,8 @@ import React from 'react';
 import { generateId } from 'ai';
 import type { ModelIdentifier } from '@api/ai/model';
 import { useModelSelector } from './models';
-import { useChatStore } from '@/store';
+import { useChatStore, useProjectStore } from '@/store';
+import type { ProjectId } from '@api/db/tables/projects';
 
 export function useElectronChat(chatId: string) {
   const queryClient = useQueryClient();
@@ -62,21 +63,24 @@ function useChatMessages(chatId: string) {
   return useSuspenseQuery(chatMessagesQueryOptions(chatId));
 }
 
-export const chatsQueryOptions = queryOptions({
-  queryKey: ['chats'],
-  queryFn: async () => window.api.listChats(),
-  retry: false,
-});
+export const chatsQueryOptions = (projectId: ProjectId | null) =>
+  queryOptions({
+    queryKey: ['chats', projectId ? projectId : null],
+    queryFn: async () => window.api.listChats({ projectId }),
+    retry: false,
+  });
 
 /**
  * Hook to watch for chat title updates and invalidate the chats query.
  */
 function useWatchChatTitleUpdates() {
+  const projectId = useProjectStore((state) => state.projectId);
   const queryClient = useQueryClient();
+  const options = chatsQueryOptions(projectId);
   React.useEffect(() => {
     const removeListener = window.api.onChatTitleUpdated((_) => {
       // Invalidate chats query to refetch updated data
-      queryClient.invalidateQueries({ queryKey: chatsQueryOptions.queryKey });
+      queryClient.invalidateQueries({ queryKey: options.queryKey });
       // TODO: Invalidate individual chat titles instead of the whole list.
       // For now it's good enough.
     });
@@ -89,7 +93,9 @@ function useWatchChatTitleUpdates() {
 
 export function useListChats() {
   useWatchChatTitleUpdates();
-  return useSuspenseQuery(chatsQueryOptions);
+  const projectId = useProjectStore((state) => state.projectId);
+  const options = chatsQueryOptions(projectId);
+  return useSuspenseQuery(options);
 }
 
 export function useWatchChatToolUpdates(
@@ -110,8 +116,9 @@ export function useWatchChatToolUpdates(
 }
 
 export async function getDefaultChatId(filterOut?: string[]): Promise<string | null> {
+  const projectId = useProjectStore.getState().projectId;
   const chats = await window.api
-    .listChats()
+    .listChats({ projectId })
     .then((chats) => (filterOut ? chats.filter((chat) => !filterOut.includes(chat.id)) : chats));
   if (chats.length === 0) return null;
   return chats[0].id;

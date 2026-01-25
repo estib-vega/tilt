@@ -45,9 +45,18 @@ export default class DBChats {
     return stmt.get(id);
   }
 
-  getAll(): DBUIChat[] {
-    const stmt = this.db.prepare<[], DBUIChat>('SELECT * FROM chats ORDER BY updated_at DESC');
+  getWithoutProjectId(): DBUIChat[] {
+    const stmt = this.db.prepare<[], DBUIChat>(
+      'SELECT * FROM chats WHERE project_id IS NULL ORDER BY updated_at DESC',
+    );
     return stmt.all();
+  }
+
+  getByProjectId(projectId: ProjectId): DBUIChat[] {
+    const stmt = this.db.prepare<[ProjectId], DBUIChat>(
+      'SELECT * FROM chats WHERE project_id = ? ORDER BY updated_at DESC',
+    );
+    return stmt.all(projectId);
   }
 
   update(id: string, updates: DBUIChatUpdate): DBUIChat | undefined {

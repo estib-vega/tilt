@@ -68,7 +68,7 @@ export default class DBNotes {
     return rows;
   }
 
-  listByProject(projectId: string): DBNote[] {
+  listByProject(projectId: ProjectId): DBNote[] {
     const rows = this.db
       .prepare<[string], DBNote>('SELECT * FROM notes WHERE project_id = ? ORDER BY id DESC')
       .all(projectId);
