@@ -1,26 +1,71 @@
 import { useChatStore } from '@/store';
+import { useModelStore } from '@/store/models';
 import type { ModelIdentifier } from '@api/ai/model';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import React from 'react';
 
 export function useListModels() {
-  return useSuspenseQuery({
+  const availableModels = useModelStore((state) => state.availableModels);
+  const setAvailableModels = useModelStore((state) => state.setAvailableModels);
+
+  const api = async () => {
+    const modelList = await window.api.listAvailableModels();
+    setAvailableModels(modelList);
+    return modelList;
+  };
+
+  const q = useSuspenseQuery({
     queryKey: ['available-models'],
-    queryFn: () => window.api.listAvailableModels(),
+    queryFn: async () => {
+      if (availableModels !== null) {
+        return availableModels;
+      }
+      return api();
+    },
+    initialData: availableModels ?? undefined,
   });
+
+  const refetch = async () => {
+    await api();
+    await q.refetch();
+  };
+
+  return { ...q, refetch };
 }
 
 export function useDefaultModel() {
-  return useSuspenseQuery({
+  const defaultModel = useModelStore((state) => state.defaultModel);
+  const setDefaultModel = useModelStore((state) => state.setDefaultModel);
+
+  const api = async () => {
+    const model = await window.api.getDefaultModel();
+    setDefaultModel(model);
+    return model;
+  };
+
+  const q = useSuspenseQuery({
     queryKey: ['default-model'],
-    queryFn: () => window.api.getDefaultModel(),
+    queryFn: () => {
+      if (defaultModel !== null) {
+        return defaultModel;
+      }
+      return api();
+    },
+    initialData: defaultModel ?? undefined,
   });
+
+  const refetch = async () => {
+    await api();
+    await q.refetch();
+  };
+
+  return { ...q, refetch };
 }
 
 export function useModelSelector(chatId: string) {
   const setChatUsesModelIdentifier = useChatStore((state) => state.setChatUsesModelIdentifier);
   const chatUsesModelIdentifier = useChatStore((state) => state.chatUsesModelIdentifier);
-  const { data: defaultModel } = useDefaultModel();
+  const { data: defaultModel, refetch } = useDefaultModel();
 
   const selectedModel = React.useMemo<ModelIdentifier | null>(() => {
     const modelFromStore = chatUsesModelIdentifier[chatId];
@@ -51,5 +96,6 @@ export function useModelSelector(chatId: string) {
     selectedModel,
     setSelectedModel,
     isSelectedModel,
+    refetch,
   };
 }

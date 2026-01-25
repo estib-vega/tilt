@@ -24,7 +24,7 @@ import {
 import { Conversation, ConversationContent } from './ai-elements/conversation';
 import { ChatMessage } from './ChatMessage';
 import type { ChatStatus } from 'ai';
-import { CheckIcon, GlobeIcon } from 'lucide-react';
+import { CheckIcon, GlobeIcon, RefreshCcw } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from './ui/button';
 import ChatContext from './ChatContext';
@@ -216,6 +216,7 @@ function ChatInput(props: ChatInputProps): JSX.Element {
 }
 
 interface ModelSelectorInputButtonProps {
+  refetch: () => Promise<void>;
   selectedModel: ModelIdentifier;
   setSelectedModel: React.Dispatch<React.SetStateAction<ModelIdentifier | null>>;
   isSelectedModel: (model: ModelIdentifier) => boolean;
@@ -224,7 +225,12 @@ interface ModelSelectorInputButtonProps {
 function ModelSelectorInputButton(props: ModelSelectorInputButtonProps): JSX.Element {
   const { selectedModel, setSelectedModel, isSelectedModel } = props;
   const [open, setOpen] = React.useState(false);
-  const { data: modelsList } = useListModels();
+  const { data: modelsList, refetch } = useListModels();
+
+  const refetchModelData = async () => {
+    await refetch();
+    await props.refetch();
+  };
 
   return (
     <div>
@@ -237,6 +243,9 @@ function ModelSelectorInputButton(props: ModelSelectorInputButtonProps): JSX.Ele
         </ModelSelectorTrigger>
         <ModelSelectorContent aria-describedby="model-selector-input">
           <ModelSelectorInput id="model-selector-input" placeholder="search models..." />
+          <div className="flex justify-center p-1">
+            <RefetchModelsButton refetch={refetchModelData} />
+          </div>
           <ModelSelectorList>
             <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
             {modelsList.map(([provider, models]) => (
@@ -265,6 +274,26 @@ function ModelSelectorInputButton(props: ModelSelectorInputButtonProps): JSX.Ele
         </ModelSelectorContent>
       </ModelSelector>
     </div>
+  );
+}
+
+interface RefetchModelsButtonProps {
+  refetch: () => Promise<void>;
+}
+function RefetchModelsButton(props: RefetchModelsButtonProps): JSX.Element {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="cursor-pointer"
+      onClick={(ev) => {
+        props.refetch();
+        ev.stopPropagation();
+      }}
+    >
+      refetch models
+      <RefreshCcw />
+    </Button>
   );
 }
 
