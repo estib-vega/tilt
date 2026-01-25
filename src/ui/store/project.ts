@@ -17,7 +17,7 @@ export const useProjectStore = create(
       }),
     ),
     {
-      name: 'chat-store',
+      name: 'project-store',
     },
   ),
 );
