@@ -1,4 +1,5 @@
 import { type Database as SQLiteDB } from 'better-sqlite3';
+import { ProjectId } from './projects';
 
 export type DBNote = {
   /**
@@ -11,7 +12,7 @@ export type DBNote = {
   path: string;
   title: string | null;
   description: string | null;
-  project_id: string | null;
+  project_id: ProjectId | null;
   created_at: number;
   updated_at: number;
 };
@@ -34,7 +35,7 @@ export default class DBNotes {
     `);
   }
 
-  add(path: string, title: string | null, description: string | null, projectId: string | null) {
+  add(path: string, title: string | null, description: string | null, projectId: ProjectId | null) {
     const stmt = this.db.prepare(`
     INSERT INTO notes (path, title, description, project_id, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -82,5 +83,10 @@ export default class DBNotes {
   deleteById(id: number): void {
     const stmt = this.db.prepare('DELETE FROM notes WHERE id = ?');
     stmt.run(id);
+  }
+
+  deleteByProject(projectId: ProjectId): void {
+    const stmt = this.db.prepare<[ProjectId], DBNote>('DELETE FROM notes WHERE project_id = ?');
+    stmt.run(projectId);
   }
 }

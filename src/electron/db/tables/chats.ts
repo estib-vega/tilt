@@ -1,16 +1,17 @@
 import { type Database as SQLiteDB } from 'better-sqlite3';
+import { ProjectId } from './projects';
 
 export type DBUIChat = {
   id: string;
   title: string | null;
-  project_id: string | null;
+  project_id: ProjectId | null;
   created_at: number;
   updated_at: number;
 };
 
 export type DBUIChatUpdate = {
   title?: string | null;
-  project_id?: string | null;
+  project_id?: ProjectId | null;
 };
 
 export default class DBChats {
@@ -75,5 +76,10 @@ export default class DBChats {
   delete(id: string): void {
     const stmt = this.db.prepare('DELETE FROM chats WHERE id = ?');
     stmt.run(id);
+  }
+
+  deleteByProject(projectId: ProjectId): void {
+    const stmt = this.db.prepare<[ProjectId], DBUIChat>('DELETE FROM chats WHERE project_id = ?');
+    stmt.run(projectId);
   }
 }

@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import DBChatSummaries, { DBChatSummary } from './tables/chatSummaries.js';
 import DBCredentials, { DBCredential } from './tables/credentials.js';
 import DBNotes from './tables/notes.js';
+import DBProjects, { ProjectId } from './tables/projects.js';
 
 export default class DB {
   private static instance: DB | undefined;
@@ -18,6 +19,7 @@ export default class DB {
   private messagesTable: DBMessages;
   private credentialsTable: DBCredentials;
   private notesTable: DBNotes;
+  private projectsTable: DBProjects;
 
   private constructor(private dataDir: string) {
     console.log('Initializing database at', dataDir);
@@ -31,6 +33,7 @@ export default class DB {
     this.messagesTable = new DBMessages(this.db);
     this.credentialsTable = new DBCredentials(this.db);
     this.notesTable = new DBNotes(this.db);
+    this.projectsTable = new DBProjects(this.db);
   }
 
   static getInstance(dataDir: string): DB {
@@ -43,6 +46,20 @@ export default class DB {
   close() {
     this.db.close();
     DB.instance = undefined;
+  }
+
+  listProjects() {
+    return this.projectsTable.getAll();
+  }
+
+  createProject(name: string) {
+    return this.projectsTable.add(name);
+  }
+
+  deleteProject(projectId: ProjectId) {
+    this.projectsTable.deleteById(projectId);
+    this.notesTable.deleteByProject(projectId);
+    this.chatsTable.deleteByProject(projectId);
   }
 
   listNotes() {
@@ -61,7 +78,7 @@ export default class DB {
     path: string,
     title: string | null,
     description: string | null,
-    projectId: string | null,
+    projectId: ProjectId | null,
   ) {
     const existing = this.notesTable.getByPath(path);
     if (existing) {
