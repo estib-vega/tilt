@@ -1,5 +1,5 @@
-import type { UsageUpdate } from '@api/ai/chat';
 import type { ModelIdentifier } from '@api/ai/model';
+import type { UsageUpdate } from '@api/api';
 import { create } from 'zustand';
 import { persist, combine } from 'zustand/middleware';
 
