@@ -8,19 +8,25 @@ export function getModelMessageTokenCount(message: ModelMessage): number {
       return getTokenCountForUserMessage(message.content);
     case 'assistant':
       return getTokenCountForAssistantMessage(message.content);
-    case 'tool':
-      return message.content.reduce((sum, part) => {
-        return (
-          sum +
-          getTokenEstimate(
-            JSON.stringify({
-              toolCallId: part.toolCallId,
-              toolName: part.toolName,
-              output: part.output,
-            }),
-          )
-        );
-      }, 0);
+    case 'tool': {
+      let tokenCount = 0;
+      for (const part of message.content) {
+        switch (part.type) {
+          case 'tool-result':
+            tokenCount += getTokenEstimate(
+              JSON.stringify({
+                toolCallId: part.toolCallId,
+                toolName: part.toolName,
+                output: part.output,
+              }),
+            );
+            break;
+          case 'tool-approval-response':
+            break;
+        }
+      }
+      return tokenCount;
+    }
   }
 }
 
@@ -201,6 +207,8 @@ function getTokenCountForAssistantMessage(content: AssistantContent): number {
             }),
           )
         );
+      case 'tool-approval-request':
+        return sum;
     }
   }, 0);
 }

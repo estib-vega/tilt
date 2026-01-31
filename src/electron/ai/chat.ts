@@ -138,7 +138,7 @@ export default class ChatManager {
     onUsage: (usage: UsageUpdate) => void,
   ): Promise<string> {
     const abortSignal = this.getAbortControllerSignal(chatId);
-    const modelMessages = convertToModelMessages(messages);
+    const modelMessages = await convertToModelMessages(messages);
 
     const lastIdx = messages.length - 1;
     if (lastIdx >= 0) {
@@ -269,7 +269,7 @@ Prefer being concise unless more detail is requested.
     existingSummary: string | undefined,
     threshold: number,
   ): Promise<PrepareStepResult<AllTools>> {
-    const modelMessages = convertToModelMessages(messages);
+    const modelMessages = await convertToModelMessages(messages);
     const totalTokens = modelMessages.reduce((sum, msg) => sum + getModelMessageTokenCount(msg), 0);
 
     if (totalTokens < threshold) {
@@ -284,7 +284,7 @@ Prefer being concise unless more detail is requested.
     const [previousMessages, lastMessage] = [messages.slice(0, -1), messages[messages.length - 1]];
 
     const system = systemPromptForCondensedConversation();
-    const previousModelMessages = convertToModelMessages(previousMessages);
+    const previousModelMessages = await convertToModelMessages(previousMessages);
     const prompt = promptForCondensedConversation(existingSummary, previousModelMessages);
 
     const textResponse = await generateText({
@@ -293,7 +293,7 @@ Prefer being concise unless more detail is requested.
       prompt,
     });
 
-    const lastModelMessage = convertToModelMessages([lastMessage]);
+    const lastModelMessage = await convertToModelMessages([lastMessage]);
 
     // Save or update the summary
     this.db.upsertChatSummary({
