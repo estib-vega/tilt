@@ -1,19 +1,19 @@
 import ts from '@typescript-eslint/eslint-plugin';
 import parser from '@typescript-eslint/parser';
+import globals from 'globals';
 
-export default {
+/**
+ * @type {import('eslint').Linter.Config}
+ */
+const electronConfig = {
+  name: 'Electron',
   languageOptions: {
     parser,
     parserOptions: {
       project: './tsconfig.electron.json',
     },
     globals: {
-      __dirname: 'readonly',
-      process: 'readonly',
-      console: 'readonly',
-      Buffer: 'readonly',
-      setTimeout: 'readonly',
-      fetch: 'readonly',
+      ...globals.nodeBuiltin,
     },
   },
   plugins: {
@@ -22,5 +22,9 @@ export default {
   rules: {
     'no-console': 'off', // common for electron main,
     'no-unused-vars': 'off', // handled by TS
+    '@typescript-eslint/consistent-type-exports': 'error',
+    '@typescript-eslint/consistent-type-imports': 'error',
   },
 };
+
+export default electronConfig;

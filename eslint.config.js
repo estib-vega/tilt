@@ -6,14 +6,15 @@ export default defineConfig([
   globalIgnores(['dist-electron/**', 'dist-ui/**', 'node_modules/**']),
 
   // UI override
-  // {
-  //   files: ['src/ui/**/*.{ts,tsx}'],
-  //   ...(await import('./eslint.ui.js')).default,
-  // },
+  {
+    files: ['src/ui/**/*.{ts,tsx}'],
+    ...(await import('./eslint.ui.js')).default,
+  },
 
   // Electron override
   {
     files: ['src/electron/**/*.ts'],
     ...(await import('./eslint.electron.js')).default,
+    name: 'Electron Config',
   },
 ]);
