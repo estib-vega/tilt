@@ -14,11 +14,12 @@ export function useListModels() {
     return modelList;
   };
 
-  const q = useSuspenseQuery({
+  const query = useSuspenseQuery({
     queryKey: ['available-models'],
     queryFn: async () => {
-      if (availableModels !== null) {
-        return availableModels;
+      const state = useModelStore.getState();
+      if (state.availableModels !== null) {
+        return state.availableModels;
       }
       return api();
     },
@@ -27,10 +28,10 @@ export function useListModels() {
 
   const refetch = async () => {
     await api();
-    await q.refetch();
+    await query.refetch();
   };
 
-  return { ...q, refetch };
+  return { data: query.data, refetch };
 }
 
 export function useDefaultModel() {
@@ -43,11 +44,12 @@ export function useDefaultModel() {
     return model;
   };
 
-  const q = useSuspenseQuery({
+  const query = useSuspenseQuery({
     queryKey: ['default-model'],
     queryFn: () => {
-      if (defaultModel !== null) {
-        return defaultModel;
+      const state = useModelStore.getState();
+      if (state.defaultModel !== null) {
+        return state.defaultModel;
       }
       return api();
     },
@@ -56,10 +58,10 @@ export function useDefaultModel() {
 
   const refetch = async () => {
     await api();
-    await q.refetch();
+    await query.refetch();
   };
 
-  return { ...q, refetch };
+  return { data: query.data, refetch };
 }
 
 export function useModelSelector(chatId: string) {

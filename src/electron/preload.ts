@@ -1,5 +1,6 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import {
+import type { IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
+import type {
   AddCredentialParams,
   ChatChunkEvent,
   ChatEndEvent,
@@ -22,11 +23,11 @@ import {
   UpdateChatTitleParams,
   WriteNoteParams,
 } from './api';
-import { ModelIdentifier, ProviderModelList } from './ai/model';
-import { Credential, CredentialService } from './model/credentials';
-import { OllamaStatus } from './model/ollama';
-import { Note } from './model/notes';
-import { Project, ProjectId } from './db/tables/projects';
+import type { ModelIdentifier, ProviderModelList } from './ai/model';
+import type { Credential, CredentialService } from './model/credentials';
+import type { OllamaStatus } from './model/ollama';
+import type { Note } from './model/notes';
+import type { Project, ProjectId } from './db/tables/projects';
 
 export type CleanUpFn = () => void;
 

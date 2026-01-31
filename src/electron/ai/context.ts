@@ -1,4 +1,4 @@
-import { AssistantContent, AssistantModelMessage, ModelMessage, UserContent } from 'ai';
+import type { AssistantContent, AssistantModelMessage, ModelMessage, UserContent } from 'ai';
 
 export function getModelMessageTokenCount(message: ModelMessage): number {
   switch (message.role) {

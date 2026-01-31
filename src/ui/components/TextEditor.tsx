@@ -10,6 +10,7 @@ interface TextEditorProps {
 }
 
 export default function TextEditor(props: TextEditorProps) {
+  const { onChange, onBlur } = props;
   const editor = useEditor({
     extensions: [StarterKit, Markdown],
     content: props.initialContent ?? '# Hello World\n\n',
@@ -17,22 +18,22 @@ export default function TextEditor(props: TextEditorProps) {
   });
 
   React.useEffect(() => {
-    const handleUpdate = () => props.onChange(editor);
+    const handleUpdate = () => onChange(editor);
 
     editor.on('update', handleUpdate);
     return () => {
       editor.off('update', handleUpdate);
     };
-  }, [editor, props.onChange]);
+  }, [editor, onChange]);
 
   React.useEffect(() => {
-    const handleBlur = () => props.onBlur(editor);
+    const handleBlur = () => onBlur(editor);
 
     editor.on('blur', handleBlur);
     return () => {
       editor.off('blur', handleBlur);
     };
-  }, [editor, props.onBlur]);
+  }, [editor, onBlur]);
 
   const handleClickOnWrapper = () => {
     editor.commands.focus('end');

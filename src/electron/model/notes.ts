@@ -1,5 +1,5 @@
-import DB from '@api/db/sqlite';
-import { ProjectId } from '@api/db/tables/projects';
+import type DB from '@api/db/sqlite';
+import type { ProjectId } from '@api/db/tables/projects';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';

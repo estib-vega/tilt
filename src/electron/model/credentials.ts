@@ -1,4 +1,4 @@
-import DB from '@api/db/sqlite';
+import type DB from '@api/db/sqlite';
 import { decryptString, encryptString } from '../utils/safeStorage.js';
 import { randomUUID } from 'crypto';
 

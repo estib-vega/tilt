@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager from './ai/chat.js';
 import dotenv from 'dotenv';
+import type { UIChatEvent, UsageUpdate } from './api.js';
 import {
   CreateProjectParamsSchema,
   DeleteNoteParamsSchema,
@@ -16,12 +17,10 @@ import {
   parseLLMResumeParams,
   parseLLMStartParams,
   ReadNoteParamsSchema,
-  UIChatEvent,
-  UsageUpdate,
   WriteNoteParamsSchema,
 } from './api.js';
 import DB from './db/sqlite.js';
-import { UIMessageChunk } from 'ai';
+import type { UIMessageChunk } from 'ai';
 import CredentialsManager from './model/credentials.js';
 import { availableModels, defaultModelIdentifier } from './ai/model.js';
 import OllamaManager from './model/ollama.js';

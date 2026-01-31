@@ -1,4 +1,4 @@
-import { ModelMessage } from 'ai';
+import type { ModelMessage } from 'ai';
 import { printModelMessages } from './context.js';
 
 export function systemPromptForCondensedConversation(): string {

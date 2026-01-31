@@ -1,5 +1,6 @@
 import { isConnectionRefusedError } from '../utils/error.js';
-import { Config, Ollama } from 'ollama';
+import type { Config } from 'ollama';
+import { Ollama } from 'ollama';
 
 export default class OllamaManager {
   private static instance: OllamaManager | undefined;

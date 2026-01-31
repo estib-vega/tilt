@@ -148,23 +148,7 @@ interface WebToolStatusProps {
 
 function WebToolStatus(props: WebToolStatusProps): JSX.Element {
   if (props.lastEvent === undefined) {
-    switch (props.description.state) {
-      case 'input-streaming':
-      case 'input-available':
-        return <></>;
-      case 'output-available':
-        return (
-          <div className="w-full">
-            <p className="text-muted-foreground">search complete</p>
-          </div>
-        );
-      case 'output-error':
-        return (
-          <div className="w-full">
-            <p className="text-muted-foreground">error during search</p>
-          </div>
-        );
-    }
+    return renderWebToolStatus(props);
   }
   if (props.isDone)
     return (
@@ -178,6 +162,44 @@ function WebToolStatus(props: WebToolStatusProps): JSX.Element {
       <Shimmer duration={1}>{getWebSearchEventTitle(props.lastEvent)}</Shimmer>
     </div>
   );
+}
+
+function renderWebToolStatus(props: WebToolStatusProps): JSX.Element {
+  switch (props.description.state) {
+    case 'input-streaming':
+    case 'input-available':
+      return <></>;
+    case 'output-available':
+      return (
+        <div className="w-full">
+          <p className="text-muted-foreground">search complete</p>
+        </div>
+      );
+    case 'output-error':
+      return (
+        <div className="w-full">
+          <p className="text-muted-foreground">error during search</p>
+        </div>
+      );
+    case 'approval-requested':
+      return (
+        <div className="w-full">
+          <p className="text-muted-foreground">awaiting approval to search</p>
+        </div>
+      );
+    case 'approval-responded':
+      return (
+        <div className="w-full">
+          <p className="text-muted-foreground">approval response received</p>
+        </div>
+      );
+    case 'output-denied':
+      return (
+        <div className="w-full">
+          <p className="text-muted-foreground">search denied</p>
+        </div>
+      );
+  }
 }
 
 function getWebSearchEventTitle(event: WebSearchEvent): string {

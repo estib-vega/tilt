@@ -1,7 +1,8 @@
 import { BrowserWindow, app } from 'electron';
 import * as cheerio from 'cheerio';
 import pie from './pupeteer.js';
-import puppeteer, { Browser, Frame, Page } from 'puppeteer-core';
+import type { Browser, Frame, Page } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 
 const DEV_TOOLS_PORT = 9222;
 

@@ -5,7 +5,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@ta
 
 const useListNotesQueryOptions = (projectId: ProjectId | null) =>
   queryOptions({
-    queryKey: ['notes', projectId ? projectId : 'all'],
+    queryKey: ['notes', projectId ?? 'all'],
     queryFn: () => window.api.listNotes({ projectId }),
   });
 

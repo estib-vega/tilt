@@ -1,7 +1,7 @@
 import http from 'http';
 import { randomUUID } from 'crypto';
-import { Browser, Page, PuppeteerNode } from 'puppeteer-core';
-import { App, BrowserView, BrowserWindow } from 'electron';
+import type { Browser, Page, PuppeteerNode } from 'puppeteer-core';
+import type { App, BrowserView, BrowserWindow } from 'electron';
 
 const readJson = async (port: string): Promise<any> =>
   new Promise((resolve, reject) => {

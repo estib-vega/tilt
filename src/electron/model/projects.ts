@@ -1,5 +1,5 @@
-import DB from '@api/db/sqlite';
-import { Project, ProjectId } from '@api/db/tables/projects';
+import type DB from '@api/db/sqlite';
+import type { Project, ProjectId } from '@api/db/tables/projects';
 
 export default class ProjectsManager {
   private static instance: ProjectsManager | undefined;

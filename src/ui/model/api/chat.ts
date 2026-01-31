@@ -65,7 +65,7 @@ function useChatMessages(chatId: string) {
 
 export const chatsQueryOptions = (projectId: ProjectId | null) =>
   queryOptions({
-    queryKey: ['chats', projectId ? projectId : null],
+    queryKey: ['chats', projectId ?? 'all'],
     queryFn: async () => window.api.listChats({ projectId }),
     retry: false,
   });
@@ -76,11 +76,11 @@ export const chatsQueryOptions = (projectId: ProjectId | null) =>
 function useWatchChatTitleUpdates() {
   const projectId = useProjectStore((state) => state.projectId);
   const queryClient = useQueryClient();
-  const options = chatsQueryOptions(projectId);
+  const { queryKey } = chatsQueryOptions(projectId);
   React.useEffect(() => {
     const removeListener = window.api.onChatTitleUpdated((_) => {
       // Invalidate chats query to refetch updated data
-      queryClient.invalidateQueries({ queryKey: options.queryKey });
+      queryClient.invalidateQueries({ queryKey: queryKey });
       // TODO: Invalidate individual chat titles instead of the whole list.
       // For now it's good enough.
     });
@@ -88,7 +88,7 @@ function useWatchChatTitleUpdates() {
     return () => {
       removeListener();
     };
-  }, []);
+  }, [queryClient, queryKey]);
 }
 
 export function useListChats() {
@@ -211,7 +211,7 @@ export function useChatUsage(chatId: string) {
     return () => {
       removeListener();
     };
-  }, [chatId]);
+  }, [chatId, setUsage]);
 
   return usage;
 }
@@ -244,7 +244,7 @@ export function useChatParams(chatId: string | undefined): ChatParamsHook {
       const nextValue = typeof value === 'function' ? value(params.webSearch) : value;
       setChatUsesWebSearch(defaultedChatId, nextValue);
     },
-    [chatId, setChatUsesWebSearch, params.webSearch, defaultedChatId],
+    [setChatUsesWebSearch, params.webSearch, defaultedChatId],
   );
 
   return {

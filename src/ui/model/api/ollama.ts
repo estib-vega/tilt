@@ -11,11 +11,12 @@ export function useOllamaStatus() {
     return status;
   };
 
-  const q = useSuspenseQuery({
+  const query = useSuspenseQuery({
     queryKey: ['ollama', 'status'],
     queryFn: async () => {
-      if (ollamaStatus !== null) {
-        return ollamaStatus;
+      const state = useOllamaStore.getState();
+      if (state.status !== null) {
+        return state.status;
       }
       return api();
     },
@@ -24,7 +25,7 @@ export function useOllamaStatus() {
 
   const refetch = async () => {
     await api();
-    await q.refetch();
+    await query.refetch();
   };
-  return { ...q, refetch };
+  return { data: query.data, refetch };
 }

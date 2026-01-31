@@ -1,10 +1,14 @@
-import { LanguageModelUsage, UIDataTypes, UIMessage, UIMessageChunk, validateUIMessages } from 'ai';
-import { Tools } from './ai/tools';
-import { isModelIdentifier, ModelIdentifier, ModelProvider } from './ai/model.js';
-import { CredentialService, isCredentialService } from './model/credentials.js';
+import type { LanguageModelUsage, UIDataTypes, UIMessage, UIMessageChunk } from 'ai';
+import { validateUIMessages } from 'ai';
+import type { Tools } from './ai/tools';
+import type { ModelIdentifier, ModelProvider } from './ai/model.js';
+import { isModelIdentifier } from './ai/model.js';
+import type { CredentialService } from './model/credentials.js';
+import { isCredentialService } from './model/credentials.js';
 import z from 'zod';
-import { WebSearchEvent } from './ai/webSearch.js';
-import { ProjectId, ProjectIdSchema } from './db/tables/projects.js';
+import type { WebSearchEvent } from './ai/webSearch.js';
+import type { ProjectId } from './db/tables/projects.js';
+import { ProjectIdSchema } from './db/tables/projects.js';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
 

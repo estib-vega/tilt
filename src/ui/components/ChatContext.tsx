@@ -42,8 +42,8 @@ export default function ChatContex(props: ChatContextProps): JSX.Element {
         inputTokens: usage.usage.inputTokens,
         outputTokens: usage.usage.outputTokens,
         totalTokens: usage.usage.totalTokens,
-        cachedInputTokens: usage.usage.cachedInputTokens,
-        reasoningTokens: usage.usage.reasoningTokens,
+        inputTokenDetails: usage.usage.inputTokenDetails,
+        outputTokenDetails: usage.usage.outputTokenDetails,
       }}
       usedTokens={usedTokens}
     >

@@ -1,5 +1,7 @@
-import Navigator, { SearchResult, WebPageContents } from '@api/model/navigator';
-import { LanguageModel, streamText } from 'ai';
+import type { SearchResult, WebPageContents } from '@api/model/navigator';
+import type Navigator from '@api/model/navigator';
+import type { LanguageModel } from 'ai';
+import { streamText } from 'ai';
 import { promptForWebResultsSummary, systemPromptForWebResultsSummary } from './prompt.js';
 
 const MAX_CONTENT_LENGTH = 10000;

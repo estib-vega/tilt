@@ -1,30 +1,28 @@
-import { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api';
-import DB from '@api/db/sqlite';
+import type { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api';
+import type DB from '@api/db/sqlite';
+import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel } from 'ai';
 import {
   streamText,
-  UIMessage,
   convertToModelMessages,
-  UIMessageChunk,
   generateText,
   createIdGenerator,
   stepCountIs,
   safeValidateUIMessages,
-  PrepareStepResult,
-  LanguageModel,
 } from 'ai';
 import { getModel } from './model.js';
 import WebSearch from './webSearch.js';
-import { AllTools, generateTools } from './tools.js';
-import { DBUIMessage } from '@api/db/tables/messages.js';
+import type { AllTools } from './tools.js';
+import { generateTools } from './tools.js';
+import type { DBUIMessage } from '@api/db/tables/messages.js';
 import { getModelMessageTokenCount } from './context.js';
 import {
   promptForCondensedConversation,
   systemPromptForCondensedConversation,
   systemPromptForContinuedConversation,
 } from './prompt.js';
-import CredentialsManager from '@api/model/credentials.js';
-import Navigator from '@api/model/navigator/index.js';
-import { ProjectId } from '@api/db/tables/projects.js';
+import type CredentialsManager from '@api/model/credentials.js';
+import type Navigator from '@api/model/navigator/index.js';
+import type { ProjectId } from '@api/db/tables/projects.js';
 
 type ChatEventListner = (event: UIChatEvent) => void;
 
