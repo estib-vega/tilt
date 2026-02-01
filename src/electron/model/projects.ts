@@ -25,6 +25,10 @@ export default class ProjectsManager {
     return this.db.listProjects();
   }
 
+  getProject(projectId: ProjectId): Project | null {
+    return this.db.getProjectById(projectId);
+  }
+
   deleteProject(projectId: ProjectId): void {
     this.db.deleteProject(projectId);
   }

@@ -57,6 +57,10 @@ export default class DB {
     return this.projectsTable.getAll();
   }
 
+  getProjectById(projectId: ProjectId) {
+    return this.projectsTable.getById(projectId);
+  }
+
   createProject(name: string) {
     return this.projectsTable.add(name);
   }

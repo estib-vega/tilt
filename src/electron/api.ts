@@ -287,3 +287,9 @@ export const DeleteProjectParamsSchema = z.object({
 });
 
 export type DeleteProjectParams = z.infer<typeof DeleteProjectParamsSchema>;
+
+export const GetProjectParamsSchema = z.object({
+  projectId: ProjectIdSchema,
+});
+
+export type GetProjectParams = z.infer<typeof GetProjectParamsSchema>;

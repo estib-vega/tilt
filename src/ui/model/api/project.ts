@@ -10,6 +10,16 @@ export function useListProjects() {
   return useSuspenseQuery(useListProjectsQueryOptions);
 }
 
+const useGetProjectQueryOptions = (projectId: ProjectId) =>
+  queryOptions({
+    queryKey: ['projects', projectId],
+    queryFn: () => window.api.getProject({ projectId }),
+  });
+
+export function useGetProject(projectId: ProjectId) {
+  return useSuspenseQuery(useGetProjectQueryOptions(projectId));
+}
+
 export function useCreateProjectMutation() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -10,6 +10,7 @@ import type {
   DeleteCredentialParams,
   DeleteNoteParams,
   DeleteProjectParams,
+  GetProjectParams,
   ListChatsParams,
   ListNotesParams,
   LLMCreateChatParams,
@@ -151,6 +152,10 @@ export interface ElectronAPI {
    */
   listProjects: () => Promise<Project[]>;
   /**
+   * Get a project by ID.
+   */
+  getProject: (params: GetProjectParams) => Promise<Project | null>;
+  /**
    * Create a new project.
    */
   createProject: (params: CreateProjectParams) => Promise<ProjectId>;
@@ -282,6 +287,9 @@ const api: ElectronAPI = {
 
   // List all projects
   listProjects: () => ipcRenderer.invoke('projects:list-projects'),
+
+  // Get a project by ID
+  getProject: (params: GetProjectParams) => ipcRenderer.invoke('projects:get-project', params),
 
   // Create a new project
   createProject: (params: CreateProjectParams) =>
