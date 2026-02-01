@@ -1,6 +1,14 @@
 import type { ModelMessage } from 'ai';
 import { printModelMessages } from './context.js';
 
+export function systemPromptForChat(): string {
+  return `
+You are a helpful AI assistant. Provide clear and concise responses based on the user's queries.
+The current date is ${new Date().toDateString()}.
+Prefer being concise unless more detail is requested.
+`.trim();
+}
+
 export function systemPromptForCondensedConversation(): string {
   return `
 You are an AI assistant that helps to summarize and condense conversation history for use in future AI interactions.

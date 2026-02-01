@@ -17,6 +17,7 @@ import type { DBUIMessage } from '@api/db/tables/messages.js';
 import { getModelMessageTokenCount } from './context.js';
 import {
   promptForCondensedConversation,
+  systemPromptForChat,
   systemPromptForCondensedConversation,
   systemPromptForContinuedConversation,
 } from './prompt.js';
@@ -125,6 +126,23 @@ export default class ChatManager {
     return result.data;
   }
 
+  private getSystemPromptForChat(chatId: string): string {
+    const projectMeta = this.db.getProjectMetaForChat(chatId);
+    let system: string = systemPromptForChat();
+    if (projectMeta) {
+      if (projectMeta.system_prompt && projectMeta.system_prompt.trim().length > 0) {
+        system = projectMeta.system_prompt.trim();
+      }
+      if (projectMeta.description && projectMeta.description.trim().length > 0) {
+        system += '\n\n';
+        system += 'Project Description:\n';
+        system += projectMeta.description.trim();
+      }
+    }
+
+    return system;
+  }
+
   /**
    * Streams a chat response from the AI model based on the provided messages.
    */
@@ -157,17 +175,11 @@ export default class ChatManager {
 
     const model = getModel(options.modelIdentifier, this.credentialsManager);
 
-    const system = `
-You are a helpful AI assistant. Provide clear and concise responses based on the user's queries.
-The current date is ${new Date().toDateString()}.
-Prefer being concise unless more detail is requested.
-`.trim();
-
     // Instantiate WebSearch with event emitter
     const webSearch = this.createWebSearch(model, chatId);
 
     const streamResponse = streamText({
-      system,
+      system: this.getSystemPromptForChat(chatId),
       model: model,
       messages: modelMessages,
       tools: generateTools({

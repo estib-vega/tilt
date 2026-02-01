@@ -12,6 +12,7 @@ import DBCredentials from './tables/credentials.js';
 import DBNotes from './tables/notes.js';
 import type { ProjectId } from './tables/projects.js';
 import DBProjects from './tables/projects.js';
+import type { DBProjectMeta } from './tables/projectMetas.js';
 import DBProjectMetas from './tables/projectMetas.js';
 
 export default class DB {
@@ -212,6 +213,17 @@ export default class DB {
 
   getChat(chatId: string): DBUIChat | undefined {
     return this.chatsTable.getById(chatId);
+  }
+
+  getProjectMetaForChat(chatId: string): DBProjectMeta | null {
+    const chat = this.chatsTable.getById(chatId);
+    if (!chat) {
+      return null;
+    }
+    if (!chat.project_id) {
+      return null;
+    }
+    return this.projectsMetasTable.getByProjectId(chat.project_id) || null;
   }
 
   updateChatTitle(chatId: string, title: string): DBUIChat {
