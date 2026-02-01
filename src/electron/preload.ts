@@ -29,6 +29,7 @@ import type { Credential, CredentialService } from './model/credentials';
 import type { OllamaStatus } from './model/ollama';
 import type { Note } from './model/notes';
 import type { Project, ProjectId } from './db/tables/projects';
+import type { ProjectMetadata } from './model/projects';
 
 export type CleanUpFn = () => void;
 
@@ -155,6 +156,10 @@ export interface ElectronAPI {
    * Get a project by ID.
    */
   getProject: (params: GetProjectParams) => Promise<Project | null>;
+  /**
+   * Get project metadata by ID.
+   */
+  getProjectMeta: (params: GetProjectParams) => Promise<ProjectMetadata>;
   /**
    * Create a new project.
    */
@@ -290,6 +295,10 @@ const api: ElectronAPI = {
 
   // Get a project by ID
   getProject: (params: GetProjectParams) => ipcRenderer.invoke('projects:get-project', params),
+
+  // Get project metadata by ID
+  getProjectMeta: (params: GetProjectParams) =>
+    ipcRenderer.invoke('projects:get-project-meta', params),
 
   // Create a new project
   createProject: (params: CreateProjectParams) =>

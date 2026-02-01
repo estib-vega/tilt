@@ -8,6 +8,7 @@ import {
   CreateProjectParamsSchema,
   DeleteNoteParamsSchema,
   DeleteProjectParamsSchema,
+  GetProjectMetaParamsSchema,
   GetProjectParamsSchema,
   ListChatsParamsSchema,
   ListNotesParamsSchema,
@@ -317,4 +318,9 @@ ipcMain.handle('projects:list-projects', () => {
 ipcMain.handle('projects:get-project', (_event, params) => {
   const parsedParams = GetProjectParamsSchema.parse(params);
   return projectsManager.getProject(parsedParams.projectId);
+});
+
+ipcMain.handle('projects:get-project-meta', (_event, params) => {
+  const parsedParams = GetProjectMetaParamsSchema.parse(params);
+  return projectsManager.getProjectMeta(parsedParams.projectId);
 });

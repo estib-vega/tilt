@@ -12,6 +12,7 @@ import DBCredentials from './tables/credentials.js';
 import DBNotes from './tables/notes.js';
 import type { ProjectId } from './tables/projects.js';
 import DBProjects from './tables/projects.js';
+import DBProjectMetas from './tables/projectMetas.js';
 
 export default class DB {
   private static instance: DB | undefined;
@@ -25,6 +26,7 @@ export default class DB {
   private credentialsTable: DBCredentials;
   private notesTable: DBNotes;
   private projectsTable: DBProjects;
+  private projectsMetasTable: DBProjectMetas;
 
   private constructor(private dataDir: string) {
     console.log('Initializing database at', dataDir);
@@ -39,6 +41,7 @@ export default class DB {
     this.credentialsTable = new DBCredentials(this.db);
     this.notesTable = new DBNotes(this.db);
     this.projectsTable = new DBProjects(this.db);
+    this.projectsMetasTable = new DBProjectMetas(this.db);
   }
 
   static getInstance(dataDir: string): DB {
@@ -62,13 +65,43 @@ export default class DB {
   }
 
   createProject(name: string) {
-    return this.projectsTable.add(name);
+    const project = this.projectsTable.add(name);
+    this.getOrCreateProjectMeta(project);
+    return project;
   }
 
   deleteProject(projectId: ProjectId) {
     this.projectsTable.deleteById(projectId);
     this.notesTable.deleteByProject(projectId);
     this.chatsTable.deleteByProject(projectId);
+    this.projectsMetasTable.deleteByProject(projectId);
+  }
+
+  updateProjectMeta(
+    projectId: ProjectId,
+    update: { systemPrompt?: string | null; description?: string | null },
+  ) {
+    const meta = this.getOrCreateProjectMeta(projectId);
+    const updatedMeta = this.projectsMetasTable.update(meta.id, {
+      system_prompt: update.systemPrompt,
+      description: update.description,
+    });
+    if (!updatedMeta) {
+      throw new Error(`Failed to update project meta for project ${projectId}`);
+    }
+    return updatedMeta;
+  }
+
+  getOrCreateProjectMeta(projectId: ProjectId) {
+    let meta = this.projectsMetasTable.getByProjectId(projectId);
+    if (!meta) {
+      meta = this.projectsMetasTable.create({
+        project_id: projectId,
+        description: null,
+        system_prompt: null,
+      });
+    }
+    return meta;
   }
 
   listNotes(projectId: ProjectId | null) {

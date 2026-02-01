@@ -29,7 +29,20 @@ export default class ProjectsManager {
     return this.db.getProjectById(projectId);
   }
 
+  getProjectMeta(projectId: ProjectId): ProjectMetadata | null {
+    const dbMeta = this.db.getOrCreateProjectMeta(projectId);
+    return {
+      description: dbMeta.description,
+      systemPrompt: dbMeta.system_prompt,
+    };
+  }
+
   deleteProject(projectId: ProjectId): void {
     this.db.deleteProject(projectId);
   }
 }
+
+export type ProjectMetadata = {
+  description: string | null;
+  systemPrompt: string | null;
+};
