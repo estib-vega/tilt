@@ -19,7 +19,7 @@ function Root() {
   return (
     <>
       <div className="w-full h-full flex flex-col min-h-0">
-        <div className="h-12 select-none [-webkit-app-region:drag] flex justify-end">
+        <div className="h-12 select-none [-webkit-app-region:drag] flex pl-20">
           <Header />
         </div>
         <Outlet />

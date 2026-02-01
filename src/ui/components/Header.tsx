@@ -15,40 +15,59 @@ import NewProjectModal from './NewProjectModal';
 import { useProjectStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 import { getDefaultChatId } from '@/model/api/chat';
+import Conditional from './Conditional';
 
 export default function Header() {
   const location = useLocation();
+  const projectId = useProjectStore((state) => state.projectId);
   const isNotesRoute = location.pathname === '/notes';
   const isChatRoute = location.pathname === '/chat';
+  const isProjectRoute = location.pathname === '/project';
 
   return (
     <>
-      <header className="[-webkit-app-region:no-drag] p-2 flex items-center gap-4 px-6 pointer-events-auto">
-        <React.Suspense>
-          <ProjectSelect />
-        </React.Suspense>
-        <Link
-          to="/chat"
-          className={cn(
-            'text-sm font-medium hover:text-primary transition-colors',
-            isChatRoute && 'underline',
-          )}
-          activeProps={{ className: 'text-primary' }}
-        >
-          chat
-        </Link>
-        <Link
-          to="/notes"
-          className={cn(
-            'text-sm font-medium hover:text-primary transition-colors',
-            isNotesRoute && 'underline',
-          )}
-          activeProps={{ className: 'text-primary' }}
-        >
-          notes
-        </Link>
+      <header className="w-full flex items-center justify-between">
+        <div className="[-webkit-app-region:no-drag] flex items-center pointer-events-auto">
+          <React.Suspense>
+            <ProjectSelect />
+          </React.Suspense>
+        </div>
+        <div className="[-webkit-app-region:no-drag] flex items-center gap-4 px-6 pointer-events-auto">
+          <Conditional condition={projectId !== null}>
+            <Link
+              to="/project"
+              className={cn(
+                'text-sm font-medium hover:text-primary transition-colors',
+                isProjectRoute && 'underline',
+              )}
+              activeProps={{ className: 'text-primary' }}
+            >
+              project
+            </Link>
+          </Conditional>
+          <Link
+            to="/chat"
+            className={cn(
+              'text-sm font-medium hover:text-primary transition-colors',
+              isChatRoute && 'underline',
+            )}
+            activeProps={{ className: 'text-primary' }}
+          >
+            chat
+          </Link>
+          <Link
+            to="/notes"
+            className={cn(
+              'text-sm font-medium hover:text-primary transition-colors',
+              isNotesRoute && 'underline',
+            )}
+            activeProps={{ className: 'text-primary' }}
+          >
+            notes
+          </Link>
 
-        <SettingsButton />
+          <SettingsButton />
+        </div>
       </header>
     </>
   );

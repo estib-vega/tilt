@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProjectRouteImport } from './routes/project'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NotesIndexRouteImport } from './routes/notes/index'
@@ -18,6 +19,11 @@ import { Route as NotesNotesIdRouteImport } from './routes/notes/$notesId'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectRoute = ProjectRouteImport.update({
+  id: '/project',
+  path: '/project',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -44,6 +50,7 @@ const NotesNotesIdRoute = NotesNotesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/project': typeof ProjectRoute
   '/settings': typeof SettingsRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes': typeof NotesIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/project': typeof ProjectRoute
   '/settings': typeof SettingsRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes': typeof NotesIndexRoute
@@ -59,21 +67,36 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/project': typeof ProjectRoute
   '/settings': typeof SettingsRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes/': typeof NotesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat' | '/settings' | '/notes/$notesId' | '/notes'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/project'
+    | '/settings'
+    | '/notes/$notesId'
+    | '/notes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/settings' | '/notes/$notesId' | '/notes'
-  id: '__root__' | '/' | '/chat' | '/settings' | '/notes/$notesId' | '/notes/'
+  to: '/' | '/chat' | '/project' | '/settings' | '/notes/$notesId' | '/notes'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/project'
+    | '/settings'
+    | '/notes/$notesId'
+    | '/notes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRoute
+  ProjectRoute: typeof ProjectRoute
   SettingsRoute: typeof SettingsRoute
   NotesNotesIdRoute: typeof NotesNotesIdRoute
   NotesIndexRoute: typeof NotesIndexRoute
@@ -86,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/project': {
+      id: '/project'
+      path: '/project'
+      fullPath: '/project'
+      preLoaderRoute: typeof ProjectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -122,6 +152,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRoute,
+  ProjectRoute: ProjectRoute,
   SettingsRoute: SettingsRoute,
   NotesNotesIdRoute: NotesNotesIdRoute,
   NotesIndexRoute: NotesIndexRoute,
