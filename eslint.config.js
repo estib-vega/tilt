@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import globals from 'globals';
 
 export default defineConfig([
   js.configs.recommended,
@@ -13,8 +14,18 @@ export default defineConfig([
 
   // Electron override
   {
-    files: ['src/electron/**/*.{ts,js}'],
+    files: ['src/electron/**/*.ts'],
     ...(await import('./eslint.electron.js')).default,
     name: 'Electron Config',
+  },
+  // Electron JS override
+  {
+    files: ['src/electron/**/*.js'],
+    name: 'Electron JS Config',
+    languageOptions: {
+      globals: {
+        ...globals.nodeBuiltin,
+      },
+    },
   },
 ]);
