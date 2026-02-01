@@ -299,3 +299,13 @@ export const GetProjectMetaParamsSchema = z.object({
 });
 
 export type GetProjectMetaParams = z.infer<typeof GetProjectMetaParamsSchema>;
+
+export const UpdateProjectMetaParamsSchema = z.object({
+  projectId: ProjectIdSchema,
+  metadata: z.object({
+    description: z.string().nullable().optional(),
+    systemPrompt: z.string().nullable().optional(),
+  }),
+});
+
+export type UpdateProjectMetaParams = z.infer<typeof UpdateProjectMetaParamsSchema>;

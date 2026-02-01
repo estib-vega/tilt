@@ -19,6 +19,7 @@ import {
   parseLLMResumeParams,
   parseLLMStartParams,
   ReadNoteParamsSchema,
+  UpdateProjectMetaParamsSchema,
   WriteNoteParamsSchema,
 } from './api.js';
 import DB from './db/sqlite.js';
@@ -323,4 +324,9 @@ ipcMain.handle('projects:get-project', (_event, params) => {
 ipcMain.handle('projects:get-project-meta', (_event, params) => {
   const parsedParams = GetProjectMetaParamsSchema.parse(params);
   return projectsManager.getProjectMeta(parsedParams.projectId);
+});
+
+ipcMain.handle('projects:update-project-meta', (_event, params) => {
+  const parsedParams = UpdateProjectMetaParamsSchema.parse(params);
+  return projectsManager.updateProjectMeta(parsedParams.projectId, parsedParams.metadata);
 });

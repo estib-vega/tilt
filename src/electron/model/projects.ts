@@ -37,6 +37,13 @@ export default class ProjectsManager {
     };
   }
 
+  updateProjectMeta(projectId: ProjectId, metadata: Partial<ProjectMetadata>): void {
+    this.db.updateProjectMeta(projectId, {
+      description: metadata.description,
+      systemPrompt: metadata.systemPrompt,
+    });
+  }
+
   deleteProject(projectId: ProjectId): void {
     this.db.deleteProject(projectId);
   }

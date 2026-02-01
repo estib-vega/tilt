@@ -22,6 +22,7 @@ import type {
   UIChatTitleUpdateEvent,
   UIChatToolUpdateEvent,
   UpdateChatTitleParams,
+  UpdateProjectMetaParams,
   WriteNoteParams,
 } from './api';
 import type { ModelIdentifier, ProviderModelList } from './ai/model';
@@ -161,6 +162,10 @@ export interface ElectronAPI {
    */
   getProjectMeta: (params: GetProjectParams) => Promise<ProjectMetadata>;
   /**
+   * Update project metadata by ID.
+   */
+  updateProjectMeta: (params: UpdateProjectMetaParams) => Promise<void>;
+  /**
    * Create a new project.
    */
   createProject: (params: CreateProjectParams) => Promise<ProjectId>;
@@ -299,6 +304,10 @@ const api: ElectronAPI = {
   // Get project metadata by ID
   getProjectMeta: (params: GetProjectParams) =>
     ipcRenderer.invoke('projects:get-project-meta', params),
+
+  // Update project metadata by ID
+  updateProjectMeta: (params: UpdateProjectMetaParams) =>
+    ipcRenderer.invoke('projects:update-project-meta', params),
 
   // Create a new project
   createProject: (params: CreateProjectParams) =>
