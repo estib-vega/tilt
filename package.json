@@ -1,6 +1,12 @@
 {
   "name": "tilt",
   "private": true,
+  "version": "0.1.0",
+  "author": {
+    "name": "estib",
+    "email": "stron@me.com"
+  },
+  "description": "tilt: the knowledge management application",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -9,7 +15,9 @@
     "build:ui": "vite build && tsc",
     "watch:electron": "tsc -p tsconfig.electron.json --watch",
     "build:electron": "tsc -p tsconfig.electron.json",
-    "build": "npm run build:ui && npm run build:electron",
+    "build": "pnpm run build:ui && pnpm run build:electron",
+    "clean-bundle": "rm -rf dist",
+    "bundle:dev": "pnpm run clean-bundle && pnpm run build && DEBUG=true electron-builder --config src/electron/scripts/electron-builder.js",
     "serve": "vite preview",
     "test": "vitest run",
     "lint": "eslint --config eslint.config.js",
@@ -17,7 +25,8 @@
     "fix:lint": "eslint --config eslint.config.js --fix",
     "fix": "pnpm run fix:format && pnpm run fix:lint",
     "check": "prettier --check . && pnpm lint && tsc -p tsconfig.electron.json --noEmit && tsc -p tsconfig.ui.json --noEmit",
-    "rebuild:sqlite": "electron-rebuild -f -w better-sqlite3"
+    "rebuild:sqlite": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.33",
@@ -88,6 +97,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "baseline-browser-mapping": "^2.9.18",
     "electron": "^39.2.3",
+    "electron-builder": "^26.7.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^17.2.0",

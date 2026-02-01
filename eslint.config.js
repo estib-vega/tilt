@@ -13,7 +13,7 @@ export default defineConfig([
 
   // Electron override
   {
-    files: ['src/electron/**/*.ts'],
+    files: ['src/electron/**/*.{ts,js}'],
     ...(await import('./eslint.electron.js')).default,
     name: 'Electron Config',
   },
