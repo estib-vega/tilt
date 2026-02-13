@@ -1,3 +1,4 @@
+import StackComponent from '@/components/Stack';
 import { useButStatus } from '@/model/api/but';
 import { RepoDataCtx } from '@/model/repo';
 import { useProjectsStore } from '@/store';
@@ -60,7 +61,9 @@ function Repo(props: RepoProps): JSX.Element {
   return (
     <div className="flex flex-col">
       <div className="flex overflow-y-auto scrollbar-muted">
-        <pre className="text-sm">{JSON.stringify(status, undefined, 2)}</pre>
+        {status.stacks.map((stack) => (
+          <StackComponent key={stack.cliId} stack={stack} />
+        ))}
       </div>
     </div>
   );
