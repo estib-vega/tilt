@@ -1,3 +1,4 @@
+import Conditional from '@/components/Conditional';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -113,14 +114,14 @@ function Project(props: ProjectProps) {
           placeholder="no associated repository"
           onSave={handleUpdateRepositoryPath}
         />
-        {!!projectRepositoryPath && (
+        <Conditional condition={!!projectRepositoryPath}>
           <EditableField
             label="but path"
             value={butPath ?? ''}
             placeholder="the path to your but... binary"
             onSave={handleUpdateButPath}
           />
-        )}
+        </Conditional>
         <div className="w-full flex justify-center">
           <Button
             onClick={handleDeleteProject}

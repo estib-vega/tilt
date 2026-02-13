@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RepoRouteImport } from './routes/repo'
 import { Route as ProjectRouteImport } from './routes/project'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +20,11 @@ import { Route as NotesNotesIdRouteImport } from './routes/notes/$notesId'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepoRoute = RepoRouteImport.update({
+  id: '/repo',
+  path: '/repo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectRoute = ProjectRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/project': typeof ProjectRoute
+  '/repo': typeof RepoRoute
   '/settings': typeof SettingsRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes': typeof NotesIndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/project': typeof ProjectRoute
+  '/repo': typeof RepoRoute
   '/settings': typeof SettingsRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes': typeof NotesIndexRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/project': typeof ProjectRoute
+  '/repo': typeof RepoRoute
   '/settings': typeof SettingsRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes/': typeof NotesIndexRoute
@@ -78,16 +87,25 @@ export interface FileRouteTypes {
     | '/'
     | '/chat'
     | '/project'
+    | '/repo'
     | '/settings'
     | '/notes/$notesId'
     | '/notes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/project' | '/settings' | '/notes/$notesId' | '/notes'
+  to:
+    | '/'
+    | '/chat'
+    | '/project'
+    | '/repo'
+    | '/settings'
+    | '/notes/$notesId'
+    | '/notes'
   id:
     | '__root__'
     | '/'
     | '/chat'
     | '/project'
+    | '/repo'
     | '/settings'
     | '/notes/$notesId'
     | '/notes/'
@@ -97,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRoute
   ProjectRoute: typeof ProjectRoute
+  RepoRoute: typeof RepoRoute
   SettingsRoute: typeof SettingsRoute
   NotesNotesIdRoute: typeof NotesNotesIdRoute
   NotesIndexRoute: typeof NotesIndexRoute
@@ -109,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/repo': {
+      id: '/repo'
+      path: '/repo'
+      fullPath: '/repo'
+      preLoaderRoute: typeof RepoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/project': {
@@ -153,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRoute,
   ProjectRoute: ProjectRoute,
+  RepoRoute: RepoRoute,
   SettingsRoute: SettingsRoute,
   NotesNotesIdRoute: NotesNotesIdRoute,
   NotesIndexRoute: NotesIndexRoute,

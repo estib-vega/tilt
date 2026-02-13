@@ -23,6 +23,7 @@ export default function Header() {
   const isNotesRoute = location.pathname === '/notes';
   const isChatRoute = location.pathname === '/chat';
   const isProjectRoute = location.pathname === '/project';
+  const isRepoRoute = location.pathname === '/repo';
 
   return (
     <>
@@ -43,6 +44,16 @@ export default function Header() {
               activeProps={{ className: 'text-primary' }}
             >
               project
+            </Link>
+            <Link
+              to="/repo"
+              className={cn(
+                'text-sm font-medium hover:text-primary transition-colors',
+                isRepoRoute && 'underline',
+              )}
+              activeProps={{ className: 'text-primary' }}
+            >
+              repo
             </Link>
           </Conditional>
           <Link
