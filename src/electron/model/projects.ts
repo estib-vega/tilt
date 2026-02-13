@@ -1,7 +1,9 @@
 import type DB from '@api/db/sqlite';
+import ButWrapper from './but';
 import type { Project, ProjectId } from '@api/db/tables/projects';
 
 export default class ProjectsManager {
+  private but: ButWrapper | null = null;
   private static instance: ProjectsManager | undefined;
   private constructor(private db: DB) {}
 
@@ -10,6 +12,12 @@ export default class ProjectsManager {
       ProjectsManager.instance = new ProjectsManager(db);
     }
     return ProjectsManager.instance;
+  }
+
+  private getOrCreateBut(cwd: string, binaryPath: string): ButWrapper {
+    if (this.but) return this.but;
+    this.but = new ButWrapper(cwd, binaryPath);
+    return this.but;
   }
 
   destroy() {
@@ -46,6 +54,13 @@ export default class ProjectsManager {
 
   deleteProject(projectId: ProjectId): void {
     this.db.deleteProject(projectId);
+  }
+
+  // but commands
+
+  butStatus(cwd: string, binaryPath: string) {
+    const but = this.getOrCreateBut(cwd, binaryPath);
+    return but.status();
   }
 }
 

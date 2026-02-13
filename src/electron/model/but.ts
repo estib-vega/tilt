@@ -1,0 +1,266 @@
+import type { BrandedID } from '@api/utils/id';
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+
+export default class ButWrapper {
+  private cwd: ValidAbsPath;
+  private binaryPath: ValidAbsPath;
+
+  constructor(cwd: string, binaryPath: string) {
+    this.binaryPath = validateAbsolutePath(binaryPath);
+    this.cwd = validateAbsolutePath(cwd);
+  }
+
+  /**
+   * Show the but workspace status.
+   */
+  status(): WorkspaceStatus {
+    return butCommand(this.cwd, this.binaryPath, ButAction.Status);
+  }
+}
+
+type ValidAbsPath = BrandedID<'ValidPath'>;
+
+function validateAbsolutePath(filePath: string): ValidAbsPath {
+  if (!path.isAbsolute(filePath)) throw new Error('File path is not absolute: ' + filePath);
+  if (!fs.existsSync(filePath)) throw new Error("File path doesn't exist: " + filePath);
+  return filePath as ValidAbsPath;
+}
+
+enum ButAction {
+  Status = 'st',
+}
+
+const JSON_MODE = '--json';
+
+function butCommand<T>(cwd: ValidAbsPath, binaryPath: ValidAbsPath, action: ButAction): T {
+  const command = `${binaryPath} ${JSON_MODE} ${action}`;
+  const raw = execSync(command, { cwd, encoding: 'utf-8' });
+  return JSON.parse(raw) as T;
+}
+
+/**
+ * Represents a branch in the GitButler workspace
+ */
+export type Branch = {
+  /**
+   * A unique ID specific to the current state of the workspace, to be used by other CLI operations (e.g `rub`)
+   */
+  cliId: string;
+  /**
+   * The name of the branch, e.g. "feature/add-new-api"
+   */
+  name: string;
+  /**
+   * The commits that are part of this branch, newest first
+   */
+  commits: Array<Commit>;
+  /**
+   * The commits that are only at the upstream of this branch, newest first
+   */
+  upstreamCommits: Array<Commit>;
+  /**
+   * Represents the status of the branch with respect to the upstream
+   */
+  branchStatus: BranchStatus;
+  /**
+   * If but status was invoked with --review and if the branch has an associated review ID (eg. PR number), it will be present here
+   */
+  reviewId: string | null;
+  /**
+   * The CI status checks associated with this branch, including pending, passing, and failing checks.
+   * This is only populated when CI information is available for the branch (for example, when the
+   * repository is configured with CI and the status has been fetched); otherwise it will be `None`.
+   */
+  ci: Ci | null;
+  /**
+   * The merge status of the branch with upstream, indicating whether it can be cleanly integrated.
+   * This is only populated when `but status --upstream` is used.
+   */
+  mergeStatus: MergeStatus | null;
+};
+
+/**
+ * The status of a branch with respect to its upstream
+ */
+export type BranchStatus =
+  | 'nothingToPush'
+  | 'unpushedCommits'
+  | 'unpushedCommitsRequiringForce'
+  | 'completelyUnpushed'
+  | 'integrated';
+
+/**
+ * The type of change that happened to a file
+ */
+export type ChangeType = 'added' | 'removed' | 'modified' | 'renamed';
+
+/**
+ * The aggregated status of CI checks associated with a branch.
+ */
+export type Ci = {
+  /**
+   * Titles of CI checks that are currently pending or still running
+   */
+  pendingCheckTitles: Array<string>;
+  /**
+   * Titles of CI checks that have completed successfully
+   */
+  passingCheckTitles: Array<string>;
+  /**
+   * Titles of CI checks that have completed with a failure
+   */
+  failingCheckTitles: Array<string>;
+  /**
+   * Overall execution status of the CI checks (whether checks are still running or all are complete)
+   */
+  status: CiStatus;
+  /**
+   * Overall result of the completed CI checks (pass, fail, or unknown), independent of whether checks are still running
+   */
+  conclusion: CiConclusion;
+};
+
+export type CiConclusion = 'failure' | 'success' | 'unknown';
+
+export type CiStatus = 'complete' | 'inProgress';
+
+/**
+ * A commit that is in the GitButler workspace
+ */
+export type Commit = {
+  /**
+   * A unique ID specific to the current state of the workspace, to be used by other CLI operations (e.g `rub`)
+   */
+  cliId: string;
+  /**
+   * The commit ID (SHA-1 or SHA-256 depending on the repository configuration)
+   */
+  commitId: string;
+  /**
+   * Timestamp of when the commit was created in format "YYYY-MM-DD HH:MM:SS +ZZZZ"
+   */
+  createdAt: string;
+  /**
+   * The commit message
+   */
+  message: string;
+  /**
+   * The name of the commit author
+   */
+  authorName: string;
+  /**
+   * The email of the commit author
+   */
+  authorEmail: string;
+  /**
+   * Whether the commit is in a conflicted state. Only applicable to local commits (and not to upstream commits)
+   */
+  conflicted: boolean | null;
+  /**
+   * If but status was invoked with --review and if the commit has an associated review ID (eg. Gerrit review number), it will be present here
+   */
+  reviewId: string | null;
+  /**
+   * If but status was invoked with --files, the list of file changes in this commit will be present here
+   */
+  changes: Array<FileChange> | null;
+};
+
+/**
+ * A change to a file in the repository
+ */
+export type FileChange = {
+  /**
+   * A unique ID specific to the current state of the workspace, to be used by other CLI operations (e.g `rub`)
+   */
+  cliId: string;
+  /**
+   * The file path, UTF-8 encoded (note - this can be lossy for some Operating Systems)
+   */
+  filePath: string;
+  /**
+   * The type of change that happened to the file
+   */
+  changeType: ChangeType;
+};
+
+/**
+ * The merge status of a branch with the upstream branch
+ */
+export type MergeStatus =
+  | 'clean'
+  | 'integrated'
+  | {
+      conflicted: {
+        /**
+         * Whether the branch can be rebased (despite conflicts)
+         */
+        rebasable: boolean;
+      };
+    }
+  | 'empty';
+
+/**
+ * Represents a stack of branches applied in the current workspace
+ */
+export type Stack = {
+  /**
+   * A unique ID specific to the current state of the workspace, to be used by other CLI operations (e.g `rub`)
+   */
+  cliId: string;
+  /**
+   * Represents uncommitted changes assigned to this stack
+   */
+  assignedChanges: Array<FileChange>;
+  /**
+   * The branches that are part of this stack, newest first
+   */
+  branches: Array<Branch>;
+};
+
+/**
+ * Represents the state of the upstream branch compared to the merge base
+ */
+export type UpstreamState = {
+  /**
+   * The number of commits the upstream is ahead of the merge base
+   */
+  behind: number;
+  /**
+   * The latest commit on the upstream branch
+   */
+  latestCommit: Commit;
+  /**
+   * Timestamp of when the upstream branch was last fetched, in RFC3339 format
+   */
+  lastFetched: string | null;
+  /**
+   * List of upstream commits (only populated when requested with --upstream flag)
+   */
+  upstreamCommits: Array<Commit> | null;
+};
+
+/**
+ * JSON output for the `but status` command
+ * This represents the status of the GitButler "workspace".
+ */
+export type WorkspaceStatus = {
+  /**
+   * Represents uncommitted changes that are not assigned to any stack
+   */
+  unassignedChanges: Array<FileChange>;
+  /**
+   * The stacks that are applied in the current workspace
+   */
+  stacks: Array<Stack>;
+  /**
+   * The most recent common merge base between all applied stacks and the target upstream branch
+   */
+  mergeBase: Commit;
+  /**
+   * Information about how ahead the target upstream branch is compared to the merge base
+   */
+  upstreamState: UpstreamState;
+};

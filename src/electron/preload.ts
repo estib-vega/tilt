@@ -24,6 +24,7 @@ import type {
   UpdateChatTitleParams,
   UpdateProjectMetaParams,
   WriteNoteParams,
+  ButStatusParams,
 } from './api';
 import type { ModelIdentifier, ProviderModelList } from './ai/model';
 import type { Credential, CredentialService } from './model/credentials';
@@ -31,6 +32,7 @@ import type { OllamaStatus } from './model/ollama';
 import type { Note } from './model/notes';
 import type { Project, ProjectId } from './db/tables/projects';
 import type { ProjectMetadata } from './model/projects';
+import type { WorkspaceStatus } from './model/but';
 
 export type CleanUpFn = () => void;
 
@@ -173,6 +175,10 @@ export interface ElectronAPI {
    * Delete a project by ID.
    */
   deleteProject: (params: DeleteProjectParams) => Promise<void>;
+  /**
+   * Get the but workspace status.
+   */
+  butStatus: (params: ButStatusParams) => Promise<WorkspaceStatus>;
 }
 
 const api: ElectronAPI = {
@@ -325,6 +331,9 @@ const api: ElectronAPI = {
       ipcRenderer.removeListener('chat:tool-update', listener);
     };
   },
+
+  // But status
+  butStatus: (params: ButStatusParams) => ipcRenderer.invoke('but:st', params),
 };
 
 // Expose protected methods that allow the renderer process to use

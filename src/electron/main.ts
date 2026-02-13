@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager from './ai/chat.js';
 import dotenv from 'dotenv';
-import type { UIChatEvent, UsageUpdate } from './api.js';
+import { ButStatusParamsSchema, type UIChatEvent, type UsageUpdate } from './api.js';
 import {
   CreateProjectParamsSchema,
   DeleteNoteParamsSchema,
@@ -329,4 +329,9 @@ ipcMain.handle('projects:get-project-meta', (_event, params) => {
 ipcMain.handle('projects:update-project-meta', (_event, params) => {
   const parsedParams = UpdateProjectMetaParamsSchema.parse(params);
   return projectsManager.updateProjectMeta(parsedParams.projectId, parsedParams.metadata);
+});
+
+ipcMain.handle('but:st', (_event, params) => {
+  const parsedParams = ButStatusParamsSchema.parse(params);
+  return projectsManager.butStatus(parsedParams.cwd, parsedParams.binaryPath);
 });

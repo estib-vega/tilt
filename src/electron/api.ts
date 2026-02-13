@@ -309,3 +309,10 @@ export const UpdateProjectMetaParamsSchema = z.object({
 });
 
 export type UpdateProjectMetaParams = z.infer<typeof UpdateProjectMetaParamsSchema>;
+
+export const ButStatusParamsSchema = z.object({
+  cwd: z.string(),
+  binaryPath: z.string(),
+});
+
+export type ButStatusParams = z.infer<typeof ButStatusParamsSchema>;
