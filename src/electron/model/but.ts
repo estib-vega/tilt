@@ -12,6 +12,10 @@ export default class ButWrapper {
     this.cwd = validateAbsolutePath(cwd);
   }
 
+  matches(cwd: string, binaryPath: string): boolean {
+    return this.cwd === cwd && this.binaryPath === binaryPath;
+  }
+
   /**
    * Show the but workspace status.
    */

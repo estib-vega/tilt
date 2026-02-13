@@ -15,7 +15,7 @@ export default class ProjectsManager {
   }
 
   private getOrCreateBut(cwd: string, binaryPath: string): ButWrapper {
-    if (this.but) return this.but;
+    if (this.but && this.but.matches(cwd, binaryPath)) return this.but;
     this.but = new ButWrapper(cwd, binaryPath);
     return this.but;
   }
