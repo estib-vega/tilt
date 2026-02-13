@@ -9,14 +9,14 @@ import {
   useGetProjectMetadata,
   useUpdateProjectMetadataMutation,
 } from '@/model/api/project';
-import { useProjectStore } from '@/store';
+import { useProjectsStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import React from 'react';
 
 export const Route = createFileRoute('/project')({
   loader: ({ context: { queryClient } }) => {
-    const projectId = useProjectStore.getState().projectId;
+    const projectId = useProjectsStore.getState().projectId;
     if (!projectId) {
       // If there's no projectId selected, redirect to chat
       throw redirect({
@@ -48,8 +48,13 @@ interface ProjectProps {
 function Project(props: ProjectProps) {
   const { projectId } = props;
   const { data: project } = useGetProject(projectId);
-  const setProject = useProjectStore((state) => state.setProject);
+  const setProject = useProjectsStore((state) => state.setProject);
   const { data: metadata } = useGetProjectMetadata(projectId);
+  const projectRepositoryPath = useProjectsStore((state) => state.repositoryPaths[projectId]);
+  const setProjectRepositoryPath = useProjectsStore((state) => state.setRepositoryPath);
+  const butPath = useProjectsStore((state) => state.butPaths[projectId]);
+  const setButPath = useProjectsStore((state) => state.setButPath);
+
   const deleteProjectMutation = useDeleteProjectMutation();
   const updateMetadataMutation = useUpdateProjectMetadataMutation();
   const navigate = useNavigate();
@@ -66,6 +71,14 @@ function Project(props: ProjectProps) {
 
   const handleUpdateSystemPrompt = (systemPrompt: string) => {
     updateMetadataMutation.mutate({ projectId, metadata: { systemPrompt } });
+  };
+
+  const handleUpdateRepositoryPath = (repositoryPath: string) => {
+    setProjectRepositoryPath(projectId, repositoryPath);
+  };
+
+  const handleUpdateButPath = (butPath: string) => {
+    setButPath(projectId, butPath);
   };
 
   if (!project) {
@@ -94,6 +107,20 @@ function Project(props: ProjectProps) {
           onSave={handleUpdateSystemPrompt}
           multiline
         />
+        <EditableField
+          label="repository path"
+          value={projectRepositoryPath ?? ''}
+          placeholder="no associated repository"
+          onSave={handleUpdateRepositoryPath}
+        />
+        {!!projectRepositoryPath && (
+          <EditableField
+            label="but path"
+            value={butPath ?? ''}
+            placeholder="the path to your but... binary"
+            onSave={handleUpdateButPath}
+          />
+        )}
         <div className="w-full flex justify-center">
           <Button
             onClick={handleDeleteProject}
@@ -114,7 +141,7 @@ interface EditableFieldProps {
   value: string;
   placeholder: string;
   onSave: (value: string) => void;
-  multiline: boolean;
+  multiline?: boolean;
 }
 
 function EditableField(props: EditableFieldProps) {
@@ -138,7 +165,7 @@ function EditableField(props: EditableFieldProps) {
 
   if (isEditing) {
     return (
-      <div className="flex flex-col gap-2 w-full min-w-0 border">
+      <div className="flex flex-col gap-2 w-full min-w-0">
         <label className="text-sm font-medium">{label}</label>
         {multiline ? (
           <Textarea

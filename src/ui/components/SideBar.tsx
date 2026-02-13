@@ -7,7 +7,7 @@ import { PopoverContent } from '@radix-ui/react-popover';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import NewChatButton from './NewChatButton';
-import { useProjectStore } from '@/store';
+import { useProjectsStore } from '@/store';
 
 interface SideBarProps {
   selectedChatId: string | undefined;
@@ -120,7 +120,7 @@ interface EditChatTitleButtonProps {
 
 function EditChatTitleButton(props: EditChatTitleButtonProps) {
   const { chatId } = props;
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const navigate = useNavigate();
   const deleteChat = useDeleteChatMutation();

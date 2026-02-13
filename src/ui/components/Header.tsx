@@ -12,14 +12,14 @@ import {
 import React from 'react';
 import { Button } from './ui/button';
 import NewProjectModal from './NewProjectModal';
-import { useProjectStore } from '@/store';
+import { useProjectsStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 import { getDefaultChatId } from '@/model/api/chat';
 import Conditional from './Conditional';
 
 export default function Header() {
   const location = useLocation();
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const isNotesRoute = location.pathname === '/notes';
   const isChatRoute = location.pathname === '/chat';
   const isProjectRoute = location.pathname === '/project';
@@ -75,8 +75,8 @@ export default function Header() {
 
 function ProjectSelect() {
   const { data: projects } = useListProjects();
-  const projectId = useProjectStore((state) => state.projectId);
-  const setProject = useProjectStore((state) => state.setProject);
+  const projectId = useProjectsStore((state) => state.projectId);
+  const setProject = useProjectsStore((state) => state.setProject);
   const [selectOpen, setSelectOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const navigate = useNavigate();

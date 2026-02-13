@@ -1,4 +1,4 @@
-import { useProjectStore } from '@/store';
+import { useProjectsStore } from '@/store';
 import type { WriteNoteParams } from '@api/api';
 import type { ProjectId } from '@api/db/tables/projects';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ const useListNotesQueryOptions = (projectId: ProjectId | null) =>
   });
 
 export function useNewNoteMutation() {
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const queryClient = useQueryClient();
   const options = useListNotesQueryOptions(projectId);
   return useMutation({
@@ -22,7 +22,7 @@ export function useNewNoteMutation() {
 }
 
 export function useListNotes() {
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const options = useListNotesQueryOptions(projectId);
   return useSuspenseQuery(options);
 }
@@ -35,7 +35,7 @@ export function useNote(noteId: string) {
 }
 
 export function useDeleteNoteMutation() {
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const queryClient = useQueryClient();
   const options = useListNotesQueryOptions(projectId);
   return useMutation({

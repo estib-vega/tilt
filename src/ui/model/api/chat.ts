@@ -10,7 +10,7 @@ import React from 'react';
 import { generateId } from 'ai';
 import type { ModelIdentifier } from '@api/ai/model';
 import { useModelSelector } from './models';
-import { useChatStore, useProjectStore } from '@/store';
+import { useChatStore, useProjectsStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 
 export function useElectronChat(chatId: string) {
@@ -74,7 +74,7 @@ export const chatsQueryOptions = (projectId: ProjectId | null) =>
  * Hook to watch for chat title updates and invalidate the chats query.
  */
 function useWatchChatTitleUpdates() {
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const queryClient = useQueryClient();
   const { queryKey } = chatsQueryOptions(projectId);
   React.useEffect(() => {
@@ -93,7 +93,7 @@ function useWatchChatTitleUpdates() {
 
 export function useListChats() {
   useWatchChatTitleUpdates();
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const options = chatsQueryOptions(projectId);
   return useSuspenseQuery(options);
 }
@@ -146,7 +146,7 @@ interface CreateChatParams {
 export function useCreateChatMutation() {
   const setChatUsesWebSearch = useChatStore((state) => state.setChatUsesWebSearch);
   const setChatUsesModelIdentifier = useChatStore((state) => state.setChatUsesModelIdentifier);
-  const projectId = useProjectStore((state) => state.projectId);
+  const projectId = useProjectsStore((state) => state.projectId);
   const queryClient = useQueryClient();
   const options = chatsQueryOptions(projectId);
 

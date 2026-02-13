@@ -10,7 +10,7 @@ import {
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { useCreateProjectMutation } from '@/model/api/project';
-import { useProjectStore } from '@/store';
+import { useProjectsStore } from '@/store';
 import { getDefaultChatId } from '@/model/api/chat';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -22,7 +22,7 @@ interface NewProjectModalProps {
 export default function NewProjectModal(props: NewProjectModalProps) {
   const [projectName, setProjectName] = React.useState('');
   const createProjectMutation = useCreateProjectMutation();
-  const setProjectId = useProjectStore((state) => state.setProject);
+  const setProjectId = useProjectsStore((state) => state.setProject);
   const navigate = useNavigate();
 
   const handleCancelCreate = () => {
