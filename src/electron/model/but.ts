@@ -29,7 +29,7 @@ function validateAbsolutePath(filePath: string): ValidAbsPath {
 }
 
 enum ButAction {
-  Status = 'st',
+  Status = 'status',
 }
 
 const JSON_MODE = '--json';

@@ -1,6 +1,8 @@
+import { useButStatus } from '@/model/api/but';
 import { RepoDataCtx } from '@/model/repo';
 import { useProjectsStore } from '@/store';
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import React, { type JSX } from 'react';
 
 export const Route = createFileRoute('/repo')({
   component: RouteComponent,
@@ -38,7 +40,28 @@ function RouteComponent() {
         repositoryPath,
       }}
     >
-      <div className="min-h-0 h-full w-full p-4 box-border flex justify-center">hello</div>;
+      <div className="min-h-0 h-full w-full p-4 box-border flex justify-center">
+        <React.Suspense>
+          <Repo butPath={butPath} repositoryPath={repositoryPath} />
+        </React.Suspense>
+      </div>
+      ;
     </RepoDataCtx.Provider>
+  );
+}
+
+interface RepoProps {
+  butPath: string;
+  repositoryPath: string;
+}
+
+function Repo(props: RepoProps): JSX.Element {
+  const { data: status } = useButStatus(props.butPath, props.repositoryPath);
+  return (
+    <div className="flex flex-col">
+      <div className="flex overflow-y-auto scrollbar-muted">
+        <pre className="text-sm">{JSON.stringify(status, undefined, 2)}</pre>
+      </div>
+    </div>
   );
 }
