@@ -1,6 +1,6 @@
+import Header from '../components/Header';
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router';
 
-import Header from '../components/Header';
 
 import type { QueryClient } from '@tanstack/react-query';
 import { useUpdateTheme } from '@/model/ui';

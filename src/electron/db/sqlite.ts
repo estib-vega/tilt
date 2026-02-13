@@ -1,10 +1,9 @@
-import Database, { type Database as SQLiteDB } from 'better-sqlite3';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import type { DBUIMessage } from './tables/messages.js';
 import DBMessages from './tables/messages.js';
 import type { DBUIChat } from './tables/chats.js';
 import DBChats from './tables/chats.js';
-import { randomUUID } from 'crypto';
 import type { DBChatSummary } from './tables/chatSummaries.js';
 import DBChatSummaries from './tables/chatSummaries.js';
 import type { DBCredential } from './tables/credentials.js';
@@ -14,6 +13,7 @@ import type { ProjectId } from './tables/projects.js';
 import DBProjects from './tables/projects.js';
 import type { DBProjectMeta } from './tables/projectMetas.js';
 import DBProjectMetas from './tables/projectMetas.js';
+import Database, { type Database as SQLiteDB } from 'better-sqlite3';
 
 export default class DB {
   private static instance: DB | undefined;

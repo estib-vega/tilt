@@ -1,16 +1,16 @@
+import { Tool, ToolContent, ToolInput, ToolOutput } from './ai-elements/tool';
+import { Shimmer } from './ai-elements/shimmer';
+import ChatMessageResponse from './ChatMessageResponse';
 import type { ToolUIPart } from 'ai';
 import type { JSX } from 'react';
 import type { Tools } from '@api/ai/tools';
-import { Tool, ToolContent, ToolInput, ToolOutput } from './ai-elements/tool';
 import { useWatchChatToolUpdates } from '@/model/api/chat';
 import type { UIChatToolUpdateEventContent } from '@api/api';
 import React from 'react';
 import type { WebSearchEvent } from '@api/ai/webSearch';
-import { Shimmer } from './ai-elements/shimmer';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { ChevronDownIcon, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import ChatMessageResponse from './ChatMessageResponse';
 
 interface ChatToolProps {
   chatId: string;

@@ -1,5 +1,3 @@
-import { useChatParams, useCreateChatMutation, useElectronChat } from '@/model/api/chat';
-import React, { type JSX } from 'react';
 import {
   PromptInput,
   PromptInputBody,
@@ -23,14 +21,16 @@ import {
 } from './ai-elements/model-selector';
 import { Conversation, ConversationContent } from './ai-elements/conversation';
 import { ChatMessage } from './ChatMessage';
+import { Button } from './ui/button';
+import ChatContext from './ChatContext';
+import ConfigureModelsButton from './ConfigureModelsButton';
+import { useChatParams, useCreateChatMutation, useElectronChat } from '@/model/api/chat';
+import React, { type JSX } from 'react';
 import type { ChatStatus } from 'ai';
 import { CheckIcon, GlobeIcon, RefreshCcw } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
-import { Button } from './ui/button';
-import ChatContext from './ChatContext';
 import { useListModels } from '@/model/api/models';
 import type { ModelIdentifier } from '@api/ai/model';
-import ConfigureModelsButton from './ConfigureModelsButton';
 
 export interface ChatProps {
   chatId: string | undefined;

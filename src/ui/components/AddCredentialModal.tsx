@@ -1,7 +1,3 @@
-import { useAddCredentialMutation, useListCredentialProviders } from '@/model/api/credentials';
-import type { CredentialService } from '@api/model/credentials';
-import type { JSX } from 'react';
-import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,9 +8,13 @@ import {
   DialogTrigger,
 } from './ui/dialog';
 import { Button } from './ui/button';
-import { Plus } from 'lucide-react';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { useAddCredentialMutation, useListCredentialProviders } from '@/model/api/credentials';
+import type { CredentialService } from '@api/model/credentials';
+import type { JSX } from 'react';
+import React from 'react';
+import { Plus } from 'lucide-react';
 
 export default function AddCredentialModal(): JSX.Element {
   const [open, setOpen] = React.useState(false);

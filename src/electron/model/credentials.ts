@@ -1,6 +1,6 @@
-import type DB from '@api/db/sqlite.js';
-import { decryptString, encryptString } from '../utils/safeStorage.js';
 import { randomUUID } from 'crypto';
+import { decryptString, encryptString } from '../utils/safeStorage.js';
+import type DB from '@api/db/sqlite.js';
 
 export default class CredentialsManager {
   private static instance: CredentialsManager | undefined;

@@ -1,5 +1,5 @@
-import type { ModelMessage } from 'ai';
 import { printModelMessages } from './context.js';
+import type { ModelMessage } from 'ai';
 
 export function systemPromptForChat(): string {
   return `

@@ -1,6 +1,6 @@
-import { type Database as SQLiteDB } from 'better-sqlite3';
 import type { JSONObject } from './utils.js';
 import { safeParseJson, safeStringifyJson } from './utils.js';
+import { type Database as SQLiteDB } from 'better-sqlite3';
 
 export type DBCredential = {
   id: string; // unique id for the credential

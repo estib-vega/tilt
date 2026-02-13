@@ -1,7 +1,7 @@
+import type WebSearch from './webSearch.js';
 import type { InferUITools, ToolSet } from 'ai';
 import { tool } from 'ai';
 import { z } from 'zod';
-import type WebSearch from './webSearch.js';
 
 interface GenerateToolsParasm {
   useWebSearch: boolean;

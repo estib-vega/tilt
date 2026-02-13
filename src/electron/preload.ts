@@ -1,5 +1,3 @@
-import type { IpcRendererEvent } from 'electron';
-import { contextBridge, ipcRenderer } from 'electron';
 import type {
   AddCredentialParams,
   ChatChunkEvent,
@@ -33,6 +31,8 @@ import type { Note } from './model/notes.js';
 import type { Project, ProjectId } from './db/tables/projects.js';
 import type { ProjectMetadata } from './model/projects.js';
 import type { WorkspaceStatus } from './model/but.js';
+import { contextBridge, ipcRenderer } from 'electron';
+import type { IpcRendererEvent } from 'electron';
 
 export type CleanUpFn = () => void;
 

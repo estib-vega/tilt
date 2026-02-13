@@ -1,5 +1,5 @@
-import type { JSX } from 'react';
 import { Button } from './ui/button';
+import type { JSX } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
 export default function ConfigureModelsButton(): JSX.Element {

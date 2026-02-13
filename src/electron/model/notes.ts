@@ -1,8 +1,8 @@
-import type DB from '@api/db/sqlite.js';
-import type { ProjectId } from '@api/db/tables/projects.js';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import type { ProjectId } from '@api/db/tables/projects.js';
+import type DB from '@api/db/sqlite.js';
 
 const NOTES_DIR = 'notes';
 

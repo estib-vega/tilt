@@ -1,10 +1,10 @@
-import type { JSX } from 'react';
 import { Message, MessageContent } from './ai-elements/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning';
-import React from 'react';
-import type { CustomUIMessage } from '@api/api';
 import ChatTool from './ChatTool';
 import ChatMessageResponse from './ChatMessageResponse';
+import React from 'react';
+import type { CustomUIMessage } from '@api/api';
+import type { JSX } from 'react';
 
 type MessagePart = CustomUIMessage['parts'][number];
 type MessageRole = CustomUIMessage['role'];

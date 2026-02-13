@@ -1,6 +1,6 @@
+import pie from './pupeteer.js';
 import { BrowserWindow, app } from 'electron';
 import * as cheerio from 'cheerio';
-import pie from './pupeteer.js';
 import type { Browser, Frame, Page } from 'puppeteer-core';
 import puppeteer from 'puppeteer-core';
 

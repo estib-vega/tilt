@@ -1,6 +1,7 @@
+import ElectronTransport, { type RequestOptions } from './electronTransport';
+import { useModelSelector } from './models';
 import { useChat } from '@ai-sdk/react';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import ElectronTransport, { type RequestOptions } from './electronTransport';
 import type {
   CustomUIMessage,
   UIChatToolUpdateEventContent,
@@ -9,7 +10,6 @@ import type {
 import React from 'react';
 import { generateId } from 'ai';
 import type { ModelIdentifier } from '@api/ai/model';
-import { useModelSelector } from './models';
 import { useChatStore, useProjectsStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 

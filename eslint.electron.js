@@ -34,6 +34,22 @@ const electronConfig = {
     'no-unused-vars': 'off', // handled by TS
     '@typescript-eslint/consistent-type-exports': 'error',
     '@typescript-eslint/consistent-type-imports': 'error',
+    'import/order': [
+      'error',
+      {
+        groups: [
+          // Imports of builtins are first
+          'builtin',
+          // Then sibling and parent imports. They can be mingled together
+          ['sibling', 'parent'],
+          // Then index file imports
+          'index',
+          // Then any arcane TypeScript imports
+          'object',
+          // Then the omitted imports: internal, external, type, unknown
+        ],
+      },
+    ],
     'import/extensions': [
       'error',
       'always',

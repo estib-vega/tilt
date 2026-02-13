@@ -1,5 +1,5 @@
-import type DB from '@api/db/sqlite.js';
 import ButWrapper from './but.js';
+import type DB from '@api/db/sqlite.js';
 import type { Project, ProjectId } from '@api/db/tables/projects.js';
 
 export default class ProjectsManager {

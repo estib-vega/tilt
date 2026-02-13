@@ -1,8 +1,6 @@
-import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager from './ai/chat.js';
-import dotenv from 'dotenv';
 import { ButStatusParamsSchema, type UIChatEvent, type UsageUpdate } from './api.js';
 import {
   CreateProjectParamsSchema,
@@ -23,13 +21,15 @@ import {
   WriteNoteParamsSchema,
 } from './api.js';
 import DB from './db/sqlite.js';
-import type { UIMessageChunk } from 'ai';
 import CredentialsManager from './model/credentials.js';
 import { availableModels, defaultModelIdentifier } from './ai/model.js';
 import OllamaManager from './model/ollama.js';
 import NotesManager from './model/notes.js';
 import Navigator from './model/navigator/index.js';
 import ProjectsManager from './model/projects.js';
+import type { UIMessageChunk } from 'ai';
+import dotenv from 'dotenv';
+import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron';
 
 dotenv.config();
 

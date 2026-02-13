@@ -1,6 +1,15 @@
-import type { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api.js';
-import type DB from '@api/db/sqlite.js';
-import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel } from 'ai';
+import { getModel } from './model.js';
+import WebSearch from './webSearch.js';
+import type { AllTools } from './tools.js';
+import { generateTools } from './tools.js';
+import { getModelMessageTokenCount } from './context.js';
+import {
+  promptForCondensedConversation,
+  systemPromptForChat,
+  systemPromptForCondensedConversation,
+  systemPromptForContinuedConversation,
+} from './prompt.js';
+import type { DBUIMessage } from '@api/db/tables/messages.js';
 import {
   streamText,
   convertToModelMessages,
@@ -9,18 +18,9 @@ import {
   stepCountIs,
   safeValidateUIMessages,
 } from 'ai';
-import { getModel } from './model.js';
-import WebSearch from './webSearch.js';
-import type { AllTools } from './tools.js';
-import { generateTools } from './tools.js';
-import type { DBUIMessage } from '@api/db/tables/messages.js';
-import { getModelMessageTokenCount } from './context.js';
-import {
-  promptForCondensedConversation,
-  systemPromptForChat,
-  systemPromptForCondensedConversation,
-  systemPromptForContinuedConversation,
-} from './prompt.js';
+import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel } from 'ai';
+import type DB from '@api/db/sqlite.js';
+import type { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api.js';
 import type CredentialsManager from '@api/model/credentials.js';
 import type Navigator from '@api/model/navigator/index.js';
 import type { ProjectId } from '@api/db/tables/projects.js';

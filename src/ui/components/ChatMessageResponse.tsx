@@ -1,5 +1,5 @@
-import type { JSX } from 'react';
 import { MessageResponse } from './ai-elements/message';
+import type { JSX } from 'react';
 
 interface ChatMessageResponseProps {
   content: string;

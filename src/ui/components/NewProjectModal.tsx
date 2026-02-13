@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -9,6 +8,7 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Input } from './ui/input';
+import React from 'react';
 import { useCreateProjectMutation } from '@/model/api/project';
 import { useProjectsStore } from '@/store';
 import { getDefaultChatId } from '@/model/api/chat';

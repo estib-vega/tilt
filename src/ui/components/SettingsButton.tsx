@@ -1,5 +1,5 @@
-import type { JSX } from 'react';
 import { Button } from './ui/button';
+import type { JSX } from 'react';
 import { Cog, X } from 'lucide-react';
 import { Link, useLocation } from '@tanstack/react-router';
 

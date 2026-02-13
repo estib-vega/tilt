@@ -1,5 +1,8 @@
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import SettingsButton from './SettingsButton';
+import { Button } from './ui/button';
+import NewProjectModal from './NewProjectModal';
+import Conditional from './Conditional';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { useListProjects } from '@/model/api/project';
 import {
@@ -10,12 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import React from 'react';
-import { Button } from './ui/button';
-import NewProjectModal from './NewProjectModal';
 import { useProjectsStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 import { getDefaultChatId } from '@/model/api/chat';
-import Conditional from './Conditional';
 
 export default function Header() {
   const location = useLocation();

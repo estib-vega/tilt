@@ -1,12 +1,12 @@
+import { Button } from './ui/button';
+import { Popover, PopoverTrigger } from './ui/popover';
+import NewChatButton from './NewChatButton';
 import { useListChats, useDeleteChatMutation, getDefaultChatId } from '@/model/api/chat';
 import React, { type JSX } from 'react';
-import { Button } from './ui/button';
 import { EllipsisVertical } from 'lucide-react';
-import { Popover, PopoverTrigger } from './ui/popover';
 import { PopoverContent } from '@radix-ui/react-popover';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
-import NewChatButton from './NewChatButton';
 import { useProjectsStore } from '@/store';
 
 interface SideBarProps {
