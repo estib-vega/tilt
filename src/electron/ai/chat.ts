@@ -1,5 +1,5 @@
-import type { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api';
-import type DB from '@api/db/sqlite';
+import type { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api.js';
+import type DB from '@api/db/sqlite.js';
 import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel } from 'ai';
 import {
   streamText,

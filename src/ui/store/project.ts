@@ -7,8 +7,8 @@ export const useProjectsStore = create(
     combine(
       {
         projectId: null as ProjectId | null,
-        repositoryPaths: {} as Record<ProjectId, string>,
-        butPaths: {} as Record<ProjectId, string>,
+        repositoryPaths: {} as Record<ProjectId, string | undefined>,
+        butPaths: {} as Record<ProjectId, string | undefined>,
       },
       (set) => ({
         setProject: (projectId: ProjectId | null) =>

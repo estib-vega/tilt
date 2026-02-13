@@ -25,14 +25,14 @@ import type {
   UpdateProjectMetaParams,
   WriteNoteParams,
   ButStatusParams,
-} from './api';
-import type { ModelIdentifier, ProviderModelList } from './ai/model';
-import type { Credential, CredentialService } from './model/credentials';
-import type { OllamaStatus } from './model/ollama';
-import type { Note } from './model/notes';
-import type { Project, ProjectId } from './db/tables/projects';
-import type { ProjectMetadata } from './model/projects';
-import type { WorkspaceStatus } from './model/but';
+} from './api.js';
+import type { ModelIdentifier, ProviderModelList } from './ai/model.js';
+import type { Credential, CredentialService } from './model/credentials.js';
+import type { OllamaStatus } from './model/ollama.js';
+import type { Note } from './model/notes.js';
+import type { Project, ProjectId } from './db/tables/projects.js';
+import type { ProjectMetadata } from './model/projects.js';
+import type { WorkspaceStatus } from './model/but.js';
 
 export type CleanUpFn = () => void;
 

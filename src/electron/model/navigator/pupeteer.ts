@@ -83,7 +83,7 @@ async function retry<T>(fn: () => Promise<T>, retries = 5, delayMs = 1000): Prom
  * @param {PuppeteerNode} puppeteer The imported puppeteer namespace.
  * @returns {Promise<Browser>} An object containing the puppeteer browser, the port, and json received from DevTools.
  */
-export const connect = async (app: App, puppeteer: PuppeteerNode): Promise<Browser> => {
+export const connect = async (app: App, puppeteer: unknown): Promise<Browser> => {
   if (!puppeteer) {
     throw new Error("The parameter 'puppeteer' was not passed in.");
   }
@@ -98,7 +98,7 @@ export const connect = async (app: App, puppeteer: PuppeteerNode): Promise<Brows
   await app.whenReady();
   const json = await retry(() => readJson(port));
 
-  const browser = await puppeteer.connect({
+  const browser = await (puppeteer as PuppeteerNode).connect({
     browserWSEndpoint: json.webSocketDebuggerUrl,
     defaultViewport: null,
   });

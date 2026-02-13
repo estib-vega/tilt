@@ -1,5 +1,5 @@
 import { type Database as SQLiteDB } from 'better-sqlite3';
-import type { ProjectId } from './projects';
+import type { ProjectId } from './projects.js';
 
 export type DBNote = {
   /**

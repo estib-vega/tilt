@@ -1,7 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
-import type CredentialsManager from '@api/model/credentials';
-import type OllamaManager from '@api/model/ollama';
+import type CredentialsManager from '@api/model/credentials.js';
+import type OllamaManager from '@api/model/ollama.js';
 import { createOllama } from 'ollama-ai-provider-v2';
 
 const MODEL_PROVIDERS = ['ollama', 'openai', 'anthropic'] as const;

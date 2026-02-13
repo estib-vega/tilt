@@ -1,4 +1,4 @@
-import type { BrandedID } from '@api/utils/id';
+import type { BrandedID } from '@api/utils/id.js';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
