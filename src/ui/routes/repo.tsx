@@ -60,7 +60,7 @@ function Repo(props: RepoProps): JSX.Element {
   const { data: status } = useButStatus(props.butPath, props.repositoryPath);
   return (
     <div className="flex flex-col">
-      <div className="flex overflow-y-auto scrollbar-muted">
+      <div className="flex overflow-y-auto scrollbar-muted gap-4">
         {status.stacks.map((stack) => (
           <StackComponent key={stack.cliId} stack={stack} />
         ))}

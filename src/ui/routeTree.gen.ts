@@ -16,6 +16,8 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NotesIndexRouteImport } from './routes/notes/index'
 import { Route as NotesNotesIdRouteImport } from './routes/notes/$notesId'
+import { Route as CommitCommitIdRouteImport } from './routes/commit/$commitId'
+import { Route as BranchBranchNameRouteImport } from './routes/branch/$branchName'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -52,6 +54,16 @@ const NotesNotesIdRoute = NotesNotesIdRouteImport.update({
   path: '/notes/$notesId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommitCommitIdRoute = CommitCommitIdRouteImport.update({
+  id: '/commit/$commitId',
+  path: '/commit/$commitId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchBranchNameRoute = BranchBranchNameRouteImport.update({
+  id: '/branch/$branchName',
+  path: '/branch/$branchName',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +71,8 @@ export interface FileRoutesByFullPath {
   '/project': typeof ProjectRoute
   '/repo': typeof RepoRoute
   '/settings': typeof SettingsRoute
+  '/branch/$branchName': typeof BranchBranchNameRoute
+  '/commit/$commitId': typeof CommitCommitIdRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes': typeof NotesIndexRoute
 }
@@ -68,6 +82,8 @@ export interface FileRoutesByTo {
   '/project': typeof ProjectRoute
   '/repo': typeof RepoRoute
   '/settings': typeof SettingsRoute
+  '/branch/$branchName': typeof BranchBranchNameRoute
+  '/commit/$commitId': typeof CommitCommitIdRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes': typeof NotesIndexRoute
 }
@@ -78,6 +94,8 @@ export interface FileRoutesById {
   '/project': typeof ProjectRoute
   '/repo': typeof RepoRoute
   '/settings': typeof SettingsRoute
+  '/branch/$branchName': typeof BranchBranchNameRoute
+  '/commit/$commitId': typeof CommitCommitIdRoute
   '/notes/$notesId': typeof NotesNotesIdRoute
   '/notes/': typeof NotesIndexRoute
 }
@@ -89,6 +107,8 @@ export interface FileRouteTypes {
     | '/project'
     | '/repo'
     | '/settings'
+    | '/branch/$branchName'
+    | '/commit/$commitId'
     | '/notes/$notesId'
     | '/notes'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +118,8 @@ export interface FileRouteTypes {
     | '/project'
     | '/repo'
     | '/settings'
+    | '/branch/$branchName'
+    | '/commit/$commitId'
     | '/notes/$notesId'
     | '/notes'
   id:
@@ -107,6 +129,8 @@ export interface FileRouteTypes {
     | '/project'
     | '/repo'
     | '/settings'
+    | '/branch/$branchName'
+    | '/commit/$commitId'
     | '/notes/$notesId'
     | '/notes/'
   fileRoutesById: FileRoutesById
@@ -117,6 +141,8 @@ export interface RootRouteChildren {
   ProjectRoute: typeof ProjectRoute
   RepoRoute: typeof RepoRoute
   SettingsRoute: typeof SettingsRoute
+  BranchBranchNameRoute: typeof BranchBranchNameRoute
+  CommitCommitIdRoute: typeof CommitCommitIdRoute
   NotesNotesIdRoute: typeof NotesNotesIdRoute
   NotesIndexRoute: typeof NotesIndexRoute
 }
@@ -172,6 +198,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotesNotesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/commit/$commitId': {
+      id: '/commit/$commitId'
+      path: '/commit/$commitId'
+      fullPath: '/commit/$commitId'
+      preLoaderRoute: typeof CommitCommitIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/branch/$branchName': {
+      id: '/branch/$branchName'
+      path: '/branch/$branchName'
+      fullPath: '/branch/$branchName'
+      preLoaderRoute: typeof BranchBranchNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -181,6 +221,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectRoute: ProjectRoute,
   RepoRoute: RepoRoute,
   SettingsRoute: SettingsRoute,
+  BranchBranchNameRoute: BranchBranchNameRoute,
+  CommitCommitIdRoute: CommitCommitIdRoute,
   NotesNotesIdRoute: NotesNotesIdRoute,
   NotesIndexRoute: NotesIndexRoute,
 }
