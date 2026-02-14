@@ -5,9 +5,12 @@ import ChatMessageResponse from './ChatMessageResponse';
 import React from 'react';
 import type { CustomUIMessage } from '@api/api';
 import type { JSX } from 'react';
+import type { UIMessage } from 'ai';
 
 type MessagePart = CustomUIMessage['parts'][number];
 type MessageRole = CustomUIMessage['role'];
+
+type GenericMessagePart = UIMessage['parts'][number];
 
 export interface ChatMessageProps {
   chatId: string;
@@ -23,6 +26,25 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
         <Message from={message.role} key={`message-part-${i}`} className=" min-w-0 w-full">
           <MessageContent className="min-w-0 w-full">
             <ChatMessagePart key={i} chatId={props.chatId} part={part} isLastMessage={isLast} />
+          </MessageContent>
+        </Message>
+      ))}
+    </ChatMessageWrapper>
+  );
+}
+export interface GenericMessageProps {
+  isLast: boolean;
+  message: UIMessage;
+}
+
+export function GenericMessage(props: GenericMessageProps): JSX.Element {
+  const { message, isLast } = props;
+  return (
+    <ChatMessageWrapper from={message.role}>
+      {message.parts.map((part, i) => (
+        <Message from={message.role} key={`message-part-${i}`} className=" min-w-0 w-full">
+          <MessageContent className="min-w-0 w-full">
+            <GenericMessagePartComponent key={i} part={part} isLastMessage={isLast} />
           </MessageContent>
         </Message>
       ))}
@@ -67,6 +89,37 @@ function ChatMessagePart(props: ChatMessagePartProps): JSX.Element {
           <ChatTool chatId={props.chatId} toolPart={part} />
         </div>
       );
+    case 'reasoning': {
+      const isStreaming = part.state === 'streaming' && isLastMessage;
+
+      return (
+        <Reasoning className="w-full" isStreaming={isStreaming}>
+          <ReasoningTrigger />
+          <div className="max-h-20 overflow-scroll flex flex-col-reverse">
+            <ReasoningContent>{part.text}</ReasoningContent>
+          </div>
+        </Reasoning>
+      );
+    }
+
+    default:
+      return <pre className="text-xs">{JSON.stringify(part, null, 2)}</pre>;
+  }
+}
+
+interface GenericMessagePartProps {
+  isLastMessage: boolean;
+  part: GenericMessagePart;
+}
+
+function GenericMessagePartComponent(props: GenericMessagePartProps): JSX.Element {
+  const { part, isLastMessage } = props;
+
+  switch (part.type) {
+    case 'text':
+      return <ChatMessageResponse content={part.text} streaming={part.state === 'streaming'} />;
+    case 'step-start':
+      return <></>;
     case 'reasoning': {
       const isStreaming = part.state === 'streaming' && isLastMessage;
 

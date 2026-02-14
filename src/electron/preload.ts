@@ -367,7 +367,7 @@ const api: ElectronAPI = {
 
   // Start the summarization of a diff
   butSummarizeDiffStart: (params: ButStreamSummary) =>
-    ipcRenderer.invoke('but:stream-summary', params),
+    ipcRenderer.send('but:stream-summary', params),
 
   // Listen for diff summarization update events
   onButSummarizationChunk: (cb: (event: MessageChunkEvent) => void) => {

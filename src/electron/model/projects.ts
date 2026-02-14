@@ -1,12 +1,12 @@
 import ButWrapper from './but.js';
 import type CredentialsManager from './credentials.js';
+import { getModel } from '../ai/model.js';
+import { promptForSummarization, systemPromptForSummarization } from '../ai/prompt.js';
 import type DB from '@api/db/sqlite.js';
 import type { Project, ProjectId } from '@api/db/tables/projects.js';
-import { promptForSummarization, systemPromptForSummarization } from '@api/ai/prompt.js';
 import type { UIMessageChunk } from 'ai';
 import { createIdGenerator, streamText } from 'ai';
 import type { ModelIdentifier } from '@api/ai/model.js';
-import { getModel } from '@api/ai/model.js';
 
 export default class ProjectsManager {
   private but: ButWrapper | null = null;

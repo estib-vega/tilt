@@ -1,6 +1,6 @@
 import { printModelMessages } from './context.js';
-import type { JsonChange } from '@api/model/but.js';
-import { stringifyJsonChanges } from '@api/model/repository/changes.js';
+import type { JsonChange } from '../model/but.js';
+import { stringifyJsonChanges } from '../model/repository/changes.js';
 import type { ModelMessage } from 'ai';
 
 export function systemPromptForChat(): string {

@@ -1,7 +1,10 @@
-import FileDiff from '@/components/FileDiff';
-import { useButDiff } from '@/model/api/but';
+import { Conversation, ConversationContent } from '@/components/ai-elements/conversation';
+import { GenericMessage } from '@/components/ChatMessage';
+import FileChange from '@/components/FileChange';
+import { Button } from '@/components/ui/button';
+import { useButDiff, useButDiffSummary } from '@/model/api/but';
 import { useProjectsStore } from '@/store';
-import type { JsonChange } from '@api/model/but';
+import type { ProjectId } from '@api/db/tables/projects';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import React from 'react';
 
@@ -24,7 +27,7 @@ export const Route = createFileRoute('/branch/$branchName')({
 
 function RouteComponent() {
   const params = Route.useParams();
-  const { butPath, repositoryPath } = Route.useLoaderData();
+  const { projectId, butPath, repositoryPath } = Route.useLoaderData();
 
   if (!butPath || !repositoryPath) {
     return (
@@ -35,14 +38,73 @@ function RouteComponent() {
   }
 
   return (
-    <div className="min-h-0 h-full w-full p-4 box-border flex justify-center">
-      <React.Suspense>
-        <BranchView
+    <div className="min-h-0 h-full w-full p-4 box-border flex overflow-y-auto scrollbar-muted">
+      <div className="w-full flex flex-col gap-4">
+        <Summary
+          projectId={projectId}
           butPath={butPath}
           repositoryPath={repositoryPath}
           branchName={params.branchName}
         />
-      </React.Suspense>
+        <React.Suspense>
+          <BranchView
+            butPath={butPath}
+            repositoryPath={repositoryPath}
+            branchName={params.branchName}
+          />
+        </React.Suspense>
+      </div>
+    </div>
+  );
+}
+
+interface SummaryProps {
+  projectId: ProjectId;
+  butPath: string;
+  repositoryPath: string;
+  branchName: string;
+}
+
+function Summary(props: SummaryProps) {
+  const { messages, isLoading, start } = useButDiffSummary();
+  const lastMessageIndex = React.useMemo(() => messages.length - 1, [messages.length]);
+
+  const handleStartSummary = async () => {
+    await start({
+      projectId: props.projectId,
+      binaryPath: props.butPath,
+      cwd: props.repositoryPath,
+      cliId: props.branchName,
+      modelIdentifier: {
+        name: 'gpt-oss:20b',
+        provider: 'ollama',
+      },
+    });
+  };
+
+  if (messages.length === 0 && !isLoading) {
+    return (
+      <div className="w-full flex justify-center">
+        <Button className="cursor-pointer" onClick={handleStartSummary}>
+          generate summary
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Conversation>
+        <ConversationContent className="min-w-0 w-full">
+          {messages.map((message, index) => (
+            <GenericMessage
+              key={message.id}
+              message={message}
+              isLast={lastMessageIndex === index}
+            />
+          ))}
+        </ConversationContent>
+      </Conversation>
     </div>
   );
 }
@@ -56,39 +118,10 @@ interface BranchViewProps {
 function BranchView(props: BranchViewProps) {
   const { data: diff } = useButDiff(props.butPath, props.repositoryPath, props.branchName);
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto scrollbar-muted w-full">
+    <div className="flex flex-col gap-4 w-full">
       {diff.changes.map((change, index) => (
         <FileChange key={change.id ?? index} change={change} />
       ))}
     </div>
   );
-}
-
-interface FileChangeProps {
-  change: JsonChange;
-}
-
-function FileChange(props: FileChangeProps) {
-  switch (props.change.diff.type) {
-    case 'binary':
-      return (
-        <div>
-          <p>binary</p>
-        </div>
-      );
-    case 'tooLarge':
-      return (
-        <div>
-          <p>too large</p>
-        </div>
-      );
-    case 'patch':
-      return (
-        <FileDiff
-          filePath={props.change.path}
-          oldFilePath={props.change.oldPath}
-          hunks={props.change.diff.hunks}
-        />
-      );
-  }
 }
