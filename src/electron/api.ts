@@ -316,3 +316,19 @@ export const ButStatusParamsSchema = z.object({
 });
 
 export type ButStatusParams = z.infer<typeof ButStatusParamsSchema>;
+
+export const ButDiffParamsSchema = z.object({
+  cwd: z.string(),
+  binaryPath: z.string(),
+  cliId: z.string(),
+});
+
+export type ButDiffParams = z.infer<typeof ButDiffParamsSchema>;
+
+export const ButCheckOutParamsSchema = z.object({
+  cwd: z.string(),
+  binaryPath: z.string(),
+  branchName: z.string(),
+});
+
+export type ButCheckOutParams = z.infer<typeof ButCheckOutParamsSchema>;

@@ -23,6 +23,8 @@ import type {
   UpdateProjectMetaParams,
   WriteNoteParams,
   ButStatusParams,
+  ButDiffParams,
+  ButCheckOutParams,
 } from './api.js';
 import type { ModelIdentifier, ProviderModelList } from './ai/model.js';
 import type { Credential, CredentialService } from './model/credentials.js';
@@ -30,7 +32,7 @@ import type { OllamaStatus } from './model/ollama.js';
 import type { Note } from './model/notes.js';
 import type { Project, ProjectId } from './db/tables/projects.js';
 import type { ProjectMetadata } from './model/projects.js';
-import type { WorkspaceStatus } from './model/but.js';
+import type { JsonDiffOutput, WorkspaceStatus } from './model/but.js';
 import { contextBridge, ipcRenderer } from 'electron';
 import type { IpcRendererEvent } from 'electron';
 
@@ -179,6 +181,15 @@ export interface ElectronAPI {
    * Get the but workspace status.
    */
   butStatus: (params: ButStatusParams) => Promise<WorkspaceStatus>;
+  /**
+   * Get the diff of a respository target.
+   * E.g. diff a branch, commit, file
+   */
+  butDiff: (params: ButDiffParams) => Promise<JsonDiffOutput>;
+  /**
+   * Checkout a git branch in the repository.
+   */
+  butCheckout: (params: ButCheckOutParams) => Promise<void>;
 }
 
 const api: ElectronAPI = {
@@ -334,6 +345,12 @@ const api: ElectronAPI = {
 
   // But status
   butStatus: (params: ButStatusParams) => ipcRenderer.invoke('but:st', params),
+
+  // But diff
+  butDiff: (params: ButDiffParams) => ipcRenderer.invoke('but:diff', params),
+
+  // But checkout branch
+  butCheckout: (params: ButCheckOutParams) => ipcRenderer.invoke('but:checkout', params),
 };
 
 // Expose protected methods that allow the renderer process to use

@@ -1,7 +1,13 @@
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ChatManager from './ai/chat.js';
-import { ButStatusParamsSchema, type UIChatEvent, type UsageUpdate } from './api.js';
+import {
+  ButCheckOutParamsSchema,
+  ButDiffParamsSchema,
+  ButStatusParamsSchema,
+  type UIChatEvent,
+  type UsageUpdate,
+} from './api.js';
 import {
   CreateProjectParamsSchema,
   DeleteNoteParamsSchema,
@@ -334,4 +340,18 @@ ipcMain.handle('projects:update-project-meta', (_event, params) => {
 ipcMain.handle('but:st', (_event, params) => {
   const parsedParams = ButStatusParamsSchema.parse(params);
   return projectsManager.butStatus(parsedParams.cwd, parsedParams.binaryPath);
+});
+
+ipcMain.handle('but:diff', (_event, params) => {
+  const parsedParams = ButDiffParamsSchema.parse(params);
+  return projectsManager.butDiff(parsedParams.cwd, parsedParams.binaryPath, parsedParams.cliId);
+});
+
+ipcMain.handle('but:checkout', (_event, params) => {
+  const parsedParams = ButCheckOutParamsSchema.parse(params);
+  return projectsManager.checkoutBranch(
+    parsedParams.cwd,
+    parsedParams.binaryPath,
+    parsedParams.branchName,
+  );
 });

@@ -62,6 +62,16 @@ export default class ProjectsManager {
     const but = this.getOrCreateBut(cwd, binaryPath);
     return but.status();
   }
+
+  butDiff(cwd: string, binaryPath: string, cliId: string) {
+    const but = this.getOrCreateBut(cwd, binaryPath);
+    return but.diff(cliId);
+  }
+
+  checkoutBranch(cwd: string, binaryPath: string, branchName: string) {
+    const but = this.getOrCreateBut(cwd, binaryPath);
+    return but.checkoutBranch(branchName);
+  }
 }
 
 export type ProjectMetadata = {
