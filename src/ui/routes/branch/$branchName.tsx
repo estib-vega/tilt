@@ -56,7 +56,7 @@ interface BranchViewProps {
 function BranchView(props: BranchViewProps) {
   const { data: diff } = useButDiff(props.butPath, props.repositoryPath, props.branchName);
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto scrollbar-muted">
+    <div className="flex flex-col gap-4 overflow-y-auto scrollbar-muted w-full">
       {diff.changes.map((change, index) => (
         <FileChange key={change.id ?? index} change={change} />
       ))}
