@@ -1,5 +1,5 @@
 import type { ModelIdentifier } from '@api/ai/model';
-import type { ChatChunkEvent, ChatEndEvent } from '@api/api';
+import type { MessageChunkEvent, MessageEndEvent } from '@api/api';
 import type { ChatRequestOptions, ChatTransport, UIMessage, UIMessageChunk } from 'ai';
 
 export default class ElectronTransport<UI_MESSAGE extends UIMessage>
@@ -36,12 +36,12 @@ export default class ElectronTransport<UI_MESSAGE extends UIMessage>
     const stream = new ReadableStream<UIMessageChunk>({
       start(controller) {
         // incoming token chunks
-        const onChunk = (data: ChatChunkEvent) => {
+        const onChunk = (data: MessageChunkEvent) => {
           if (data.id !== options.chatId) return;
           controller.enqueue(data.chunk);
         };
 
-        const onEnd = (data: ChatEndEvent) => {
+        const onEnd = (data: MessageEndEvent) => {
           if (data.id !== options.chatId) return;
           controller.close();
           cleanup();

@@ -5,6 +5,7 @@ import {
   ButCheckOutParamsSchema,
   ButDiffParamsSchema,
   ButStatusParamsSchema,
+  ButStreamSummaryParams,
   type UIChatEvent,
   type UsageUpdate,
 } from './api.js';
@@ -50,7 +51,7 @@ const navigator = Navigator.getInstance();
 const chatManager = ChatManager.getInstance(db, credentialsManager, navigator);
 const ollamaManager = OllamaManager.getInstance();
 const notesManager = NotesManager.getInstance(appDir, db);
-const projectsManager = ProjectsManager.getInstance(db);
+const projectsManager = ProjectsManager.getInstance(db, credentialsManager);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -354,4 +355,23 @@ ipcMain.handle('but:checkout', (_event, params) => {
     parsedParams.binaryPath,
     parsedParams.branchName,
   );
+});
+
+ipcMain.on('but:stream-summary', async (event, params) => {
+  const parsedParams = ButStreamSummaryParams.parse(params);
+  const id = `${parsedParams.projectId}:${parsedParams.cliId}`;
+
+  const onUpdate = (chunk: UIMessageChunk) => {
+    event.sender.send('but:stream-summary-chunk', { id, chunk });
+  };
+
+  const fullResponse = await projectsManager.summarizeDiff(
+    parsedParams.cwd,
+    parsedParams.binaryPath,
+    parsedParams.cliId,
+    parsedParams.modelIdentifier,
+    onUpdate,
+  );
+
+  event.sender.send('but:stream-summary-end', { id, text: fullResponse });
 });

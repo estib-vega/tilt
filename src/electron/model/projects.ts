@@ -1,15 +1,24 @@
 import ButWrapper from './but.js';
+import type CredentialsManager from './credentials.js';
 import type DB from '@api/db/sqlite.js';
 import type { Project, ProjectId } from '@api/db/tables/projects.js';
+import { promptForSummarization, systemPromptForSummarization } from '@api/ai/prompt.js';
+import type { UIMessageChunk } from 'ai';
+import { createIdGenerator, streamText } from 'ai';
+import type { ModelIdentifier } from '@api/ai/model.js';
+import { getModel } from '@api/ai/model.js';
 
 export default class ProjectsManager {
   private but: ButWrapper | null = null;
   private static instance: ProjectsManager | undefined;
-  private constructor(private db: DB) {}
+  private constructor(
+    private db: DB,
+    private credentialsManger: CredentialsManager,
+  ) {}
 
-  static getInstance(db: DB): ProjectsManager {
+  static getInstance(db: DB, credentialsManager: CredentialsManager): ProjectsManager {
     if (!ProjectsManager.instance) {
-      ProjectsManager.instance = new ProjectsManager(db);
+      ProjectsManager.instance = new ProjectsManager(db, credentialsManager);
     }
     return ProjectsManager.instance;
   }
@@ -66,6 +75,44 @@ export default class ProjectsManager {
   butDiff(cwd: string, binaryPath: string, cliId: string) {
     const but = this.getOrCreateBut(cwd, binaryPath);
     return but.diff(cliId);
+  }
+
+  async summarizeDiff(
+    cwd: string,
+    binaryPath: string,
+    cliId: string,
+    modelIdentifier: ModelIdentifier,
+    onUpdate: (chunk: UIMessageChunk) => void,
+  ) {
+    const diff = this.butDiff(cwd, binaryPath, cliId);
+    const sysPrompt = systemPromptForSummarization();
+    const prompt = promptForSummarization({
+      changes: diff.changes,
+    });
+
+    const model = getModel(modelIdentifier, this.credentialsManger);
+    const streamResponse = streamText({
+      system: sysPrompt,
+      model,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const stream = streamResponse.toUIMessageStream({
+      originalMessages: [],
+      generateMessageId: createIdGenerator({
+        prefix: 'msg',
+        size: 16,
+      }),
+      onFinish: () => {
+        // TODO: store this somewhere
+      },
+    });
+
+    for await (const chunk of stream) {
+      onUpdate(chunk);
+    }
+
+    return streamResponse.text;
   }
 
   checkoutBranch(cwd: string, binaryPath: string, branchName: string) {

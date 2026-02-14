@@ -1,6 +1,6 @@
 import type { Tools } from './ai/tools.js';
 import type { ModelIdentifier, ModelProvider } from './ai/model.js';
-import { isModelIdentifier } from './ai/model.js';
+import { isModelIdentifier, ModelIdentifierSchema } from './ai/model.js';
 import type { CredentialService } from './model/credentials.js';
 import { isCredentialService } from './model/credentials.js';
 import type { WebSearchEvent } from './ai/webSearch.js';
@@ -18,12 +18,12 @@ export const ListChatsParamsSchema = z.object({
 
 export type ListChatsParams = z.infer<typeof ListChatsParamsSchema>;
 
-export interface ChatEndEvent {
+export interface MessageEndEvent {
   id: string;
   text: string;
 }
 
-export interface ChatChunkEvent {
+export interface MessageChunkEvent {
   id: string;
   chunk: UIMessageChunk;
 }
@@ -332,3 +332,13 @@ export const ButCheckOutParamsSchema = z.object({
 });
 
 export type ButCheckOutParams = z.infer<typeof ButCheckOutParamsSchema>;
+
+export const ButStreamSummaryParams = z.object({
+  projectId: ProjectIdSchema,
+  cwd: z.string(),
+  binaryPath: z.string(),
+  cliId: z.string(),
+  modelIdentifier: ModelIdentifierSchema,
+});
+
+export type ButStreamSummary = z.infer<typeof ButStreamSummaryParams>;

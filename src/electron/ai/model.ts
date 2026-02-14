@@ -3,18 +3,22 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import type CredentialsManager from '@api/model/credentials.js';
 import type OllamaManager from '@api/model/ollama.js';
 import { createOllama } from 'ollama-ai-provider-v2';
+import z from 'zod';
 
 const MODEL_PROVIDERS = ['ollama', 'openai', 'anthropic'] as const;
-export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
+export const ModelProviderSchema = z.enum(MODEL_PROVIDERS);
+export type ModelProvider = z.infer<typeof ModelProviderSchema>;
 
 export function isModelProvider(something: unknown): something is ModelProvider {
   return typeof something === 'string' && MODEL_PROVIDERS.includes(something as ModelProvider);
 }
 
-export interface ModelIdentifier {
-  name: string;
-  provider: ModelProvider;
-}
+export const ModelIdentifierSchema = z.object({
+  name: z.string(),
+  provider: ModelProviderSchema,
+});
+
+export type ModelIdentifier = z.infer<typeof ModelIdentifierSchema>;
 
 export function isModelIdentifier(something: unknown): something is ModelIdentifier {
   if (typeof something !== 'object' || something === null) {

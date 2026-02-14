@@ -1,7 +1,7 @@
 import type {
   AddCredentialParams,
-  ChatChunkEvent,
-  ChatEndEvent,
+  MessageChunkEvent,
+  MessageEndEvent,
   ChatUsageEvent,
   CreateProjectParams,
   CustomUIMessage,
@@ -25,6 +25,7 @@ import type {
   ButStatusParams,
   ButDiffParams,
   ButCheckOutParams,
+  ButStreamSummary,
 } from './api.js';
 import type { ModelIdentifier, ProviderModelList } from './ai/model.js';
 import type { Credential, CredentialService } from './model/credentials.js';
@@ -62,7 +63,7 @@ export interface ElectronAPI {
   /**
    * Listens for chat response chunks.
    */
-  onChatChunk: (cb: (event: ChatChunkEvent) => void) => CleanUpFn;
+  onChatChunk: (cb: (event: MessageChunkEvent) => void) => CleanUpFn;
   /**
    * Listens for usage updates during a chat session.
    */
@@ -70,7 +71,7 @@ export interface ElectronAPI {
   /**
    * Listens for the end of a chat session.
    */
-  onChatEnd: (cb: (event: ChatEndEvent) => void) => CleanUpFn;
+  onChatEnd: (cb: (event: MessageEndEvent) => void) => CleanUpFn;
   /**
    * Interrupts an ongoing chat session with the given ID.
    */
@@ -190,6 +191,18 @@ export interface ElectronAPI {
    * Checkout a git branch in the repository.
    */
   butCheckout: (params: ButCheckOutParams) => Promise<void>;
+  /**
+   * Stream the summarization of a diff.
+   */
+  butSummarizeDiffStart: (params: ButStreamSummary) => void;
+  /**
+   * On a chunk event from the diff summarization.
+   */
+  onButSummarizationChunk: (cb: (e: MessageChunkEvent) => void) => CleanUpFn;
+  /**
+   * On diff summarization end.
+   */
+  onButSummarizationEnd: (cb: (e: MessageEndEvent) => void) => CleanUpFn;
 }
 
 const api: ElectronAPI = {
@@ -224,8 +237,8 @@ const api: ElectronAPI = {
   },
 
   // Listen for chat chunks
-  onChatChunk: (cb: (event: ChatChunkEvent) => void) => {
-    const listener = (_event: IpcRendererEvent, data: ChatChunkEvent) => cb(data);
+  onChatChunk: (cb: (event: MessageChunkEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: MessageChunkEvent) => cb(data);
     ipcRenderer.on('llm:chunk', listener);
     return () => {
       ipcRenderer.removeListener('llm:chunk', listener);
@@ -242,8 +255,8 @@ const api: ElectronAPI = {
   },
 
   // Listen for chat end
-  onChatEnd: (cb: (event: ChatEndEvent) => void) => {
-    const listener = (_event: IpcRendererEvent, data: ChatEndEvent) => cb(data);
+  onChatEnd: (cb: (event: MessageEndEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: MessageEndEvent) => cb(data);
     ipcRenderer.on('llm:end', listener);
     return () => {
       ipcRenderer.removeListener('llm:end', listener);
@@ -351,6 +364,28 @@ const api: ElectronAPI = {
 
   // But checkout branch
   butCheckout: (params: ButCheckOutParams) => ipcRenderer.invoke('but:checkout', params),
+
+  // Start the summarization of a diff
+  butSummarizeDiffStart: (params: ButStreamSummary) =>
+    ipcRenderer.invoke('but:stream-summary', params),
+
+  // Listen for diff summarization update events
+  onButSummarizationChunk: (cb: (event: MessageChunkEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: MessageChunkEvent) => cb(data);
+    ipcRenderer.on('but:stream-summary-chunk', listener);
+    return () => {
+      ipcRenderer.removeListener('but:stream-summary-chunk', listener);
+    };
+  },
+
+  // Listen for diff summarization end events
+  onButSummarizationEnd: (cb: (event: MessageEndEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: MessageEndEvent) => cb(data);
+    ipcRenderer.on('but:stream-summary-end', listener);
+    return () => {
+      ipcRenderer.removeListener('but:stream-summary-end', listener);
+    };
+  },
 };
 
 // Expose protected methods that allow the renderer process to use
