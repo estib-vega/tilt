@@ -78,6 +78,10 @@ export default class DB {
     this.projectsMetasTable.deleteByProject(projectId);
   }
 
+  getProjectMeta(projectId: ProjectId) {
+    return this.projectsMetasTable.getByProjectId(projectId) ?? null;
+  }
+
   updateProjectMeta(
     projectId: ProjectId,
     update: { systemPrompt?: string | null; description?: string | null },

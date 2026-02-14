@@ -1,14 +1,29 @@
 import { printModelMessages } from './context.js';
 import type { JsonChange } from '../model/but.js';
 import { stringifyJsonChanges } from '../model/repository/changes.js';
+import type { DBProjectMeta } from '../db/tables/projectMetas.js';
 import type { ModelMessage } from 'ai';
 
-export function systemPromptForChat(): string {
-  return `
+export function systemPromptForChat(projectMeta: DBProjectMeta | null): string {
+  let system: string = `
 You are a helpful AI assistant. Provide clear and concise responses based on the user's queries.
 The current date is ${new Date().toDateString()}.
 Prefer being concise unless more detail is requested.
 `.trim();
+
+  if (projectMeta) {
+    if (projectMeta.system_prompt && projectMeta.system_prompt.trim().length > 0) {
+      system = projectMeta.system_prompt.trim();
+      system += '\n';
+      system += `The current date is ${new Date().toDateString()}.`;
+    }
+    if (projectMeta.description && projectMeta.description.trim().length > 0) {
+      system += '\n\n';
+      system += 'Project Description:\n';
+      system += projectMeta.description.trim();
+    }
+  }
+  return system;
 }
 
 export function systemPromptForCondensedConversation(): string {
@@ -124,7 +139,19 @@ ${webResults}
 `;
 }
 
-export function systemPromptForSummarization(): string {
+export function systemPromptForSummarization(projectMeta: DBProjectMeta | null): string {
+  let projectDescription = '';
+  if (projectMeta?.description?.trim()) {
+    projectDescription += '\n\n';
+    projectDescription += '---';
+    projectDescription += '\n\n';
+    projectDescription += '# Project description';
+    projectDescription += '\n\n';
+    projectDescription += projectMeta.description;
+    projectDescription += '\n\n';
+    projectDescription += '---';
+  }
+
   return `
 # Code Change Summarization Prompt
 
@@ -144,7 +171,7 @@ Focus on:
 * What could break
 * Where reviewers should focus
 
----
+---${projectDescription}
 
 # Output Format
 

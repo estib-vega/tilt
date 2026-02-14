@@ -128,19 +128,7 @@ export default class ChatManager {
 
   private getSystemPromptForChat(chatId: string): string {
     const projectMeta = this.db.getProjectMetaForChat(chatId);
-    let system: string = systemPromptForChat();
-    if (projectMeta) {
-      if (projectMeta.system_prompt && projectMeta.system_prompt.trim().length > 0) {
-        system = projectMeta.system_prompt.trim();
-      }
-      if (projectMeta.description && projectMeta.description.trim().length > 0) {
-        system += '\n\n';
-        system += 'Project Description:\n';
-        system += projectMeta.description.trim();
-      }
-    }
-
-    return system;
+    return systemPromptForChat(projectMeta);
   }
 
   /**

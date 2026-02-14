@@ -366,6 +366,7 @@ ipcMain.on('but:stream-summary', async (event, params) => {
   };
 
   const fullResponse = await projectsManager.summarizeDiff(
+    parsedParams.projectId,
     parsedParams.cwd,
     parsedParams.binaryPath,
     parsedParams.cliId,

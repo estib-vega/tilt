@@ -78,14 +78,16 @@ export default class ProjectsManager {
   }
 
   async summarizeDiff(
+    projectId: ProjectId,
     cwd: string,
     binaryPath: string,
     cliId: string,
     modelIdentifier: ModelIdentifier,
     onUpdate: (chunk: UIMessageChunk) => void,
   ) {
+    const projectMeta = this.db.getProjectMeta(projectId);
     const diff = this.butDiff(cwd, binaryPath, cliId);
-    const sysPrompt = systemPromptForSummarization();
+    const sysPrompt = systemPromptForSummarization(projectMeta);
     const prompt = promptForSummarization({
       changes: diff.changes,
     });
