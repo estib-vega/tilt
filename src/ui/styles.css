@@ -2,6 +2,8 @@
 
 @import 'tw-animate-css';
 
+@import "@git-diff-view/react/styles/diff-view.css";
+
 @source "../../node_modules/streamdown/dist/*.js";
 
 @custom-variant dark (&:is(.dark *));
