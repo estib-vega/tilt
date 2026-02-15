@@ -45,17 +45,13 @@ export default function FileDiff(props: FileDiffProps): JSX.Element {
   );
 }
 
-function getDiffLangFromName(filePath: string): DiffHighlighterLang {
+function getDiffLangFromName(filePath: string): DiffHighlighterLang | undefined {
   const extension = filePath.split('.').at(-1);
   if (!extension) return 'markdown';
   switch (extension) {
-    case 'ts':
     case 'svelte':
       return 'ts';
-    case 'rs':
-      return 'rust';
-
     default:
-      return 'markdown';
+      return undefined;
   }
 }
