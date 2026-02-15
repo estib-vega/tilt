@@ -51,6 +51,8 @@ The current date is ${new Date().toDateString()}.
   Read a file from the repository where changes are being reviewed.
 - 'tool-showDiff':
   Tool for displaying all or a subset of the change diffs being reviewed.
+
+- DON'T USE 'dynamic-tool' or 'tool-exec'!
 `.trim();
 
   if (projectMeta) {
