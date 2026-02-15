@@ -8,6 +8,7 @@ import { useChat } from '@ai-sdk/react';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import type {
   CustomUIMessage,
+  ReviewUIMessage,
   UIChatToolUpdateEventContent,
   UpdateChatTitleParams,
 } from '@api/api';
@@ -57,7 +58,7 @@ export function useElectronChat(chatId: string) {
 }
 
 export function useElectronReviewChat() {
-  const chat = useChat({
+  const chat = useChat<ReviewUIMessage>({
     transport: new ElectronReviewChatTransport(),
   });
 

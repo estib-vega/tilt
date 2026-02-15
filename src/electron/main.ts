@@ -205,6 +205,7 @@ ipcMain.on('llm:review-start', async (event, params) => {
 
   const fullResponse = await chatManager.reviewChat(
     projectId,
+    cliId,
     summary,
     messages,
     options,

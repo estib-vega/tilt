@@ -58,6 +58,8 @@ export default class ProjectsManager {
     this.db.updateProjectMeta(projectId, {
       description: metadata.description,
       systemPrompt: metadata.systemPrompt,
+      repositoryPath: metadata.repositoryPath,
+      butBinaryPath: metadata.butBinaryPath,
     });
   }
 

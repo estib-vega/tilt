@@ -1,4 +1,4 @@
-import type { Tools } from './ai/tools.js';
+import type { ReviewTools, Tools } from './ai/tools.js';
 import type { ModelIdentifier, ModelProvider } from './ai/model.js';
 import { isModelIdentifier, ModelIdentifierSchema } from './ai/model.js';
 import type { CredentialService } from './model/credentials.js';
@@ -11,6 +11,8 @@ import { validateUIMessages } from 'ai';
 import type { LanguageModelUsage, UIDataTypes, UIMessage, UIMessageChunk } from 'ai';
 
 export type CustomUIMessage = UIMessage<unknown, UIDataTypes, Tools>;
+
+export type ReviewUIMessage = UIMessage<unknown, UIDataTypes, ReviewTools>;
 
 export const ListChatsParamsSchema = z.object({
   projectId: ProjectIdSchema.nullable(),

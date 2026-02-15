@@ -3,7 +3,7 @@ import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/rea
 import ChatTool from './ChatTool';
 import ChatMessageResponse from './ChatMessageResponse';
 import React from 'react';
-import type { CustomUIMessage } from '@api/api';
+import type { CustomUIMessage, ReviewUIMessage } from '@api/api';
 import type { JSX } from 'react';
 import type { UIMessage } from 'ai';
 
@@ -11,6 +11,8 @@ type MessagePart = CustomUIMessage['parts'][number];
 type MessageRole = CustomUIMessage['role'];
 
 type GenericMessagePart = UIMessage['parts'][number];
+
+type ReviewMessagePart = ReviewUIMessage['parts'][number];
 
 export interface ChatMessageProps {
   chatId: string;
@@ -45,6 +47,25 @@ export function GenericMessage(props: GenericMessageProps): JSX.Element {
         <Message from={message.role} key={`message-part-${i}`} className=" min-w-0 w-full">
           <MessageContent className="min-w-0 w-full">
             <GenericMessagePartComponent key={i} part={part} isLastMessage={isLast} />
+          </MessageContent>
+        </Message>
+      ))}
+    </ChatMessageWrapper>
+  );
+}
+export interface ReviewMessageProps {
+  isLast: boolean;
+  message: ReviewUIMessage;
+}
+
+export function ReivewMessage(props: ReviewMessageProps): JSX.Element {
+  const { message, isLast } = props;
+  return (
+    <ChatMessageWrapper from={message.role}>
+      {message.parts.map((part, i) => (
+        <Message from={message.role} key={`message-part-${i}`} className=" min-w-0 w-full">
+          <MessageContent className="min-w-0 w-full">
+            <ReviewMessagePartComponent key={i} part={part} isLastMessage={isLast} />
           </MessageContent>
         </Message>
       ))}
@@ -113,6 +134,37 @@ interface GenericMessagePartProps {
 }
 
 function GenericMessagePartComponent(props: GenericMessagePartProps): JSX.Element {
+  const { part, isLastMessage } = props;
+
+  switch (part.type) {
+    case 'text':
+      return <ChatMessageResponse content={part.text} streaming={part.state === 'streaming'} />;
+    case 'step-start':
+      return <></>;
+    case 'reasoning': {
+      const isStreaming = part.state === 'streaming' && isLastMessage;
+
+      return (
+        <Reasoning className="w-full" isStreaming={isStreaming}>
+          <ReasoningTrigger />
+          <div className="max-h-20 overflow-scroll flex flex-col-reverse">
+            <ReasoningContent>{part.text}</ReasoningContent>
+          </div>
+        </Reasoning>
+      );
+    }
+
+    default:
+      return <pre className="text-xs">{JSON.stringify(part, null, 2)}</pre>;
+  }
+}
+
+interface ReviewMessagePartProps {
+  isLastMessage: boolean;
+  part: ReviewMessagePart;
+}
+
+function ReviewMessagePartComponent(props: ReviewMessagePartProps): JSX.Element {
   const { part, isLastMessage } = props;
 
   switch (part.type) {

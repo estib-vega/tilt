@@ -2,7 +2,7 @@ import type { ModelIdentifier } from './model.js';
 import { getModel } from './model.js';
 import WebSearch from './webSearch.js';
 import type { AllTools } from './tools.js';
-import { generateTools } from './tools.js';
+import { generateBashTools, generateReviewTools, generateTools } from './tools.js';
 import { getModelMessageTokenCount } from './context.js';
 import {
   promptForCondensedConversation,
@@ -22,7 +22,7 @@ import {
   stepCountIs,
   safeValidateUIMessages,
 } from 'ai';
-import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel } from 'ai';
+import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel, ToolSet } from 'ai';
 import type DB from '@api/db/sqlite.js';
 import type {
   ChatRequestOptions,
@@ -42,6 +42,7 @@ export default class ChatManager {
   private static instance: ChatManager | undefined;
   private activeControllers = new Map<string, AbortController>(); // id → abortController
   private chatEventListeners: Set<ChatEventListner> = new Set();
+  private bashTools: Map<string, ToolSet> = new Map();
 
   private constructor(
     private db: DB,
@@ -226,8 +227,31 @@ export default class ChatManager {
     return streamResponse.text;
   }
 
+  private async getReviewTools(projectId: ProjectId, cliId: string): Promise<ToolSet> {
+    const projectMeta = this.db.getProjectMeta(projectId);
+    const repositoryPath = projectMeta?.repository_path;
+
+    if (!repositoryPath) throw new Error('Missing repository path in project meta');
+
+    let bashTools = this.bashTools.get(repositoryPath);
+    if (!bashTools) {
+      bashTools = await generateBashTools({ repositoryPath });
+      this.bashTools.set(repositoryPath, bashTools);
+    }
+
+    const toolSet = await await generateReviewTools({
+      diff: () => this.projectsManager.butDiff(projectId, cliId),
+    });
+
+    return {
+      ...bashTools,
+      ...toolSet,
+    };
+  }
+
   async reviewChat(
     projectId: ProjectId,
+    cliId: string,
     diffSummary: string | null,
     messages: UIMessage[],
     options: ReviewChatRequestOptions,
@@ -238,8 +262,10 @@ export default class ChatManager {
 
     const streamResponse = streamText({
       system: this.getSystemPromptForReviewChat(projectId, diffSummary),
+      tools: await this.getReviewTools(projectId, cliId),
       model,
       messages: modelMessages,
+      stopWhen: stepCountIs(15),
     });
 
     const stream = streamResponse.toUIMessageStream({
