@@ -196,14 +196,20 @@ ipcMain.on('llm:start', async (event, params) => {
 });
 
 ipcMain.on('llm:review-start', async (event, params) => {
-  const [projectId, cliId, messages, options] = await parseLLMReviewStartParams(params);
+  const [projectId, cliId, summary, messages, options] = await parseLLMReviewStartParams(params);
 
   const id = `${projectId}:${cliId}`;
   const onUpdate = (chunk: UIMessageChunk) => {
     event.sender.send('llm:review-chunk', { id, chunk });
   };
 
-  const fullResponse = await chatManager.reviewChat(projectId, messages, options, onUpdate);
+  const fullResponse = await chatManager.reviewChat(
+    projectId,
+    summary,
+    messages,
+    options,
+    onUpdate,
+  );
 
   event.sender.send('llm:review-end', { id, text: fullResponse });
 });

@@ -26,7 +26,10 @@ Prefer being concise unless more detail is requested.
   return system;
 }
 
-export function systemPromptForReviewChat(projectMeta: DBProjectMeta | null): string {
+export function systemPromptForReviewChat(
+  projectMeta: DBProjectMeta | null,
+  diffSummary: string | null,
+): string {
   let system: string = `
 You are a senior software engineer.
 Given a set of code changes and other context around them, answer the questions of the user in a clear and to-the-point way.
@@ -44,10 +47,18 @@ The current date is ${new Date().toDateString()}.
     }
     if (projectMeta.description && projectMeta.description.trim().length > 0) {
       system += '\n\n';
-      system += 'Project Description:\n';
+      system += '**Project Description**:\n';
       system += projectMeta.description.trim();
     }
   }
+
+  if (diffSummary) {
+    system += '\n\n';
+    system += '**Summary of the changes:';
+    system += '\n';
+    system += diffSummary;
+  }
+
   return system;
 }
 

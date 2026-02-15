@@ -29,7 +29,7 @@ export default function FileDiff(props: FileDiffProps): JSX.Element {
   }, [props.oldFilePath, props.filePath, props.hunks, lang]);
 
   return (
-    <div>
+    <div className="w-full overflow-auto">
       <p className="font-mono text-xs p-2 border-t border-r border-l rounded-t-lg bg-muted text-muted-foreground">
         {props.filePath}
       </p>

@@ -1,7 +1,9 @@
 import { Conversation, ConversationContent } from '@/components/ai-elements/conversation';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { GenericMessage } from '@/components/ChatMessage';
+import Conditional from '@/components/Conditional';
 import FileChange from '@/components/FileChange';
+import ReviewChat from '@/components/ReviewChat';
 import { Button } from '@/components/ui/button';
 import { useButDiff, useButDiffSummary } from '@/model/api/but';
 import { useProjectsStore } from '@/store';
@@ -30,6 +32,7 @@ export const Route = createFileRoute('/branch/$branchName')({
 function RouteComponent() {
   const params = Route.useParams();
   const { projectId, butPath, repositoryPath } = Route.useLoaderData();
+  const [showChat, setShowChat] = React.useState(false);
 
   if (!butPath || !repositoryPath) {
     return (
@@ -40,7 +43,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="min-h-0 h-full w-full p-2 box-border flex overflow-y-auto scrollbar-muted">
+    <div className="min-h-0 h-full w-full px-2 box-border flex overflow-y-auto scrollbar-muted">
       <div className="w-full flex flex-col gap-4">
         <Summary
           projectId={projectId}
@@ -56,30 +59,36 @@ function RouteComponent() {
           />
         </React.Suspense>
       </div>
-      <ToolKit
-        projectId={projectId}
-        butPath={butPath}
-        repositoryPath={repositoryPath}
-        branchName={params.branchName}
-      />
+      <Conditional condition={showChat}>
+        <div className="w-full min-w-64 flex sticky top-0">
+          <ReviewChat
+            projectId={projectId}
+            cliId={params.branchName}
+            onClose={() => setShowChat(false)}
+          />
+        </div>
+      </Conditional>
+      <ToolKit showingChat={showChat} onChatClick={() => setShowChat((prev) => !prev)} />
     </div>
   );
 }
 
 interface ToolKitProps {
-  projectId: ProjectId;
-  butPath: string;
-  repositoryPath: string;
-  branchName: string;
+  showingChat: boolean;
+  onChatClick: () => void;
 }
 
-function ToolKit(_props: ToolKitProps) {
+function ToolKit(props: ToolKitProps) {
   return (
-    <div className="absolute bottom-0 right-0 p-8 flex">
-      <Button className="cursor-pointer rounded-full w-12 h-12">
-        <MessageCircleCode />
-      </Button>
-    </div>
+    <Conditional condition={!props.showingChat}>
+      <div className="z-50 absolute bottom-0 right-0 p-8 flex">
+        <div className="flex px-8 py-4 rounded-2xl bg-accent-foreground/10 hover:bg-accent-foreground/50 transition-colors">
+          <Button className="cursor-pointer rounded-full w-8 h-8" onClick={props.onChatClick}>
+            <MessageCircleCode />
+          </Button>
+        </div>
+      </div>
+    </Conditional>
   );
 }
 

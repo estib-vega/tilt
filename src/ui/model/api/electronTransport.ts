@@ -32,16 +32,17 @@ export class ElectronReviewChatTransport<UI_MESSAGE extends UIMessage>
     } & ChatRequestOptions,
     chatOptions: ReviewRequestOptions,
   ) {
+    const id = `${chatOptions.projectId}:${chatOptions.cliId}`;
     const stream = new ReadableStream<UIMessageChunk>({
       start(controller) {
         // incoming token chunks
         const onChunk = (data: MessageChunkEvent) => {
-          if (data.id !== options.chatId) return;
+          if (data.id !== id) return;
           controller.enqueue(data.chunk);
         };
 
         const onEnd = (data: MessageEndEvent) => {
-          if (data.id !== options.chatId) return;
+          if (data.id !== id) return;
           controller.close();
           cleanup();
         };
@@ -60,6 +61,7 @@ export class ElectronReviewChatTransport<UI_MESSAGE extends UIMessage>
           projectId: chatOptions.projectId,
           cliId: chatOptions.cliId,
           messages: options.messages,
+          summary: chatOptions.diffSummary,
           modelIdentifier: chatOptions.modelIdentifier,
         });
       },
@@ -175,6 +177,7 @@ export interface RequestOptions extends BaseRequestOptions {
 export interface ReviewRequestOptions extends BaseRequestOptions {
   projectId: ProjectId;
   cliId: string;
+  diffSummary: string | null;
 }
 
 interface ElectronChatRequestOptions {
@@ -213,6 +216,7 @@ function isElectronReviewChatRequestOptions(
   return (
     typeof obj.body.modelIdentifier === 'object' &&
     typeof (obj.body as any).projectId === 'string' &&
+    (typeof (obj.body as any).diffSummary === 'string' || (obj.body as any).diffSummary === null) &&
     typeof (obj.body as any).cliId === 'string'
   );
 }
@@ -223,6 +227,7 @@ function parseElectronReviewChatRequestOptions(options: ChatRequestOptions): Rev
       modelIdentifier: options.body.modelIdentifier,
       projectId: options.body.projectId,
       cliId: options.body.cliId,
+      diffSummary: options.body.diffSummary,
     };
   }
 

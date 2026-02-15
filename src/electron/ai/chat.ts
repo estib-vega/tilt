@@ -138,9 +138,9 @@ export default class ChatManager {
     return systemPromptForChat(projectMeta);
   }
 
-  private getSystemPromptForReviewChat(projectId: ProjectId) {
+  private getSystemPromptForReviewChat(projectId: ProjectId, diffSummary: string | null) {
     const projectMeta = this.db.getProjectMeta(projectId);
-    return systemPromptForReviewChat(projectMeta);
+    return systemPromptForReviewChat(projectMeta, diffSummary);
   }
 
   /**
@@ -223,6 +223,7 @@ export default class ChatManager {
 
   async reviewChat(
     projectId: ProjectId,
+    diffSummary: string | null,
     messages: UIMessage[],
     options: ReviewChatRequestOptions,
     onUpdate: (chunk: UIMessageChunk) => void,
@@ -231,7 +232,7 @@ export default class ChatManager {
     const model = getModel(options.modelIdentifier, this.credentialsManager);
 
     const streamResponse = streamText({
-      system: this.getSystemPromptForReviewChat(projectId),
+      system: this.getSystemPromptForReviewChat(projectId, diffSummary),
       model,
       messages: modelMessages,
     });

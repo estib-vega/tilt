@@ -68,12 +68,14 @@ export function useElectronReviewChat() {
     modelIdentifier: ModelIdentifier,
     projectId: ProjectId,
     cliId: string,
+    diffSummary: string | null,
   ): Promise<void> => {
     await chat.sendMessage(message, {
       body: {
         modelIdentifier,
         projectId,
         cliId,
+        diffSummary,
       },
     });
   };
