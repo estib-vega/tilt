@@ -2,6 +2,7 @@ import { Message, MessageContent } from './ai-elements/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning';
 import ChatTool from './ChatTool';
 import ChatMessageResponse from './ChatMessageResponse';
+import ReviewChatTool from './ReviewChatTool';
 import React from 'react';
 import type { CustomUIMessage, ReviewUIMessage } from '@api/api';
 import type { JSX } from 'react';
@@ -172,6 +173,11 @@ function ReviewMessagePartComponent(props: ReviewMessagePartProps): JSX.Element 
       return <ChatMessageResponse content={part.text} streaming={part.state === 'streaming'} />;
     case 'step-start':
       return <></>;
+    case 'tool-bash':
+    case 'tool-readFile':
+    case 'tool-showDiff':
+    case 'tool-writeFile':
+      return <ReviewChatTool toolPart={part} />;
     case 'reasoning': {
       const isStreaming = part.state === 'streaming' && isLastMessage;
 

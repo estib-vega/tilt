@@ -21,8 +21,6 @@ export default function ChatTool(props: ChatToolProps): JSX.Element {
   switch (props.toolPart.type) {
     case 'tool-searchWeb':
       return <WebTool chatId={props.chatId} description={props.toolPart} />;
-    default:
-      return <div>Unknown Tool</div>;
   }
 }
 
@@ -53,11 +51,7 @@ function WebTool(props: WebToolProps): JSX.Element {
           </div>
         </CollapsibleTrigger>
         {showSummary && (
-          <div
-            className={cn(
-              'px-4 pb-2 text-muted-foreground italic max-h-60 overflow-y-auto scrollbar-muted flex flex-col-reverse',
-            )}
-          >
+          <div className="px-4 pb-2 text-muted-foreground italic max-h-60 overflow-y-auto scrollbar-muted flex flex-col-reverse">
             <ChatMessageResponse content={summary} streaming={!isDone} />
           </div>
         )}

@@ -7,7 +7,7 @@ import {
   type PromptInputMessage,
 } from './ai-elements/prompt-input';
 import { Conversation, ConversationContent } from './ai-elements/conversation';
-import { GenericMessage } from './ChatMessage';
+import { ReivewMessage } from './ChatMessage';
 import ConfigureModelsButton from './ConfigureModelsButton';
 import ModelSelectorInputButton from './ModelSelectorInputButton';
 import { Button } from './ui/button';
@@ -72,7 +72,7 @@ export default function ReviewChat(props: ReviewChatProps) {
       <Conversation>
         <ConversationContent className="min-w-0 w-full">
           {messages.map((message, index) => (
-            <GenericMessage key={index} message={message} isLast={index === lastMessageIndex} />
+            <ReivewMessage key={index} message={message} isLast={index === lastMessageIndex} />
           ))}
         </ConversationContent>
       </Conversation>
