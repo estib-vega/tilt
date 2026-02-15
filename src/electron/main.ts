@@ -49,10 +49,10 @@ let mainWindow: BrowserWindow | null = null;
 const db = DB.getInstance(appDir);
 const credentialsManager = CredentialsManager.getInstance(db);
 const navigator = Navigator.getInstance();
-const chatManager = ChatManager.getInstance(db, credentialsManager, navigator);
+const projectsManager = ProjectsManager.getInstance(db);
+const chatManager = ChatManager.getInstance(db, credentialsManager, navigator, projectsManager);
 const ollamaManager = OllamaManager.getInstance();
 const notesManager = NotesManager.getInstance(appDir, db);
-const projectsManager = ProjectsManager.getInstance(db, credentialsManager);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -381,7 +381,7 @@ ipcMain.on('but:stream-summary', async (event, params) => {
     event.sender.send('but:stream-summary-chunk', { id, chunk });
   };
 
-  const fullResponse = await projectsManager.summarizeDiff(
+  const fullResponse = await chatManager.summarizeDiff(
     parsedParams.projectId,
     parsedParams.cliId,
     parsedParams.modelIdentifier,

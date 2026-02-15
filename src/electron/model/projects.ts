@@ -1,24 +1,15 @@
 import ButWrapper from './but.js';
-import type CredentialsManager from './credentials.js';
-import { getModel } from '../ai/model.js';
-import { promptForSummarization, systemPromptForSummarization } from '../ai/prompt.js';
 import type DB from '@api/db/sqlite.js';
 import type { Project, ProjectId } from '@api/db/tables/projects.js';
-import type { UIMessageChunk } from 'ai';
-import { createIdGenerator, streamText } from 'ai';
-import type { ModelIdentifier } from '@api/ai/model.js';
 
 export default class ProjectsManager {
   private but: ButWrapper | null = null;
   private static instance: ProjectsManager | undefined;
-  private constructor(
-    private db: DB,
-    private credentialsManger: CredentialsManager,
-  ) {}
+  private constructor(private db: DB) {}
 
-  static getInstance(db: DB, credentialsManager: CredentialsManager): ProjectsManager {
+  static getInstance(db: DB): ProjectsManager {
     if (!ProjectsManager.instance) {
-      ProjectsManager.instance = new ProjectsManager(db, credentialsManager);
+      ProjectsManager.instance = new ProjectsManager(db);
     }
     return ProjectsManager.instance;
   }
@@ -84,44 +75,6 @@ export default class ProjectsManager {
   butDiff(projectId: ProjectId, cliId: string) {
     const but = this.getOrCreateBut(projectId);
     return but.diff(cliId);
-  }
-
-  async summarizeDiff(
-    projectId: ProjectId,
-    cliId: string,
-    modelIdentifier: ModelIdentifier,
-    onUpdate: (chunk: UIMessageChunk) => void,
-  ) {
-    const projectMeta = this.db.getProjectMeta(projectId);
-    const diff = this.butDiff(projectId, cliId);
-    const sysPrompt = systemPromptForSummarization(projectMeta);
-    const prompt = promptForSummarization({
-      changes: diff.changes,
-    });
-
-    const model = getModel(modelIdentifier, this.credentialsManger);
-    const streamResponse = streamText({
-      system: sysPrompt,
-      model,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const stream = streamResponse.toUIMessageStream({
-      originalMessages: [],
-      generateMessageId: createIdGenerator({
-        prefix: 'msg',
-        size: 16,
-      }),
-      onFinish: () => {
-        // TODO: store this somewhere
-      },
-    });
-
-    for await (const chunk of stream) {
-      onUpdate(chunk);
-    }
-
-    return streamResponse.text;
   }
 
   checkoutBranch(projectId: ProjectId, branchName: string) {

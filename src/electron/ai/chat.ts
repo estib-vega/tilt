@@ -1,3 +1,4 @@
+import type { ModelIdentifier } from './model.js';
 import { getModel } from './model.js';
 import WebSearch from './webSearch.js';
 import type { AllTools } from './tools.js';
@@ -5,10 +6,12 @@ import { generateTools } from './tools.js';
 import { getModelMessageTokenCount } from './context.js';
 import {
   promptForCondensedConversation,
+  promptForSummarization,
   systemPromptForChat,
   systemPromptForCondensedConversation,
   systemPromptForContinuedConversation,
   systemPromptForReviewChat,
+  systemPromptForSummarization,
 } from './prompt.js';
 import type { DBUIMessage } from '@api/db/tables/messages.js';
 import {
@@ -31,6 +34,7 @@ import type {
 import type CredentialsManager from '@api/model/credentials.js';
 import type Navigator from '@api/model/navigator/index.js';
 import type { ProjectId } from '@api/db/tables/projects.js';
+import type ProjectsManager from '@api/model/projects.js';
 
 type ChatEventListner = (event: UIChatEvent) => void;
 
@@ -43,6 +47,7 @@ export default class ChatManager {
     private db: DB,
     private credentialsManager: CredentialsManager,
     private navigator: Navigator,
+    private projectsManager: ProjectsManager,
   ) {
     // Private constructor to enforce singleton pattern
     this.activeControllers = new Map();
@@ -412,6 +417,44 @@ Answer with only the title, without any additional text.
     }
   }
 
+  async summarizeDiff(
+    projectId: ProjectId,
+    cliId: string,
+    modelIdentifier: ModelIdentifier,
+    onUpdate: (chunk: UIMessageChunk) => void,
+  ) {
+    const projectMeta = this.db.getProjectMeta(projectId);
+    const diff = this.projectsManager.butDiff(projectId, cliId);
+    const sysPrompt = systemPromptForSummarization(projectMeta);
+    const prompt = promptForSummarization({
+      changes: diff.changes,
+    });
+
+    const model = getModel(modelIdentifier, this.credentialsManager);
+    const streamResponse = streamText({
+      system: sysPrompt,
+      model,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const stream = streamResponse.toUIMessageStream({
+      originalMessages: [],
+      generateMessageId: createIdGenerator({
+        prefix: 'msg',
+        size: 16,
+      }),
+      onFinish: () => {
+        // TODO: store this somewhere
+      },
+    });
+
+    for await (const chunk of stream) {
+      onUpdate(chunk);
+    }
+
+    return streamResponse.text;
+  }
+
   private getAbortControllerSignal(id: string): AbortSignal {
     let controller = this.activeControllers.get(id);
     if (!controller) {
@@ -425,9 +468,10 @@ Answer with only the title, without any additional text.
     db: DB,
     credentialsManager: CredentialsManager,
     navigator: Navigator,
+    projectsManager: ProjectsManager,
   ): ChatManager {
     if (!ChatManager.instance) {
-      ChatManager.instance = new ChatManager(db, credentialsManager, navigator);
+      ChatManager.instance = new ChatManager(db, credentialsManager, navigator, projectsManager);
     }
     return ChatManager.instance;
   }
