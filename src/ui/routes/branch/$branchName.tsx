@@ -7,6 +7,7 @@ import { useButDiff, useButDiffSummary } from '@/model/api/but';
 import { useProjectsStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import { MessageCircleCode } from 'lucide-react';
 import React from 'react';
 
 export const Route = createFileRoute('/branch/$branchName')({
@@ -55,6 +56,29 @@ function RouteComponent() {
           />
         </React.Suspense>
       </div>
+      <ToolKit
+        projectId={projectId}
+        butPath={butPath}
+        repositoryPath={repositoryPath}
+        branchName={params.branchName}
+      />
+    </div>
+  );
+}
+
+interface ToolKitProps {
+  projectId: ProjectId;
+  butPath: string;
+  repositoryPath: string;
+  branchName: string;
+}
+
+function ToolKit(_props: ToolKitProps) {
+  return (
+    <div className="absolute bottom-0 right-0 p-8 flex">
+      <Button className="cursor-pointer rounded-full w-12 h-12">
+        <MessageCircleCode />
+      </Button>
     </div>
   );
 }
@@ -132,6 +156,7 @@ function BranchView(props: BranchViewProps) {
       {diff.changes.map((change, index) => (
         <FileChange key={change.id ?? index} change={change} />
       ))}
+      <div className="w-full h-60"></div>
     </div>
   );
 }
