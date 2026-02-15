@@ -42,7 +42,6 @@ export default class ChatManager {
   private static instance: ChatManager | undefined;
   private activeControllers = new Map<string, AbortController>(); // id → abortController
   private chatEventListeners: Set<ChatEventListner> = new Set();
-  private bashTools: Map<string, ToolSet> = new Map();
 
   private constructor(
     private db: DB,
@@ -233,12 +232,7 @@ export default class ChatManager {
 
     if (!repositoryPath) throw new Error('Missing repository path in project meta');
 
-    let bashTools = this.bashTools.get(repositoryPath);
-    if (!bashTools) {
-      bashTools = await generateBashTools({ repositoryPath });
-      this.bashTools.set(repositoryPath, bashTools);
-    }
-
+    const bashTools = await generateBashTools({ repositoryPath });
     const toolSet = await await generateReviewTools({
       diff: () => this.projectsManager.butDiff(projectId, cliId),
     });
