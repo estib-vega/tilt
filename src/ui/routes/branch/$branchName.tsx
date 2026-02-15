@@ -1,4 +1,5 @@
 import { Conversation, ConversationContent } from '@/components/ai-elements/conversation';
+import { Shimmer } from '@/components/ai-elements/shimmer';
 import { GenericMessage } from '@/components/ChatMessage';
 import FileChange from '@/components/FileChange';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="min-h-0 h-full w-full p-4 box-border flex overflow-y-auto scrollbar-muted">
+    <div className="min-h-0 h-full w-full p-2 box-border flex overflow-y-auto scrollbar-muted">
       <div className="w-full flex flex-col gap-4">
         <Summary
           projectId={projectId}
@@ -66,7 +67,8 @@ interface SummaryProps {
 }
 
 function Summary(props: SummaryProps) {
-  const { messages, isLoading, start } = useButDiffSummary();
+  const id = `${props.projectId}:${props.branchName}`;
+  const { messages, isLoading, start } = useButDiffSummary(id);
   const lastMessageIndex = React.useMemo(() => messages.length - 1, [messages.length]);
 
   const handleStartSummary = async () => {
@@ -88,6 +90,14 @@ function Summary(props: SummaryProps) {
         <Button className="cursor-pointer" onClick={handleStartSummary}>
           generate summary
         </Button>
+      </div>
+    );
+  }
+
+  if (messages.length === 0 && isLoading) {
+    return (
+      <div className="w-full flex justify-center">
+        <Shimmer duration={1}>loading</Shimmer>
       </div>
     );
   }

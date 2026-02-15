@@ -30,11 +30,11 @@ export default function FileDiff(props: FileDiffProps): JSX.Element {
 
   return (
     <div>
-      <p className="font-mono text-xs p-2 border-t border-r border-l rounded-t-lg">
+      <p className="font-mono text-xs p-2 border-t border-r border-l rounded-t-lg bg-muted text-muted-foreground">
         {props.filePath}
       </p>
       <DiffView<string>
-        className="border-color overflow-hidden"
+        className="border-color overflow-hidden rounded-b-lg"
         diffFile={data}
         diffViewTheme={theme === 'dark' ? 'dark' : 'light'}
         diffViewFontSize={12}

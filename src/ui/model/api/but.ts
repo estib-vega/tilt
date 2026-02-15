@@ -1,6 +1,7 @@
+import { useProjectsStore } from '@/store';
 import type { ButStreamSummary, MessageChunkEvent, MessageEndEvent } from '@api/api';
 import { useSuspenseQuery, queryOptions } from '@tanstack/react-query';
-import { readUIMessageStream, type UIMessage, type UIMessageChunk } from 'ai';
+import { readUIMessageStream, type UIMessageChunk } from 'ai';
 import React from 'react';
 
 const butStatusOptions = (butPath: string, repositoryPath: string) =>
@@ -25,37 +26,33 @@ export function useButDiff(butPath: string, repositoryPath: string, cliId: strin
   return useSuspenseQuery(options);
 }
 
-export function useButDiffSummary() {
-  const [messages, setMessages] = React.useState<UIMessage[]>([]);
+export function useButDiffSummary(id: string) {
+  const diffSummaries = useProjectsStore((state) => state.diffSummaries);
+  const messages = React.useMemo(() => diffSummaries[id] ?? [], [diffSummaries, id]);
+  const upsertSummaryMessage = useProjectsStore((state) => state.upsertSummaryMessage);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const start = React.useCallback(async (params: ButStreamSummary) => {
-    setIsLoading(true);
+  const start = React.useCallback(
+    async (params: ButStreamSummary) => {
+      setIsLoading(true);
 
-    const stream = createDiffSummaryStream(params);
-    for await (const msg of readUIMessageStream({ stream })) {
-      setMessages((prev) => {
-        // If this message already exists (matching id), replace it
-        const idx = prev.findIndex((m) => m.id === msg.id);
-        if (idx >= 0) {
-          const next = [...prev];
-          next[idx] = msg;
-          return next;
-        }
-        // Otherwise append
-        return [...prev, msg];
-      });
-    }
+      const stream = createDiffSummaryStream(id, params);
+      for await (const msg of readUIMessageStream({ stream })) {
+        upsertSummaryMessage(id, msg);
+      }
 
-    setIsLoading(false);
-  }, []);
+      setIsLoading(false);
+    },
+    [id, upsertSummaryMessage],
+  );
 
   return { start, isLoading, messages };
 }
 
-function createDiffSummaryStream(params: ButStreamSummary): ReadableStream<UIMessageChunk> {
-  const id = `${params.projectId}:${params.cliId}`;
-
+function createDiffSummaryStream(
+  id: string,
+  params: ButStreamSummary,
+): ReadableStream<UIMessageChunk> {
   const stream = new ReadableStream<UIMessageChunk>({
     start(controller) {
       // incoming token chunks
