@@ -26,6 +26,7 @@ import type {
   ButDiffParams,
   ButCheckOutParams,
   ButStreamSummary,
+  LLMReviewStartParams,
 } from './api.js';
 import type { ModelIdentifier, ProviderModelList } from './ai/model.js';
 import type { Credential, CredentialService } from './model/credentials.js';
@@ -72,6 +73,18 @@ export interface ElectronAPI {
    * Listens for the end of a chat session.
    */
   onChatEnd: (cb: (event: MessageEndEvent) => void) => CleanUpFn;
+  /**
+   * Starts a review chat.
+   */
+  reviewChatStart: (params: LLMReviewStartParams) => void;
+  /**
+   * Listens for review chat response chunks.
+   */
+  onReviewChatChunk: (cb: (event: MessageChunkEvent) => void) => CleanUpFn;
+  /**
+   * Listens for the end of a review chat session.
+   */
+  onReviewChatEnd: (cb: (event: MessageEndEvent) => void) => CleanUpFn;
   /**
    * Interrupts an ongoing chat session with the given ID.
    */
@@ -260,6 +273,29 @@ const api: ElectronAPI = {
     ipcRenderer.on('llm:end', listener);
     return () => {
       ipcRenderer.removeListener('llm:end', listener);
+    };
+  },
+
+  // State review chat
+  reviewChatStart: (params: LLMReviewStartParams) => {
+    ipcRenderer.send('llm:review-start', params);
+  },
+
+  // Listen for review chat updates
+  onReviewChatChunk: (cb: (event: MessageChunkEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: MessageChunkEvent) => cb(data);
+    ipcRenderer.on('llm:review-chunk', listener);
+    return () => {
+      ipcRenderer.removeListener('llm:review-chunk', listener);
+    };
+  },
+
+  // Listen for the end of the review chat session
+  onReviewChatEnd: (cb: (event: MessageEndEvent) => void) => {
+    const listener = (_event: IpcRendererEvent, data: MessageEndEvent) => cb(data);
+    ipcRenderer.on('llm:review-end', listener);
+    return () => {
+      ipcRenderer.removeListener('llm:review-end', listener);
     };
   },
 

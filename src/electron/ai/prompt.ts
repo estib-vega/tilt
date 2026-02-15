@@ -26,6 +26,31 @@ Prefer being concise unless more detail is requested.
   return system;
 }
 
+export function systemPromptForReviewChat(projectMeta: DBProjectMeta | null): string {
+  let system: string = `
+You are a senior software engineer.
+Given a set of code changes and other context around them, answer the questions of the user in a clear and to-the-point way.
+Be sure to justify your answers by referencing the code in the changes.
+Prefer being concise unless more detail is requested.
+
+The current date is ${new Date().toDateString()}.
+`.trim();
+
+  if (projectMeta) {
+    if (projectMeta.system_prompt && projectMeta.system_prompt.trim().length > 0) {
+      system = projectMeta.system_prompt.trim();
+      system += '\n';
+      system += `The current date is ${new Date().toDateString()}.`;
+    }
+    if (projectMeta.description && projectMeta.description.trim().length > 0) {
+      system += '\n\n';
+      system += 'Project Description:\n';
+      system += projectMeta.description.trim();
+    }
+  }
+  return system;
+}
+
 export function systemPromptForCondensedConversation(): string {
   return `
 You are an AI assistant that helps to summarize and condense conversation history for use in future AI interactions.

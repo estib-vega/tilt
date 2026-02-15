@@ -6,6 +6,7 @@ import {
   ButDiffParamsSchema,
   ButStatusParamsSchema,
   ButStreamSummaryParams,
+  parseLLMReviewStartParams,
   type UIChatEvent,
   type UsageUpdate,
 } from './api.js';
@@ -192,6 +193,19 @@ ipcMain.on('llm:start', async (event, params) => {
   const fullResponse = await chatManager.chat(id, messages, options, onUpdate, onUsage);
 
   event.sender.send('llm:end', { id, text: fullResponse });
+});
+
+ipcMain.on('llm:review-start', async (event, params) => {
+  const [projectId, cliId, messages, options] = await parseLLMReviewStartParams(params);
+
+  const id = `${projectId}:${cliId}`;
+  const onUpdate = (chunk: UIMessageChunk) => {
+    event.sender.send('llm:review-chunk', { id, chunk });
+  };
+
+  const fullResponse = await chatManager.reviewChat(projectId, messages, options, onUpdate);
+
+  event.sender.send('llm:review-end', { id, text: fullResponse });
 });
 
 ipcMain.on('llm:resume', async (event, params) => {

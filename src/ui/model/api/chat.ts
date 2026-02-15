@@ -1,4 +1,8 @@
-import ElectronTransport, { type RequestOptions } from './electronTransport';
+import {
+  type RequestOptions,
+  ElectronChatTransport,
+  ElectronReviewChatTransport,
+} from './electronTransport';
 import { useModelSelector } from './models';
 import { useChat } from '@ai-sdk/react';
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
@@ -19,7 +23,7 @@ export function useElectronChat(chatId: string) {
 
   const chat = useChat<CustomUIMessage>({
     id: chatId,
-    transport: new ElectronTransport(),
+    transport: new ElectronChatTransport(),
     messages,
     resume: true,
     onFinish: () => {
@@ -42,6 +46,34 @@ export function useElectronChat(chatId: string) {
       body: {
         webSearch,
         modelIdentifier,
+      },
+    });
+  };
+
+  return {
+    ...chat,
+    sendMessage,
+  };
+}
+
+export function useElectronReviewChat() {
+  const chat = useChat({
+    transport: new ElectronReviewChatTransport(),
+  });
+
+  type MessageType = Parameters<typeof chat.sendMessage>[0];
+
+  const sendMessage = async (
+    message: MessageType,
+    modelIdentifier: ModelIdentifier,
+    projectId: ProjectId,
+    cliId: string,
+  ): Promise<void> => {
+    await chat.sendMessage(message, {
+      body: {
+        modelIdentifier,
+        projectId,
+        cliId,
       },
     });
   };
@@ -162,7 +194,7 @@ export function useCreateChatMutation() {
       const chatId = await window.api.createChat({ initialMessages, projectId });
       setChatUsesWebSearch(chatId, useWebSearch);
       setChatUsesModelIdentifier(chatId, modelIdentifier);
-      ElectronTransport.createChatStream(
+      ElectronChatTransport.createChatStream(
         {
           chatId,
           trigger: 'submit-message',

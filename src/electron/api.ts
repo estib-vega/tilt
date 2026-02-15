@@ -54,9 +54,52 @@ export function isLLMStartParams(something: unknown): something is LLMStartParam
   );
 }
 
+export interface LLMReviewStartParams {
+  projectId: ProjectId;
+  cliId: string;
+  messages: UIMessage[];
+  modelIdentifier: ModelIdentifier;
+}
+
+export function isLLMReviewStartParams(something: unknown): something is LLMReviewStartParams {
+  return (
+    typeof something === 'object' &&
+    something !== null &&
+    'messages' in something &&
+    'projectId' in something &&
+    typeof (something as any).projectId === 'string' &&
+    'cliId' in something &&
+    typeof (something as any).cliId === 'string' &&
+    Array.isArray((something as any).messages) &&
+    isModelIdentifier((something as any).modelIdentifier)
+  );
+}
+
 export interface ChatRequestOptions {
   modelIdentifier: ModelIdentifier;
   webSearch: boolean;
+}
+
+export const ReviewChatRequestOptionsSchema = z.object({
+  modelIdentifier: ModelIdentifierSchema,
+});
+
+export type ReviewChatRequestOptions = z.infer<typeof ReviewChatRequestOptionsSchema>;
+
+/**
+ * Validate and parse the LLM review start parameters
+ *
+ * Throws an error if validation fails.
+ */
+export async function parseLLMReviewStartParams(
+  something: unknown,
+): Promise<[ProjectId, string, UIMessage[], ReviewChatRequestOptions]> {
+  if (!isLLMReviewStartParams(something)) {
+    throw new Error('Invalid LLM review start parameters: ' + JSON.stringify(something));
+  }
+  const { projectId, cliId, messages, modelIdentifier } = something;
+  const validatedMessages = await validateUIMessages({ messages });
+  return [projectId, cliId, validatedMessages, { modelIdentifier }];
 }
 
 /**

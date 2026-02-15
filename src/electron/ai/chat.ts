@@ -8,6 +8,7 @@ import {
   systemPromptForChat,
   systemPromptForCondensedConversation,
   systemPromptForContinuedConversation,
+  systemPromptForReviewChat,
 } from './prompt.js';
 import type { DBUIMessage } from '@api/db/tables/messages.js';
 import {
@@ -20,7 +21,13 @@ import {
 } from 'ai';
 import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel } from 'ai';
 import type DB from '@api/db/sqlite.js';
-import type { ChatRequestOptions, UIChat, UIChatEvent, UsageUpdate } from '@api/api.js';
+import type {
+  ChatRequestOptions,
+  ReviewChatRequestOptions,
+  UIChat,
+  UIChatEvent,
+  UsageUpdate,
+} from '@api/api.js';
 import type CredentialsManager from '@api/model/credentials.js';
 import type Navigator from '@api/model/navigator/index.js';
 import type { ProjectId } from '@api/db/tables/projects.js';
@@ -131,6 +138,11 @@ export default class ChatManager {
     return systemPromptForChat(projectMeta);
   }
 
+  private getSystemPromptForReviewChat(projectId: ProjectId) {
+    const projectMeta = this.db.getProjectMeta(projectId);
+    return systemPromptForReviewChat(projectMeta);
+  }
+
   /**
    * Streams a chat response from the AI model based on the provided messages.
    */
@@ -205,6 +217,36 @@ export default class ChatManager {
         usage,
       });
     });
+
+    return streamResponse.text;
+  }
+
+  async reviewChat(
+    projectId: ProjectId,
+    messages: UIMessage[],
+    options: ReviewChatRequestOptions,
+    onUpdate: (chunk: UIMessageChunk) => void,
+  ): Promise<string> {
+    const modelMessages = await convertToModelMessages(messages);
+    const model = getModel(options.modelIdentifier, this.credentialsManager);
+
+    const streamResponse = streamText({
+      system: this.getSystemPromptForReviewChat(projectId),
+      model,
+      messages: modelMessages,
+    });
+
+    const stream = streamResponse.toUIMessageStream({
+      originalMessages: messages,
+      generateMessageId: createIdGenerator({
+        prefix: 'msg',
+        size: 16,
+      }),
+    });
+
+    for await (const chunk of stream) {
+      onUpdate(chunk);
+    }
 
     return streamResponse.text;
   }
