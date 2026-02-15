@@ -19,6 +19,14 @@ export type DBProjectMeta = {
    * The system prompt to use for the project.
    */
   system_prompt: string | null;
+  /**
+   * The path to the associated repository.
+   */
+  repository_path: string | null;
+  /**
+   * The path of the but binary to use.
+   */
+  but_binary_path: string | null;
   created_at: number;
   updated_at: number;
 };
@@ -32,6 +40,8 @@ export default class DBProjectMetas {
       project_id TEXT NOT NULL UNIQUE,
       description TEXT,
       system_prompt TEXT,
+      repository_path TEXT,
+      but_binary_path TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
@@ -43,10 +53,18 @@ export default class DBProjectMetas {
   create(meta: Omit<DBProjectMeta, 'id' | 'created_at' | 'updated_at'>): DBProjectMeta {
     const now = Date.now();
     const stmt = this.db.prepare(`
-      INSERT INTO project_metas (project_id, description, system_prompt, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO project_metas (project_id, description, system_prompt, repository_path, but_binary_path, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
-    const result = stmt.run(meta.project_id, meta.description, meta.system_prompt, now, now);
+    const result = stmt.run(
+      meta.project_id,
+      meta.description,
+      meta.system_prompt,
+      meta.repository_path,
+      meta.but_binary_path,
+      now,
+      now,
+    );
     return { ...meta, id: result.lastInsertRowid as number, created_at: now, updated_at: now };
   }
 
@@ -71,10 +89,19 @@ export default class DBProjectMetas {
       UPDATE project_metas
       SET description = COALESCE(?, description),
         system_prompt = COALESCE(?, system_prompt),
+        repository_path = COALESCE(?, repository_path),
+        but_binary_path = COALESCE(?, but_binary_path),
         updated_at = ?
       WHERE id = ?
     `);
-    stmt.run(updates.description, updates.system_prompt, now, id);
+    stmt.run(
+      updates.description,
+      updates.system_prompt,
+      updates.repository_path,
+      updates.but_binary_path,
+      now,
+      id,
+    );
     return this.getById(id);
   }
 

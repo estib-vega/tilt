@@ -6,11 +6,12 @@ import FileChange from '@/components/FileChange';
 import ReviewChat from '@/components/ReviewChat';
 import { Button } from '@/components/ui/button';
 import { useButDiff, useButDiffSummary } from '@/model/api/but';
+import { useGetProjectMetadata } from '@/model/api/project';
 import { useProjectsStore } from '@/store';
 import type { ProjectId } from '@api/db/tables/projects';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { MessageCircleCode } from 'lucide-react';
-import React from 'react';
+import React, { type JSX } from 'react';
 
 export const Route = createFileRoute('/branch/$branchName')({
   component: RouteComponent,
@@ -23,53 +24,52 @@ export const Route = createFileRoute('/branch/$branchName')({
         to: '/chat',
       });
     }
-    const repositoryPath = state.repositoryPaths[projectId];
-    const butPath = state.butPaths[projectId];
-    return { projectId, repositoryPath, butPath };
+    return { projectId };
   },
 });
 
 function RouteComponent() {
+  const { projectId } = Route.useLoaderData();
   const params = Route.useParams();
-  const { projectId, butPath, repositoryPath } = Route.useLoaderData();
-  const [showChat, setShowChat] = React.useState(false);
-
-  if (!butPath || !repositoryPath) {
-    return (
-      <div className="min-h-0 h-full w-full p-4 box-border flex justify-center">
-        <h1>Please configure a repository path and but path in order to use this feature</h1>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-0 h-full w-full px-2 box-border flex overflow-y-auto scrollbar-muted">
+      <React.Suspense>
+        <View projectId={projectId} branchName={params.branchName} />
+      </React.Suspense>
+    </div>
+  );
+}
+
+interface ViewProps {
+  projectId: ProjectId;
+  branchName: string;
+}
+
+function View(props: ViewProps): JSX.Element {
+  const { projectId, branchName } = props;
+  const [showChat, setShowChat] = React.useState(false);
+  const { data: meta } = useGetProjectMetadata(projectId);
+
+  if (!meta.butBinaryPath || !meta.repositoryPath) {
+    return <h1>Please configure a repository path and but path in order to use this feature</h1>;
+  }
+
+  return (
+    <React.Fragment>
       <div className="w-full flex flex-col gap-4">
-        <Summary
-          projectId={projectId}
-          butPath={butPath}
-          repositoryPath={repositoryPath}
-          branchName={params.branchName}
-        />
+        <Summary projectId={projectId} branchName={branchName} />
         <React.Suspense>
-          <BranchView
-            butPath={butPath}
-            repositoryPath={repositoryPath}
-            branchName={params.branchName}
-          />
+          <BranchView projectId={projectId} branchName={branchName} />
         </React.Suspense>
       </div>
       <Conditional condition={showChat}>
         <div className="w-full min-w-64 flex sticky top-0">
-          <ReviewChat
-            projectId={projectId}
-            cliId={params.branchName}
-            onClose={() => setShowChat(false)}
-          />
+          <ReviewChat projectId={projectId} cliId={branchName} onClose={() => setShowChat(false)} />
         </div>
       </Conditional>
       <ToolKit showingChat={showChat} onChatClick={() => setShowChat((prev) => !prev)} />
-    </div>
+    </React.Fragment>
   );
 }
 
@@ -94,8 +94,6 @@ function ToolKit(props: ToolKitProps) {
 
 interface SummaryProps {
   projectId: ProjectId;
-  butPath: string;
-  repositoryPath: string;
   branchName: string;
 }
 
@@ -107,8 +105,6 @@ function Summary(props: SummaryProps) {
   const handleStartSummary = async () => {
     await start({
       projectId: props.projectId,
-      binaryPath: props.butPath,
-      cwd: props.repositoryPath,
       cliId: props.branchName,
       modelIdentifier: {
         name: 'gpt-oss:20b',
@@ -153,13 +149,12 @@ function Summary(props: SummaryProps) {
 }
 
 interface BranchViewProps {
-  butPath: string;
-  repositoryPath: string;
+  projectId: ProjectId;
   branchName: string;
 }
 
 function BranchView(props: BranchViewProps) {
-  const { data: diff } = useButDiff(props.butPath, props.repositoryPath, props.branchName);
+  const { data: diff } = useButDiff(props.projectId, props.branchName);
   return (
     <div className="flex flex-col gap-4 w-full">
       {diff.changes.map((change, index) => (

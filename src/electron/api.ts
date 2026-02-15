@@ -351,29 +351,28 @@ export const UpdateProjectMetaParamsSchema = z.object({
   metadata: z.object({
     description: z.string().nullable().optional(),
     systemPrompt: z.string().nullable().optional(),
+    repositoryPath: z.string().nullable().optional(),
+    butBinaryPath: z.string().nullable().optional(),
   }),
 });
 
 export type UpdateProjectMetaParams = z.infer<typeof UpdateProjectMetaParamsSchema>;
 
 export const ButStatusParamsSchema = z.object({
-  cwd: z.string(),
-  binaryPath: z.string(),
+  projectId: ProjectIdSchema,
 });
 
 export type ButStatusParams = z.infer<typeof ButStatusParamsSchema>;
 
 export const ButDiffParamsSchema = z.object({
-  cwd: z.string(),
-  binaryPath: z.string(),
+  projectId: ProjectIdSchema,
   cliId: z.string(),
 });
 
 export type ButDiffParams = z.infer<typeof ButDiffParamsSchema>;
 
 export const ButCheckOutParamsSchema = z.object({
-  cwd: z.string(),
-  binaryPath: z.string(),
+  projectId: ProjectIdSchema,
   branchName: z.string(),
 });
 
@@ -381,8 +380,6 @@ export type ButCheckOutParams = z.infer<typeof ButCheckOutParamsSchema>;
 
 export const ButStreamSummaryParams = z.object({
   projectId: ProjectIdSchema,
-  cwd: z.string(),
-  binaryPath: z.string(),
   cliId: z.string(),
   modelIdentifier: ModelIdentifierSchema,
 });

@@ -51,10 +51,6 @@ function Project(props: ProjectProps) {
   const { data: project } = useGetProject(projectId);
   const setProject = useProjectsStore((state) => state.setProject);
   const { data: metadata } = useGetProjectMetadata(projectId);
-  const projectRepositoryPath = useProjectsStore((state) => state.repositoryPaths[projectId]);
-  const setProjectRepositoryPath = useProjectsStore((state) => state.setRepositoryPath);
-  const butPath = useProjectsStore((state) => state.butPaths[projectId]);
-  const setButPath = useProjectsStore((state) => state.setButPath);
 
   const deleteProjectMutation = useDeleteProjectMutation();
   const updateMetadataMutation = useUpdateProjectMetadataMutation();
@@ -75,11 +71,11 @@ function Project(props: ProjectProps) {
   };
 
   const handleUpdateRepositoryPath = (repositoryPath: string) => {
-    setProjectRepositoryPath(projectId, repositoryPath);
+    updateMetadataMutation.mutate({ projectId, metadata: { repositoryPath } });
   };
 
   const handleUpdateButPath = (butPath: string) => {
-    setButPath(projectId, butPath);
+    updateMetadataMutation.mutate({ projectId, metadata: { butBinaryPath: butPath } });
   };
 
   if (!project) {
@@ -110,14 +106,14 @@ function Project(props: ProjectProps) {
         />
         <EditableField
           label="repository path"
-          value={projectRepositoryPath ?? ''}
+          value={metadata.repositoryPath ?? ''}
           placeholder="no associated repository"
           onSave={handleUpdateRepositoryPath}
         />
-        <Conditional condition={!!projectRepositoryPath}>
+        <Conditional condition={!!metadata.repositoryPath}>
           <EditableField
             label="but path"
-            value={butPath ?? ''}
+            value={metadata.butBinaryPath ?? ''}
             placeholder="the path to your but... binary"
             onSave={handleUpdateButPath}
           />

@@ -9,14 +9,6 @@ type ProjectsState = {
    */
   projectId: ProjectId | null;
   /**
-   * The repository paths associated with a given project, if any.
-   */
-  repositoryPaths: Record<ProjectId, string | undefined>;
-  /**
-   * The but binary path associated with a given project, if any.
-   */
-  butPaths: Record<ProjectId, string | undefined>;
-  /**
    * The generated summaries for a given diff, if any.
    */
   diffSummaries: Record<string, UIMessage[] | undefined>;
@@ -24,8 +16,6 @@ type ProjectsState = {
 
 const state: ProjectsState = {
   projectId: null,
-  repositoryPaths: {},
-  butPaths: {},
   diffSummaries: {},
 };
 
@@ -36,22 +26,6 @@ export const useProjectsStore = create(
         set((state) => ({
           ...state,
           projectId,
-        })),
-      setRepositoryPath: (projectId: ProjectId, repositoryPath: string) =>
-        set((state) => ({
-          ...state,
-          repositoryPaths: {
-            ...state.repositoryPaths,
-            [projectId]: repositoryPath,
-          },
-        })),
-      setButPath: (projectId: ProjectId, butPath: string) =>
-        set((state) => ({
-          ...state,
-          butPaths: {
-            ...state.butPaths,
-            [projectId]: butPath,
-          },
         })),
       upsertSummaryMessage: (summaryId: string, message: UIMessage) =>
         set((state) => {

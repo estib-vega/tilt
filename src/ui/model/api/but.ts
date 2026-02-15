@@ -1,28 +1,29 @@
 import { useProjectsStore } from '@/store';
 import type { ButStreamSummary, MessageChunkEvent, MessageEndEvent } from '@api/api';
+import type { ProjectId } from '@api/db/tables/projects';
 import { useSuspenseQuery, queryOptions } from '@tanstack/react-query';
 import { readUIMessageStream, type UIMessageChunk } from 'ai';
 import React from 'react';
 
-const butStatusOptions = (butPath: string, repositoryPath: string) =>
+const butStatusOptions = (projectId: ProjectId) =>
   queryOptions({
-    queryKey: ['but-status', butPath, repositoryPath],
-    queryFn: () => window.api.butStatus({ cwd: repositoryPath, binaryPath: butPath }),
+    queryKey: ['but-status', projectId],
+    queryFn: () => window.api.butStatus({ projectId }),
   });
 
-export function useButStatus(butPath: string, repositoryPath: string) {
-  const options = butStatusOptions(butPath, repositoryPath);
+export function useButStatus(projectId: ProjectId) {
+  const options = butStatusOptions(projectId);
   return useSuspenseQuery(options);
 }
 
-const butDiffOptions = (butPath: string, repositoryPath: string, cliId: string) =>
+const butDiffOptions = (projectId: ProjectId, cliId: string) =>
   queryOptions({
-    queryKey: ['but-diff', butPath, repositoryPath, cliId],
-    queryFn: () => window.api.butDiff({ cwd: repositoryPath, binaryPath: butPath, cliId }),
+    queryKey: ['but-diff', projectId, cliId],
+    queryFn: () => window.api.butDiff({ projectId, cliId }),
   });
 
-export function useButDiff(butPath: string, repositoryPath: string, cliId: string) {
-  const options = butDiffOptions(butPath, repositoryPath, cliId);
+export function useButDiff(projectId: ProjectId, cliId: string) {
+  const options = butDiffOptions(projectId, cliId);
   return useSuspenseQuery(options);
 }
 

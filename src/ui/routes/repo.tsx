@@ -1,7 +1,8 @@
 import StackComponent from '@/components/Stack';
 import { useButStatus } from '@/model/api/but';
-import { RepoDataCtx } from '@/model/repo';
+import { useGetProjectMetadata } from '@/model/api/project';
 import { useProjectsStore } from '@/store';
+import type { ProjectId } from '@api/db/tables/projects';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import React, { type JSX } from 'react';
 
@@ -16,48 +17,45 @@ export const Route = createFileRoute('/repo')({
         to: '/chat',
       });
     }
-    const repositoryPath = state.repositoryPaths[projectId];
-    const butPath = state.butPaths[projectId];
-    return { projectId, repositoryPath, butPath };
+    return { projectId };
   },
 });
 
 function RouteComponent() {
-  const { projectId, butPath, repositoryPath } = Route.useLoaderData();
+  const { projectId } = Route.useLoaderData();
+  return (
+    <div className="min-h-0 h-full w-full p-4 box-border flex justify-center">
+      <React.Suspense>
+        <View projectId={projectId} />
+      </React.Suspense>
+    </div>
+  );
+}
 
-  if (!butPath || !repositoryPath) {
-    return (
-      <div className="min-h-0 h-full w-full p-4 box-border flex justify-center">
-        <h1>Please configure a repository path and but path in order to use this feature</h1>
-      </div>
-    );
+interface ViewProps {
+  projectId: ProjectId;
+}
+
+function View(props: ViewProps) {
+  const { data: meta } = useGetProjectMetadata(props.projectId);
+
+  if (!meta.butBinaryPath || !meta.repositoryPath) {
+    return <h1>Please configure a repository path and but path in order to use this feature</h1>;
   }
 
   return (
-    <RepoDataCtx.Provider
-      value={{
-        projectId,
-        butPath,
-        repositoryPath,
-      }}
-    >
-      <div className="min-h-0 h-full w-full p-4 box-border flex justify-center">
-        <React.Suspense>
-          <Repo butPath={butPath} repositoryPath={repositoryPath} />
-        </React.Suspense>
-      </div>
-      ;
-    </RepoDataCtx.Provider>
+    <React.Suspense>
+      <Repo projectId={props.projectId} />
+    </React.Suspense>
   );
 }
 
 interface RepoProps {
-  butPath: string;
-  repositoryPath: string;
+  projectId: ProjectId;
 }
 
 function Repo(props: RepoProps): JSX.Element {
-  const { data: status } = useButStatus(props.butPath, props.repositoryPath);
+  const { data: status } = useButStatus(props.projectId);
   return (
     <div className="flex flex-col">
       <div className="flex overflow-y-auto scrollbar-muted gap-4">

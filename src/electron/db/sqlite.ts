@@ -84,12 +84,19 @@ export default class DB {
 
   updateProjectMeta(
     projectId: ProjectId,
-    update: { systemPrompt?: string | null; description?: string | null },
+    update: {
+      systemPrompt?: string | null;
+      description?: string | null;
+      repositoryPath?: string | null;
+      butBinaryPath?: string | null;
+    },
   ) {
     const meta = this.getOrCreateProjectMeta(projectId);
     const updatedMeta = this.projectsMetasTable.update(meta.id, {
       system_prompt: update.systemPrompt,
       description: update.description,
+      repository_path: update.repositoryPath,
+      but_binary_path: update.butBinaryPath,
     });
     if (!updatedMeta) {
       throw new Error(`Failed to update project meta for project ${projectId}`);
@@ -104,6 +111,8 @@ export default class DB {
         project_id: projectId,
         description: null,
         system_prompt: null,
+        repository_path: null,
+        but_binary_path: null,
       });
     }
     return meta;

@@ -23,7 +23,14 @@ export default class ProjectsManager {
     return ProjectsManager.instance;
   }
 
-  private getOrCreateBut(cwd: string, binaryPath: string): ButWrapper {
+  private getOrCreateBut(projectId: ProjectId): ButWrapper {
+    const projectMeta = this.db.getProjectMeta(projectId);
+    const cwd = projectMeta?.repository_path;
+    const binaryPath = projectMeta?.but_binary_path;
+
+    if (!cwd) throw new Error('Missing repository path in project metadata');
+    if (!binaryPath) throw new Error('Missing but binary path in project metadata');
+
     if (this.but && this.but.matches(cwd, binaryPath)) return this.but;
     this.but = new ButWrapper(cwd, binaryPath);
     return this.but;
@@ -51,6 +58,8 @@ export default class ProjectsManager {
     return {
       description: dbMeta.description,
       systemPrompt: dbMeta.system_prompt,
+      repositoryPath: dbMeta.repository_path,
+      butBinaryPath: dbMeta.but_binary_path,
     };
   }
 
@@ -67,26 +76,24 @@ export default class ProjectsManager {
 
   // but commands
 
-  butStatus(cwd: string, binaryPath: string) {
-    const but = this.getOrCreateBut(cwd, binaryPath);
+  butStatus(projectId: ProjectId) {
+    const but = this.getOrCreateBut(projectId);
     return but.status();
   }
 
-  butDiff(cwd: string, binaryPath: string, cliId: string) {
-    const but = this.getOrCreateBut(cwd, binaryPath);
+  butDiff(projectId: ProjectId, cliId: string) {
+    const but = this.getOrCreateBut(projectId);
     return but.diff(cliId);
   }
 
   async summarizeDiff(
     projectId: ProjectId,
-    cwd: string,
-    binaryPath: string,
     cliId: string,
     modelIdentifier: ModelIdentifier,
     onUpdate: (chunk: UIMessageChunk) => void,
   ) {
     const projectMeta = this.db.getProjectMeta(projectId);
-    const diff = this.butDiff(cwd, binaryPath, cliId);
+    const diff = this.butDiff(projectId, cliId);
     const sysPrompt = systemPromptForSummarization(projectMeta);
     const prompt = promptForSummarization({
       changes: diff.changes,
@@ -117,8 +124,8 @@ export default class ProjectsManager {
     return streamResponse.text;
   }
 
-  checkoutBranch(cwd: string, binaryPath: string, branchName: string) {
-    const but = this.getOrCreateBut(cwd, binaryPath);
+  checkoutBranch(projectId: ProjectId, branchName: string) {
+    const but = this.getOrCreateBut(projectId);
     return but.checkoutBranch(branchName);
   }
 }
@@ -126,4 +133,6 @@ export default class ProjectsManager {
 export type ProjectMetadata = {
   description: string | null;
   systemPrompt: string | null;
+  repositoryPath: string | null;
+  butBinaryPath: string | null;
 };

@@ -360,21 +360,17 @@ ipcMain.handle('projects:update-project-meta', (_event, params) => {
 
 ipcMain.handle('but:st', (_event, params) => {
   const parsedParams = ButStatusParamsSchema.parse(params);
-  return projectsManager.butStatus(parsedParams.cwd, parsedParams.binaryPath);
+  return projectsManager.butStatus(parsedParams.projectId);
 });
 
 ipcMain.handle('but:diff', (_event, params) => {
   const parsedParams = ButDiffParamsSchema.parse(params);
-  return projectsManager.butDiff(parsedParams.cwd, parsedParams.binaryPath, parsedParams.cliId);
+  return projectsManager.butDiff(parsedParams.projectId, parsedParams.cliId);
 });
 
 ipcMain.handle('but:checkout', (_event, params) => {
   const parsedParams = ButCheckOutParamsSchema.parse(params);
-  return projectsManager.checkoutBranch(
-    parsedParams.cwd,
-    parsedParams.binaryPath,
-    parsedParams.branchName,
-  );
+  return projectsManager.checkoutBranch(parsedParams.projectId, parsedParams.branchName);
 });
 
 ipcMain.on('but:stream-summary', async (event, params) => {
@@ -387,8 +383,6 @@ ipcMain.on('but:stream-summary', async (event, params) => {
 
   const fullResponse = await projectsManager.summarizeDiff(
     parsedParams.projectId,
-    parsedParams.cwd,
-    parsedParams.binaryPath,
     parsedParams.cliId,
     parsedParams.modelIdentifier,
     onUpdate,
