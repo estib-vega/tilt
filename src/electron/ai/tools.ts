@@ -1,5 +1,5 @@
 import type WebSearch from './webSearch.js';
-import type { JsonDiffOutput } from '../model/but.js';
+import type { JsonChange, JsonDiffOutput } from '../model/but.js';
 import { stringifyJsonChanges } from '../model/repository/changes.js';
 import type { InferUITools, ToolSet } from 'ai';
 import { tool } from 'ai';
@@ -73,21 +73,45 @@ export async function generateReviewTools(params: GenerateReviewToolsParams) {
 </description>
 
 <notes>
-    - If a full path filter is given, only the diff of the file that matches will be returned.
-    - If a partial path filter is given, only the diffs of the files that start with that filter will be returned.
+    - If a path filter(s) is given, only the diffs of the files that contain ANY of the passed filter strings in their path will be returned.
+    - If a constent filter(s) is given, only the diffs of the file changes that contain ANY of the passed filter string in the content will be returned.
 </notes>
       `.trim(),
       inputSchema: ShowDiffToolInputSchema,
-      execute: async ({ pathFilter }) => {
+      execute: async ({ pathFilters, contentFilters }) => {
         const output = params.diff();
         const changes = output.changes.filter((change) => {
-          if (pathFilter) {
-            return change.path.startsWith(pathFilter);
+          if (pathFilters && pathFilters.length > 0) {
+            return pathFilters.some(
+              (f) =>
+                change.path.toLowerCase().includes(f.toLocaleLowerCase()) ||
+                change.oldPath?.toLowerCase().includes(f.toLowerCase()),
+            );
           }
           return true;
         });
 
-        return stringifyJsonChanges(changes);
+        const contentFilteredChanges: JsonChange[] = [];
+        if (contentFilters && contentFilters.length > 0) {
+          for (const change of changes) {
+            if (change.diff.type !== 'patch') continue;
+            const hunks = change.diff.hunks.filter((h) => {
+              return contentFilters.some((f) => h.diff.toLowerCase().includes(f.toLowerCase()));
+            });
+
+            if (hunks.length === 0) continue;
+
+            contentFilteredChanges.push({
+              ...change,
+              diff: {
+                ...change.diff,
+                hunks,
+              },
+            });
+          }
+        }
+
+        return stringifyJsonChanges(contentFilteredChanges);
       },
     }),
   } satisfies ToolSet;
@@ -96,12 +120,18 @@ export async function generateReviewTools(params: GenerateReviewToolsParams) {
 }
 
 const ShowDiffToolInputSchema = z.object({
-  pathFilter: z
+  pathFilters: z
     .string()
+    .array()
     .optional()
     .describe(
-      'Optional. Either a full or a partial path string to match the file changes against.',
+      'Optional. One or multiple string values to match against the file paths of the changes being reviewed.',
     ),
+  contentFilters: z
+    .string()
+    .array()
+    .optional()
+    .describe('Optional. One or multiple terms to search against the content of the change diffs.'),
 });
 
 export type GenericReviewTools = Awaited<ReturnType<typeof generateReviewTools>>;
