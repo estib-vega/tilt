@@ -1,8 +1,9 @@
 import type WebSearch from './webSearch.js';
 import type { JsonChange, JsonDiffOutput } from '../model/but.js';
 import { stringifyJsonChanges } from '../model/repository/changes.js';
-import type { InferUITools, ToolSet } from 'ai';
-import { tool } from 'ai';
+import { promptForChangeAgent } from './prompt.js';
+import type { InferUITools, ToolLoopAgent, ToolSet, UIMessage } from 'ai';
+import { readUIMessageStream, tool } from 'ai';
 import { z } from 'zod';
 import { Bash, OverlayFs } from 'just-bash';
 import { createBashTool } from 'bash-tool';
@@ -109,6 +110,8 @@ export async function generateReviewTools(params: GenerateReviewToolsParams) {
               },
             });
           }
+        } else {
+          contentFilteredChanges.push(...changes);
         }
 
         return stringifyJsonChanges(contentFilteredChanges);
@@ -153,6 +156,65 @@ export async function generateBashTools(params: GenerateBashToolsParams) {
 
 export type BashTools = Awaited<ReturnType<typeof generateBashTools>>;
 
-export type AllReviewTools = GenericReviewTools & BashTools;
+export interface GenerateChangeTool {
+  changeAgent: ToolLoopAgent<never, GenericReviewTools, never>;
+  diffSummary: string | null;
+}
+
+export function generateChangeTool(params: GenerateChangeTool) {
+  const toolset = {
+    changesQuery: tool({
+      description: `
+<description>
+  Ask a question about the code changes being reviewed.
+</description>
+
+<notes>
+  - The question should be a full sentence.
+  - Prefer multiple focused questions than one big one.
+</notes>
+`,
+      inputSchema: ChangeQueryInputSchema,
+      execute: async function* ({ query }) {
+        const result = await params.changeAgent.stream({
+          prompt: promptForChangeAgent(query, params.diffSummary),
+        });
+
+        // Each iteration yields a complete, accumulated UIMessage
+        for await (const message of readUIMessageStream({
+          stream: result.toUIMessageStream(),
+        })) {
+          yield message;
+        }
+      },
+      toModelOutput: ({ output }) => {
+        const message: UIMessage = output;
+        const text = findLastTextPart(message);
+        return {
+          type: 'text',
+          value: text ?? 'Task completed.',
+        };
+      },
+    }),
+  } satisfies ToolSet;
+
+  return toolset;
+}
+
+const ChangeQueryInputSchema = z.object({
+  query: z.string().describe('A question about the code changes being reviewed.'),
+});
+
+export type ChangeTools = ReturnType<typeof generateChangeTool>;
+
+export type AllReviewTools = GenericReviewTools & BashTools & ChangeTools;
 
 export type ReviewTools = InferUITools<AllReviewTools>;
+
+function findLastTextPart(message: UIMessage): string | null {
+  for (let i = message.parts.length - 1; i >= 0; i--) {
+    const part = message.parts[i];
+    if (part.type === 'text') return part.text;
+  }
+  return null;
+}

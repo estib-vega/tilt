@@ -177,6 +177,7 @@ function ReviewMessagePartComponent(props: ReviewMessagePartProps): JSX.Element 
     case 'tool-readFile':
     case 'tool-showDiff':
     case 'tool-writeFile':
+    case 'tool-changesQuery':
       return <ReviewChatTool toolPart={part} />;
     case 'reasoning': {
       const isStreaming = part.state === 'streaming' && isLastMessage;

@@ -1,9 +1,18 @@
 import { Tool, ToolContent, ToolInput, ToolOutput } from './ai-elements/tool';
+import { ReivewMessage } from './ChatMessage';
 import type { ReviewTools } from '@api/ai/tools';
 import type { ToolUIPart } from 'ai';
 import type { JSX } from 'react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
-import { ChevronDownIcon, FileCode, SquareTerminal, File, SquarePen } from 'lucide-react';
+import {
+  ChevronDownIcon,
+  FileCode,
+  SquareTerminal,
+  File,
+  SquarePen,
+  MessageSquare,
+} from 'lucide-react';
+import type { ReviewUIMessage } from '@api/api';
 
 interface ReviewChatToolProps {
   toolPart: ToolUIPart<ReviewTools>;
@@ -19,6 +28,8 @@ export default function ReviewChatTool(props: ReviewChatToolProps): JSX.Element 
       return <ReadFileTool description={props.toolPart} />;
     case 'tool-writeFile':
       return <WriteFileTool description={props.toolPart} />;
+    case 'tool-changesQuery':
+      return <ChangeQueryTool description={props.toolPart} />;
   }
 }
 
@@ -26,6 +37,7 @@ type ShowDiffToolDescription = ToolUIPart<Pick<ReviewTools, 'showDiff'>>;
 type BashToolDescription = ToolUIPart<Pick<ReviewTools, 'bash'>>;
 type ReadFileToolDescription = ToolUIPart<Pick<ReviewTools, 'readFile'>>;
 type WriteFileToolDescription = ToolUIPart<Pick<ReviewTools, 'writeFile'>>;
+type ChangeQueryToolDescription = ToolUIPart<Pick<ReviewTools, 'changesQuery'>>;
 
 interface ShowDiffToolProps {
   description: ShowDiffToolDescription;
@@ -43,6 +55,10 @@ interface WriteFileToolProps {
   description: WriteFileToolDescription;
 }
 
+interface ChangeQueryToolProps {
+  description: ChangeQueryToolDescription;
+}
+
 function ShowDiffTool(props: ShowDiffToolProps) {
   return (
     <div className="min-w-0 w-full mb-4 flex flex-col gap-1">
@@ -50,6 +66,7 @@ function ShowDiffTool(props: ShowDiffToolProps) {
         <CollapsibleTrigger className="cursor-pointer flex w-full items-center gap-4 p-3">
           <div className="flex items-center gap-2">
             <FileCode className="size-4 text-muted-foreground shrink-0" />
+            <p className="text-sm font-mono truncate">reading diffs</p>
             <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 shrink-0" />
           </div>
         </CollapsibleTrigger>
@@ -94,6 +111,7 @@ function ReadFileTool(props: ReadFileToolProps) {
         <CollapsibleTrigger className="cursor-pointer flex w-full items-center gap-4 p-3">
           <div className="flex items-center gap-2">
             <File className="size-4 text-muted-foreground shrink-0" />
+            <p className="text-sm font-mono">{props.description.input?.path}</p>
             <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 shrink-0" />
           </div>
         </CollapsibleTrigger>
@@ -113,6 +131,7 @@ function WriteFileTool(props: WriteFileToolProps) {
         <CollapsibleTrigger className="cursor-pointer flex w-full items-center gap-4 p-3">
           <div className="flex items-center gap-2">
             <SquarePen className="size-4 text-muted-foreground shrink-0" />
+            <p className="text-sm font-mono">{props.description.input?.path}</p>
             <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 shrink-0" />
           </div>
         </CollapsibleTrigger>
@@ -121,6 +140,25 @@ function WriteFileTool(props: WriteFileToolProps) {
           <ToolOutput output={props.description.output} errorText={props.description.errorText} />
         </ToolContent>
       </Tool>
+    </div>
+  );
+}
+
+function ChangeQueryTool(props: ChangeQueryToolProps) {
+  return (
+    <div className="min-w-0 w-full mb-4 flex flex-col gap-1">
+      <Tool className="mb-0">
+        <CollapsibleTrigger className="cursor-pointer flex w-full items-center gap-4 p-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="size-4 text-muted-foreground shrink-0" />
+            <p className="text-sm font-mono">{props.description.input?.query ?? '-no query-'}</p>
+            <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 shrink-0" />
+          </div>
+        </CollapsibleTrigger>
+      </Tool>
+      {props.description.output && (
+        <ReivewMessage message={props.description.output as ReviewUIMessage} isLast />
+      )}
     </div>
   );
 }

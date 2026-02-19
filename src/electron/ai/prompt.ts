@@ -26,10 +26,7 @@ Prefer being concise unless more detail is requested.
   return system;
 }
 
-export function systemPromptForReviewChat(
-  projectMeta: DBProjectMeta | null,
-  diffSummary: string | null,
-): string {
+export function systemPromptForReviewChat(projectMeta: DBProjectMeta | null): string {
   let system: string = `
 ### Tone
 You are a senior software engineer.
@@ -46,33 +43,26 @@ The current date is ${new Date().toDateString()}.
 - 'tool-bash':
   ONLY USE THIS TOOL FOR COMMAND EXECUTION.
   Execute bash commands on the repository where changes are being reviewed.
-  Use \`pwd\` first, to verify that the working directory matches the expectations.
 - 'tool-readFile':
   Read a file from the repository where changes are being reviewed.
-- 'tool-showDiff':
-  Tool for displaying all or a subset of the change diffs being reviewed.
+- 'tool-chngesQuery':
+  Ask natural language questions about the changes being reviewed.
+
+### Guidelines
+When aswering questions about the changes or reviewing them:
+1. Familiarize yourself with the changes.
+2. Familiarize yourself with the files changes and their role in the repository.
+3. Answer the questions.
 
 - DON'T USE 'dynamic-tool' or 'tool-exec'!
 `.trim();
 
   if (projectMeta) {
-    if (projectMeta.system_prompt && projectMeta.system_prompt.trim().length > 0) {
-      system = projectMeta.system_prompt.trim();
-      system += '\n';
-      system += `The current date is ${new Date().toDateString()}.`;
-    }
     if (projectMeta.description && projectMeta.description.trim().length > 0) {
       system += '\n\n';
-      system += '**Project Description**:\n';
+      system += '### Project Description\n';
       system += projectMeta.description.trim();
     }
-  }
-
-  if (diffSummary) {
-    system += '\n\n';
-    system += '**Summary of the changes:';
-    system += '\n';
-    system += diffSummary;
   }
 
   return system;
@@ -462,4 +452,30 @@ function getPersona(persona: SummarizationPersona | undefined): string {
     case 'scan':
       return '**Quick Scan Mode**';
   }
+}
+
+export function systemPromptForChangeAgent(): string {
+  return `
+# Tone
+You are a research assistant for code changes.
+Your communicating with other LLM agents, to answer the queries concisely and throughly.
+
+# Task
+Given a query, explore the code changes summary and changes diff strings and answer.
+  `.trim();
+}
+
+export function promptForChangeAgent(query: string, diffSummary: string | null): string {
+  if (!diffSummary) return query;
+  return `
+Please take a look at the code changes summary and answer the following query:
+
+<query>
+  ${query}
+</query>
+
+<summary>
+${diffSummary}
+</summary>
+`.trim();
 }

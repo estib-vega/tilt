@@ -2,11 +2,17 @@ import type { ModelIdentifier } from './model.js';
 import { getModel } from './model.js';
 import WebSearch from './webSearch.js';
 import type { AllTools } from './tools.js';
-import { generateBashTools, generateReviewTools, generateTools } from './tools.js';
+import {
+  generateBashTools,
+  generateChangeTool,
+  generateReviewTools,
+  generateTools,
+} from './tools.js';
 import { getModelMessageTokenCount } from './context.js';
 import {
   promptForCondensedConversation,
   promptForSummarization,
+  systemPromptForChangeAgent,
   systemPromptForChat,
   systemPromptForCondensedConversation,
   systemPromptForContinuedConversation,
@@ -21,6 +27,7 @@ import {
   createIdGenerator,
   stepCountIs,
   safeValidateUIMessages,
+  ToolLoopAgent,
 } from 'ai';
 import type { UIMessage, UIMessageChunk, PrepareStepResult, LanguageModel, ToolSet } from 'ai';
 import type DB from '@api/db/sqlite.js';
@@ -143,9 +150,9 @@ export default class ChatManager {
     return systemPromptForChat(projectMeta);
   }
 
-  private getSystemPromptForReviewChat(projectId: ProjectId, diffSummary: string | null) {
+  private getSystemPromptForReviewChat(projectId: ProjectId) {
     const projectMeta = this.db.getProjectMeta(projectId);
-    return systemPromptForReviewChat(projectMeta, diffSummary);
+    return systemPromptForReviewChat(projectMeta);
   }
 
   /**
@@ -226,20 +233,36 @@ export default class ChatManager {
     return streamResponse.text;
   }
 
-  private async getReviewTools(projectId: ProjectId, cliId: string): Promise<ToolSet> {
+  private async getReviewTools(
+    projectId: ProjectId,
+    cliId: string,
+    diffSummary: string | null,
+    model: LanguageModel,
+  ): Promise<ToolSet> {
     const projectMeta = this.db.getProjectMeta(projectId);
     const repositoryPath = projectMeta?.repository_path;
 
     if (!repositoryPath) throw new Error('Missing repository path in project meta');
 
-    const bashTools = await generateBashTools({ repositoryPath });
     const toolSet = await await generateReviewTools({
       diff: () => this.projectsManager.butDiff(projectId, cliId),
     });
 
+    const changeAgent = new ToolLoopAgent({
+      model,
+      instructions: systemPromptForChangeAgent(),
+      tools: toolSet,
+    });
+
+    const bashTools = await generateBashTools({ repositoryPath });
+    const changeTools = generateChangeTool({
+      diffSummary,
+      changeAgent,
+    });
+
     return {
       ...bashTools,
-      ...toolSet,
+      ...changeTools,
     };
   }
 
@@ -255,8 +278,8 @@ export default class ChatManager {
     const model = getModel(options.modelIdentifier, this.credentialsManager);
 
     const streamResponse = streamText({
-      system: this.getSystemPromptForReviewChat(projectId, diffSummary),
-      tools: await this.getReviewTools(projectId, cliId),
+      system: this.getSystemPromptForReviewChat(projectId),
+      tools: await this.getReviewTools(projectId, cliId, diffSummary, model),
       model,
       messages: modelMessages,
       stopWhen: stepCountIs(15),
