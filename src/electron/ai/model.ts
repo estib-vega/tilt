@@ -143,14 +143,7 @@ export async function availableModels(
   const availableProviders = credentialsManager.listProviders();
   const result: ProviderModelList = [];
 
-  const remoteModels = MODEL_PROVIDER_LIST.filter(([provider]) => {
-    return availableProviders.includes(provider);
-  });
-
-  result.push(...remoteModels);
-
   const ollamaModels = await ollamaManager.listModels();
-
   if (ollamaModels.length > 0) {
     const ollamaModelInfos: ModelInfo[] = ollamaModels.map((modelName) => ({
       provider: 'ollama',
@@ -159,6 +152,22 @@ export async function availableModels(
     }));
     result.push(['ollama', ollamaModelInfos]);
   }
+
+  const openAIModels = await credentialsManager.listOpenAIModels();
+  if (openAIModels.length > 0) {
+    const models: ModelInfo[] = openAIModels.map((model) => ({
+      provider: 'openai',
+      name: model.id,
+      displayName: model.id,
+    }));
+    result.push(['openai', models]);
+  }
+
+  const remoteModels = MODEL_PROVIDER_LIST.filter(([provider]) => {
+    return provider !== 'openai' && availableProviders.includes(provider);
+  });
+
+  result.push(...remoteModels);
 
   return result;
 }

@@ -2,7 +2,9 @@ ignoredBuiltDependencies:
   - unrs-resolver
 
 onlyBuiltDependencies:
+  - '@mongodb-js/zstd'
   - better-sqlite3
   - electron
   - electron-winstaller
   - esbuild
+  - node-liblzma

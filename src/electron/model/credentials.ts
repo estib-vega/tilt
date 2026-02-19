@@ -59,6 +59,64 @@ export default class CredentialsManager {
     const services = creds.map((c) => assertValidCredentialService(c.service));
     return Array.from(new Set(services));
   }
+
+  async listOpenAIModels(): Promise<OpenAIModelInformation[]> {
+    const apiKey = this.getCredential('openai');
+    if (!apiKey) return [];
+
+    const modelsResponse = await fetch('https://api.openai.com/v1/models', {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+    if (!modelsResponse.ok) {
+      return [];
+    }
+
+    const models = (await modelsResponse.json()) as OpenAIModelListResponse;
+    return filterAndSortOpenAIModels(models.data);
+  }
+}
+
+function filterAndSortOpenAIModels(models: OpenAIModelInformation[]): OpenAIModelInformation[] {
+  const resultModels: OpenAIModelInformation[] = [];
+  const avoidTerm = [
+    'audio',
+    'realtime',
+    'image',
+    'trasncribe',
+    'search',
+    'tts',
+    '-20',
+    'omni',
+    'gpt-3.5',
+    'preview',
+    'transcribe',
+  ];
+  const gptModels = models
+    .filter(
+      (model) => model.id.startsWith('gpt') && !avoidTerm.some((term) => model.id.includes(term)),
+    )
+    .sort((a, b) => b.id.localeCompare(a.id));
+
+  const oModels = models
+    .filter(
+      (model) => model.id.startsWith('o') && !avoidTerm.some((term) => model.id.includes(term)),
+    )
+    .sort((a, b) => b.id.localeCompare(a.id));
+
+  resultModels.push(...gptModels, ...oModels);
+
+  return resultModels;
+}
+
+export interface OpenAIModelListResponse {
+  data: OpenAIModelInformation[];
+}
+
+export interface OpenAIModelInformation {
+  id: string;
 }
 
 export interface Credential {
